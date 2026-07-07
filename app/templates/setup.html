@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ app.APP_NAME }} - Einrichtung{% endblock %}
+{% block body %}
+<div class="setup">
+  <div class="wordmark" style="justify-content:center; margin-bottom:24px">
+    <span class="self">Self</span><span class="rest">MediaHub</span>
+    <span class="badge">SETUP</span>
+  </div>
+  <div class="panel">
+    <h1>Fast fertig - noch eine Quelle verbinden</h1>
+    <p style="color:var(--self-text-2)">
+      SelfMediaHub liest deine Mediathek <strong>nur lesend</strong> und speichert alles
+      in seiner eigenen Datenbank. An Emby wird nichts veraendert. Setze dafuer diese
+      Container-Variablen und starte neu:
+    </p>
+    <table>
+      <tr>
+        <td><code>EMBY_URL</code></td>
+        <td>Adresse deines Emby-Servers, z.&nbsp;B. <code>http://192.168.1.19:8096</code></td>
+      </tr>
+      <tr>
+        <td><code>EMBY_API_KEY</code></td>
+        <td>In Emby unter <em>Einstellungen &rarr; Erweitert &rarr; API-Schluessel</em> anlegen</td>
+      </tr>
+      <tr>
+        <td><code>TMDB_API_KEY</code></td>
+        <td>Optional, erst ab Phase&nbsp;2 (Metadaten-Abgleich). Kann leer bleiben.</td>
+      </tr>
+    </table>
+    <p class="label">Status</p>
+    <p style="margin-top:6px">
+      Emby-Verbindung:
+      {% if app.emby_configured() %}
+        <span style="color:var(--self-green)">konfiguriert</span> - Seite neu laden.
+      {% else %}
+        <span style="color:var(--self-yellow)">noch nicht gesetzt</span>
+      {% endif %}
+    </p>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+services:
+  selfmediahub:
+    image: ghcr.io/s3lfcod3r/selfmediahub:latest
+    container_name: selfmediahub
+    ports:
+      - "8092:8092"
+    environment:
+      EMBY_URL: "http://192.168.1.19:8096"
+      EMBY_API_KEY: "dein_emby_api_key"
+      TMDB_API_KEY: ""
+    volumes:
+      - ./data:/data
+    restart: unless-stopped

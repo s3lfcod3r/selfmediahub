@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}{{ app.APP_NAME }} - Uebersicht{% endblock %}
+{% block body %}
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <div class="wordmark">
+      <span class="self">Self</span><span class="rest">MediaHub</span>
+      <span class="badge">v{{ app.VERSION }}</span>
+    </div>
+    <div class="spacer"></div>
+    <button class="btn btn-icon" id="themeBtn" title="Hell/Dunkel umschalten" aria-label="Theme umschalten">◐</button>
+    <button class="btn btn-primary" id="syncBtn">
+      <span id="syncLabel">Neu einlesen</span>
+    </button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <p class="label">Read-only Analyse &amp; Uebersicht</p>
+    <h1>Deine Mediathek auf einen Blick</h1>
+    <p>Filme und Serien aus Emby - gelesen, nie veraendert. Filtere nach Qualitaet,
+       Freigabe und Vollstaendigkeit. Letzter Scan:
+       <span class="mono" id="lastSync">{{ last_sync or "noch nie" }}</span>.</p>
+  </section>
+
+  <section class="stats">
+    <div class="stat"><div class="num" id="stTotal">{{ stats.total }}</div><div class="cap label">Eintraege gesamt</div></div>
+    <div class="stat"><div class="num" id="stFilms">{{ stats.films }}</div><div class="cap label">Filme</div></div>
+    <div class="stat"><div class="num" id="stSeries">{{ stats.series }}</div><div class="cap label">Serien</div></div>
+    <div class="stat warn"><div class="num" id="stNoRating">{{ stats.no_rating }}</div><div class="cap label">Ohne Freigabe</div></div>
+  </section>
+
+  <div class="toolbar">
+    <label class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>
+      </svg>
+      <input type="search" id="q" placeholder="Titel suchen ..." autocomplete="off">
+    </label>
+
+    <select class="field" id="fLibrary">
+      <option value="">Alle Bibliotheken</option>
+      {% for lib in libraries %}<option value="{{ lib }}">{{ lib }}</option>{% endfor %}
+    </select>
+
+    <select class="field" id="fType">
+      <option value="">Filme &amp; Serien</option>
+      <option value="Film">Nur Filme</option>
+      <option value="Serie">Nur Serien</option>
+    </select>
+
+    <select class="field" id="fRating">
+      <option value="">Alle Freigaben</option>
+      <option value="__none__">Ohne Freigabe</option>
+    </select>
+
+    <div class="viewtoggle" id="viewToggle">
+      <button data-view="cover" class="active">Cover</button>
+      <button data-view="list">Liste</button>
+    </div>
+
+    <div class="colmenu" id="colmenu" hidden>
+      <button class="btn btn-icon" id="colBtn" title="Spalten">▦</button>
+      <div class="colmenu-panel" id="colPanel"></div>
+    </div>
+  </div>
+
+  <div class="count-line"><span id="count">0</span> Eintraege</div>
+
+  <section id="coverView"><div class="grid" id="grid"></div></section>
+  <section id="listView" class="hidden">
+    <div class="tablewrap"><table class="list"><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+  </section>
+  <div class="empty hidden" id="empty">Keine Eintraege - passe die Filter an oder lies neu ein.</div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  window.__DATA__ = {{ items_json | safe }};
+  window.__LIBS__ = {{ libraries | tojson }};
+</script>
+<script src="/static/js/app.js"></script>
+{% endblock %}

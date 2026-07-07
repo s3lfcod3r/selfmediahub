@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>SelfMediaHub</Name>
+  <Repository>ghcr.io/s3lfcod3r/selfmediahub:latest</Repository>
+  <Registry>https://github.com/s3lfcod3r/selfmediahub/pkgs/container/selfmediahub</Registry>
+  <Network>bridge</Network>
+  <MyIP/>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/s3lfcod3r/selfmediahub/issues</Support>
+  <Project>https://github.com/s3lfcod3r/selfmediahub</Project>
+  <Overview>Read-only Analyse- und Uebersichtsschicht fuer bestehende Mediatheken (Emby; Plex/Jellyfin/lokal folgen). Liest Filme und Serien nur lesend ein und speichert alles in einer eigenen Datenbank - es wird nie in den Medienserver zurueckgeschrieben. Cover- und frei konfigurierbare Listenansicht, Filter nach Bibliothek, Typ und Freigabe. Weitere Phasen: Technik-/Qualitaetsanalyse, Vollstaendigkeitspruefung, Tags und Regeln, Benachrichtigungen.</Overview>
+  <Category>MediaApp:Video Tools: Productivity:</Category>
+  <WebUI>http://[IP]:[PORT:8092]/</WebUI>
+  <TemplateURL/>
+  <Icon>https://raw.githubusercontent.com/s3lfcod3r/selfmediahub/main/icon.png</Icon>
+  <Config Name="WebUI Port" Target="8092" Default="8092" Mode="tcp" Description="Port der Weboberflaeche" Type="Port" Display="always" Required="true" Mask="false">8092</Config>
+  <Config Name="Daten (DB)" Target="/data" Default="/mnt/user/appdata/selfmediahub" Mode="rw" Description="Ablage der eigenen Datenbank" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/selfmediahub</Config>
+  <Config Name="Emby URL" Target="EMBY_URL" Default="http://192.168.1.19:8096" Description="Adresse deines Emby-Servers (ohne Slash am Ende)" Type="Variable" Display="always" Required="true" Mask="false"></Config>
+  <Config Name="Emby API Key" Target="EMBY_API_KEY" Default="" Description="Emby: Einstellungen -> Erweitert -> API-Schluessel" Type="Variable" Display="always" Required="true" Mask="true"></Config>
+  <Config Name="TMDb API Key (optional)" Target="TMDB_API_KEY" Default="" Description="themoviedb.org v3-Key. Erst ab Phase 2 (Metadaten-Abgleich)." Type="Variable" Display="always" Required="false" Mask="true"></Config>
+</Container>
