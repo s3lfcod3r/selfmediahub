@@ -13,7 +13,8 @@ ITEM_COLUMNS = [
     "tmdb_seasons", "tmdb_episodes", "have_seasons", "have_episodes",
     "completeness", "missing_episodes", "video_codec", "width", "height",
     "resolution", "hdr", "audio_codecs", "audio_langs", "subtitle_langs",
-    "runtime_min", "fsk_suggested", "fsk_suspicious", "fsk_reason", "synced_at",
+    "runtime_min", "size_bytes", "fsk_suggested", "fsk_suspicious", "fsk_reason",
+    "synced_at",
 ]
 JSON_COLUMNS = {"genres", "audio_codecs", "audio_langs", "subtitle_langs"}
 
@@ -30,6 +31,7 @@ _ITEM_COLDEF = {
     "video_codec": "TEXT", "width": "INTEGER", "height": "INTEGER",
     "resolution": "TEXT", "hdr": "TEXT", "audio_codecs": "TEXT",
     "audio_langs": "TEXT", "subtitle_langs": "TEXT", "runtime_min": "INTEGER",
+    "size_bytes": "INTEGER",
     "fsk_suggested": "TEXT", "fsk_suspicious": "INTEGER", "fsk_reason": "TEXT",
     "synced_at": "TEXT",
 }
@@ -48,6 +50,7 @@ CREATE TABLE IF NOT EXISTS media_items (
   completeness TEXT, missing_episodes INTEGER,
   video_codec TEXT, width INTEGER, height INTEGER, resolution TEXT, hdr TEXT,
   audio_codecs TEXT, audio_langs TEXT, subtitle_langs TEXT, runtime_min INTEGER,
+  size_bytes INTEGER,
   fsk_suggested TEXT, fsk_suspicious INTEGER, fsk_reason TEXT,
   synced_at TEXT,
   UNIQUE(source_kind, source_id)

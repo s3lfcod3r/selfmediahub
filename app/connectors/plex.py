@@ -87,4 +87,41 @@ class PlexConnector(Connector):
                 item["video_codec"] = media[0].get("videoCodec")
                 item["width"] = media[0].get("width")
                 item["height"] = media[0].get("height")
+                parts = media[0].get("Part") or []
+                if parts:
+                    item["size_bytes"] = parts[0].get("size")
         return item
+
+    def _res(self, h):
+        h = h or 0
+        if h >= 2000:
+            return "4K"
+        if h >= 1000:
+            return "1080p"
+        if h >= 700:
+            return "720p"
+        return "SD" if h > 0 else None
+
+    def fetch_episodes(self, series_id: str) -> list:
+        """Alle Episoden einer Serie (live, read-only)."""
+        data = self._get(f"/library/metadata/{series_id}/allLeaves")
+        episodes = []
+        for m in data.get("Metadata", []):
+            media = m.get("Media") or []
+            v = media[0] if media else {}
+            parts = v.get("Part") or []
+            dur = m.get("duration")
+            episodes.append({
+                "season": m.get("parentIndex"),
+                "episode": m.get("index"),
+                "name": m.get("title", ""),
+                "video_codec": v.get("videoCodec"),
+                "height": v.get("height"),
+                "resolution": self._res(v.get("height")),
+                "size_bytes": parts[0].get("size") if parts else None,
+                "runtime_min": round(dur / 60000) if dur else None,
+                "audio_langs": [], "subtitle_langs": [],
+            })
+        episodes.sort(key=lambda e: ((e["season"] if e["season"] is not None else 999),
+                                     (e["episode"] if e["episode"] is not None else 999)))
+        return episodes

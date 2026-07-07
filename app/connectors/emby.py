@@ -24,6 +24,21 @@ def _dedupe(seq):
     return out
 
 
+def _resolution_label(height):
+    h = height or 0
+    if h >= 2000:
+        return "4K"
+    if h >= 1000:
+        return "1080p"
+    if h >= 700:
+        return "720p"
+    if h >= 570:
+        return "576p"
+    if h >= 400:
+        return "480p"
+    return "SD" if h > 0 else None
+
+
 def tech_from_streams(streams: list) -> dict:
     """Technische Merkmale aus Emby/Jellyfin-MediaStreams ziehen."""
     video_codec = width = height = hdr = None
@@ -142,4 +157,36 @@ class EmbyConnector(Connector):
             sources = it.get("MediaSources") or []
             streams = sources[0].get("MediaStreams") if sources else []
             item.update(tech_from_streams(streams))
+            if sources:
+                item["size_bytes"] = sources[0].get("Size")
         return item
+
+    def fetch_episodes(self, series_id: str) -> list:
+        """Alle Episoden einer Serie mit Technik holen (live, read-only)."""
+        uid = self._admin_user_id()
+        params = {
+            "Recursive": "true",
+            "IncludeItemTypes": "Episode",
+            "ParentId": series_id,
+            "Fields": "MediaSources,RunTimeTicks,Overview",
+            "EnableImages": "false",
+        }
+        data = self._get(f"/Users/{uid}/Items", params)
+        episodes = []
+        for it in data.get("Items", []):
+            sources = it.get("MediaSources") or []
+            streams = sources[0].get("MediaStreams") if sources else []
+            ticks = it.get("RunTimeTicks")
+            ep = {
+                "season": it.get("ParentIndexNumber"),
+                "episode": it.get("IndexNumber"),
+                "name": it.get("Name", ""),
+                "size_bytes": sources[0].get("Size") if sources else None,
+                "runtime_min": round(ticks / TICKS_PER_MINUTE) if ticks else None,
+            }
+            ep.update(tech_from_streams(streams))
+            ep["resolution"] = _resolution_label(ep.get("height"))
+            episodes.append(ep)
+        episodes.sort(key=lambda e: ((e["season"] if e["season"] is not None else 999),
+                                     (e["episode"] if e["episode"] is not None else 999)))
+        return episodes

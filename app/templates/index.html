@@ -56,6 +56,11 @@
   <div class="empty hidden" id="empty">Keine Eintraege - passe die Filter an oder lies neu ein.</div>
 </main>
 
+<div class="modal" id="modal">
+  <button class="modal-close" id="modalClose" aria-label="Schliessen">&times;</button>
+  <div class="modal-panel" id="modalPanel"></div>
+</div>
+
 <script>
   window.__DATA__ = {{ items_json | safe }};
 </script>

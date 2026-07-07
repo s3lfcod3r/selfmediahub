@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, Request
 
 from .. import config, db
-from ..services import fsk, rules, sync as sync_service, tags
+from ..services import fsk, queries, rules, sync as sync_service, tags
 
 router = APIRouter(prefix="/api")
 
@@ -21,6 +21,27 @@ def api_sync():
 @router.get("/sync/status")
 def api_sync_status():
     return sync_service.get_state()
+
+
+# -- Detailansicht (Item + Episoden live) -----------------------------------
+@router.get("/items/{item_id}/detail")
+def api_item_detail(item_id: int):
+    item = queries.get_item(item_id)
+    if not item:
+        raise HTTPException(status_code=404, detail="Eintrag nicht gefunden")
+    item["tags"] = tags.tags_for_items().get(item_id, [])
+
+    episodes, note = [], None
+    if item["item_type"] == "Serie":
+        conn = sync_service.connector_for(item["source_kind"])
+        if conn is not None and hasattr(conn, "fetch_episodes"):
+            try:
+                episodes = conn.fetch_episodes(item["source_id"])
+            except Exception as exc:  # noqa: BLE001
+                note = f"Episoden konnten nicht geladen werden: {exc}"
+        else:
+            note = "Episodendetails sind fuer diese Quelle nicht verfuegbar."
+    return {"item": item, "episodes": episodes, "note": note}
 
 
 # -- Metadaten fuer den Regel-Builder --------------------------------------

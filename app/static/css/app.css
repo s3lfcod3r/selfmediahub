@@ -221,7 +221,7 @@ select.field {
 .tablewrap { overflow-x: auto; padding-bottom: 60px; }
 table.list { width: 100%; border-collapse: collapse; font-size: 14px; }
 table.list th {
-  text-align: left; position: sticky; top: 112px;
+  text-align: left;
   background: var(--self-bg-1);
   font-family: var(--self-font-mono); font-size: 11px; letter-spacing: 0.1em;
   text-transform: uppercase; color: var(--self-text-2);
@@ -364,8 +364,65 @@ table.list td.name { font-weight: 600; }
 .ok-note { color: var(--self-green); font-size: 14px; margin: 6px 0 10px; }
 .qc table.list th { top: 0; }
 
+/* --- Klickbare Eintraege ------------------------------------ */
+.card { cursor: pointer; }
+table.list tbody tr { cursor: pointer; }
+
+/* --- Detail-Fenster (Modal) --------------------------------- */
+.modal {
+  position: fixed; inset: 0; z-index: 60; display: none;
+  background: rgba(4, 7, 10, 0.72); backdrop-filter: blur(4px);
+  padding: 5vh 16px; overflow-y: auto;
+}
+.modal.open { display: block; }
+.modal-panel {
+  max-width: 900px; margin: 0 auto;
+  background: var(--self-bg-1); border: 1px solid var(--self-line-strong);
+  border-radius: var(--self-radius); box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.9);
+  overflow: hidden;
+}
+.modal-head { display: flex; gap: 20px; padding: 24px; border-bottom: 1px solid var(--self-line); }
+.modal-poster {
+  width: 130px; flex: none; aspect-ratio: 2/3; border-radius: var(--self-radius-sm);
+  object-fit: cover; background: var(--self-bg-2); border: 1px solid var(--self-line);
+}
+.modal-title { font-size: 24px; font-weight: 800; margin: 0 0 4px; }
+.modal-sub { color: var(--self-text-3); font-family: var(--self-font-mono); font-size: 13px; }
+.modal-badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+.modal-close {
+  position: absolute; top: 5vh; right: calc(50% - 450px + 8px);
+  background: var(--self-bg-3); border: 1px solid var(--self-line-strong);
+  color: var(--self-text); border-radius: 999px; width: 34px; height: 34px;
+  cursor: pointer; font-size: 18px; line-height: 1;
+}
+.modal-body { padding: 22px 24px; }
+.meta-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px 20px; margin-bottom: 18px;
+}
+.meta-grid .k { font-family: var(--self-font-mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--self-text-3); }
+.meta-grid .v { font-size: 14px; margin-top: 2px; }
+.overview { color: var(--self-text-2); font-size: 14px; line-height: 1.6; margin-bottom: 8px; }
+
+.season-h { font-family: var(--self-font-mono); font-size: 12px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--self-teal-bright);
+  margin: 20px 0 8px; padding-bottom: 6px; border-bottom: 1px solid var(--self-line); }
+.ep {
+  display: flex; align-items: center; gap: 12px; padding: 8px 4px;
+  border-bottom: 1px solid var(--self-line); font-size: 13px;
+}
+.ep .no { font-family: var(--self-font-mono); color: var(--self-text-3); width: 54px; flex: none; }
+.ep .en { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ep .et { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.modal-note { color: var(--self-yellow); font-size: 13px; margin: 10px 0; }
+.modal-loading { text-align: center; color: var(--self-text-2); padding: 40px; }
+
+@media (max-width: 940px) { .modal-close { right: 20px; } }
 @media (max-width: 720px) {
   .stats { grid-template-columns: repeat(2, 1fr); }
   .hero { padding: 22px 0 8px; }
   .nav { display: none; }
+  .modal-head { flex-direction: column; }
+  .modal-poster { width: 96px; }
 }

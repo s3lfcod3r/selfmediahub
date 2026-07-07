@@ -49,6 +49,17 @@ def build_connectors() -> list:
     return conns
 
 
+def connector_for(kind: str):
+    """Einzelnen Connector fuer eine Quelle bauen (z.B. fuer Detail-Abrufe)."""
+    if kind == "emby" and config.emby_configured():
+        return EmbyConnector(config.EMBY_URL, config.EMBY_API_KEY)
+    if kind == "jellyfin" and config.jellyfin_configured():
+        return JellyfinConnector(config.JELLYFIN_URL, config.JELLYFIN_API_KEY)
+    if kind == "plex" and config.plex_configured():
+        return PlexConnector(config.PLEX_URL, config.PLEX_TOKEN)
+    return None
+
+
 def _enrich_one(item: dict, existing: dict, cache: dict) -> None:
     analysis.enrich(item)
     prev = existing.get(item["source_id"])
