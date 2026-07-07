@@ -14,10 +14,13 @@ def _fail(exc: Exception):
 # -- Sync -------------------------------------------------------------------
 @router.post("/sync")
 def api_sync():
-    try:
-        return {"ok": True, **sync_service.run_sync()}
-    except Exception as exc:  # noqa: BLE001
-        _fail(exc)
+    """Startet den Sync im Hintergrund und kehrt sofort zurueck."""
+    return {"ok": True, **sync_service.start_background()}
+
+
+@router.get("/sync/status")
+def api_sync_status():
+    return sync_service.get_state()
 
 
 # -- Metadaten fuer den Regel-Builder --------------------------------------

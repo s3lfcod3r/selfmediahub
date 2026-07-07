@@ -26,23 +26,49 @@
     };
   }
 
+  var pollTimer;
+  function setLabel(txt) {
+    var label = document.getElementById("syncLabel");
+    if (label) { label.innerHTML = txt; }
+  }
+  function stopSync(resetText) {
+    clearInterval(pollTimer);
+    var btn = document.getElementById("syncBtn");
+    if (btn) { btn.disabled = false; }
+    setLabel(resetText || "Neu einlesen");
+  }
+  function phaseText(s) {
+    var spin = '<span class="spin" style="display:inline-block">&#8635;</span> ';
+    if (s.total && String(s.phase).indexOf("TMDb") !== -1) {
+      return spin + "Abgleich " + s.processed + "/" + s.total;
+    }
+    return spin + (s.phase || "Lese ein");
+  }
+  function poll() {
+    fetch("/api/sync/status").then(function (r) { return r.json(); }).then(function (s) {
+      if (s.error) { stopSync(); toast("Sync fehlgeschlagen: " + s.error, "err"); return; }
+      if (!s.running) {
+        clearInterval(pollTimer);
+        var n = s.result ? s.result.count : 0;
+        toast(n + " Eintraege - Seite wird aktualisiert ...", "ok");
+        setTimeout(function () { location.reload(); }, 900);
+        return;
+      }
+      setLabel(phaseText(s));
+    }).catch(function () { /* transienter Fehler - weiter pollen */ });
+  }
   function doSync() {
     var btn = document.getElementById("syncBtn");
-    var label = document.getElementById("syncLabel");
     btn.disabled = true;
-    if (label) { label.innerHTML = 'Lese ein <span class="spin" style="display:inline-block">&#8635;</span>'; }
+    setLabel('<span class="spin" style="display:inline-block">&#8635;</span> Starte ...');
     fetch("/api/sync", { method: "POST" })
-      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-      .then(function (res) {
-        if (!res.ok) { throw new Error(res.j.detail || "Fehler beim Einlesen"); }
-        toast(res.j.count + " Eintraege - Seite wird aktualisiert ...", "ok");
-        setTimeout(function () { location.reload(); }, 900);
+      .then(function (r) { return r.json(); })
+      .then(function () {
+        clearInterval(pollTimer);
+        pollTimer = setInterval(poll, 1500);
+        poll();
       })
-      .catch(function (e) {
-        toast("Sync fehlgeschlagen: " + e.message, "err");
-        btn.disabled = false;
-        if (label) { label.textContent = "Neu einlesen"; }
-      });
+      .catch(function (e) { stopSync(); toast("Start fehlgeschlagen: " + e.message, "err"); });
   }
 
   document.addEventListener("DOMContentLoaded", function () {

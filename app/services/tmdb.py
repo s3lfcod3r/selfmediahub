@@ -7,7 +7,7 @@ import requests
 from .. import config
 
 BASE = "https://api.themoviedb.org/3"
-TIMEOUT = 12
+TIMEOUT = 8
 DE_CERTS = {"0", "6", "12", "16", "18"}
 
 

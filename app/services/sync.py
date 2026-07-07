@@ -1,4 +1,10 @@
-"""Import/Scan-Pipeline: liest alle konfigurierten Quellen, reichert an, speichert."""
+"""Import/Scan-Pipeline: liest alle Quellen, reichert an (parallel), speichert.
+
+Laeuft im Hintergrund mit Fortschritts-State, damit die UI nicht blockiert.
+"""
+import json
+import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 
 from .. import config, db
@@ -7,6 +13,27 @@ from ..connectors.jellyfin import JellyfinConnector
 from ..connectors.local import LocalConnector
 from ..connectors.plex import PlexConnector
 from . import analysis, completeness, fsk, notify, rules, tmdb
+
+# Wieviele TMDb-Abfragen gleichzeitig (TMDb erlaubt reichlich).
+TMDB_WORKERS = 8
+# TMDb-Felder, die aus einem frueheren Sync uebernommen werden koennen.
+_CARRY = ("tmdb_id", "tmdb_seasons", "tmdb_episodes", "status", "fsk_suggested")
+
+_lock = threading.Lock()
+_thread = None
+_STATE = {"running": False, "phase": "", "processed": 0, "total": 0,
+          "result": None, "error": None, "at": None}
+
+
+# -- Fortschritt ------------------------------------------------------------
+def get_state() -> dict:
+    with _lock:
+        return dict(_STATE)
+
+
+def _set(**kw) -> None:
+    with _lock:
+        _STATE.update(kw)
 
 
 def build_connectors() -> list:
@@ -22,44 +49,106 @@ def build_connectors() -> list:
     return conns
 
 
-def _enrich(item: dict, cache: dict) -> None:
+def _enrich_one(item: dict, existing: dict, cache: dict) -> None:
     analysis.enrich(item)
-    tmdb.enrich(item, cache)
+    prev = existing.get(item["source_id"])
+    if prev and prev.get("tmdb_id"):
+        # Bereits abgeglichen -> TMDb-Daten uebernehmen, kein Netzabruf.
+        for field in _CARRY:
+            if item.get(field) is None:
+                item[field] = prev.get(field)
+        if not item.get("genres") and prev.get("genres"):
+            item["genres"] = json.loads(prev.get("genres") or "[]")
+    else:
+        tmdb.enrich(item, cache)
     completeness.compute(item)
     fsk.analyze(item)
 
 
 def run_sync() -> dict:
-    """Vollen Re-Sync aller Quellen ausfuehren."""
+    """Vollen Re-Sync aller Quellen ausfuehren (aktualisiert den Fortschritt)."""
     connectors = build_connectors()
     if not connectors:
         raise RuntimeError("Keine Medienquelle konfiguriert.")
 
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     cache: dict = {}
-    total, total_new, sources = 0, 0, []
+    groups, sources = [], []
 
+    # 1) Alle Quellen einlesen (schnell) -----------------------------------
     for conn in connectors:
+        _set(phase=f"Lese {conn.kind} ...")
         try:
             items = conn.fetch_items()
-            for it in items:
-                _enrich(it, cache)
-            res = db.upsert_items(conn.kind, items, now)
-            total += res["seen"]
-            total_new += len(res["new"])
-            sources.append({
-                "kind": conn.kind, "seen": res["seen"],
-                "new": len(res["new"]), "removed": res["removed"], "ok": True,
-            })
-        except Exception as exc:  # noqa: BLE001 - eine kaputte Quelle stoppt nicht den Rest
+            existing = {
+                r["source_id"]: dict(r)
+                for r in db.query("SELECT * FROM media_items WHERE source_kind=?", (conn.kind,))
+            }
+            groups.append((conn, items, existing))
+        except Exception as exc:  # noqa: BLE001 - kaputte Quelle stoppt Rest nicht
             sources.append({"kind": conn.kind, "ok": False, "error": str(exc)})
 
+    total = sum(len(items) for _c, items, _e in groups)
+    _set(total=total, processed=0, phase="Analysiere & gleiche mit TMDb ab ...")
+
+    # 2) Anreichern (parallel) ---------------------------------------------
+    processed = 0
+    with ThreadPoolExecutor(max_workers=TMDB_WORKERS) as pool:
+        futures = [
+            pool.submit(_enrich_one, it, existing, cache)
+            for _conn, items, existing in groups for it in items
+        ]
+        for fut in as_completed(futures):
+            try:
+                fut.result()
+            except Exception:  # noqa: BLE001 - einzelnes Item darf nicht alles kippen
+                pass
+            processed += 1
+            if processed % 20 == 0 or processed == total:
+                _set(processed=processed)
+
+    # 3) Speichern ----------------------------------------------------------
+    total_seen, total_new = 0, 0
+    for conn, items, _existing in groups:
+        _set(phase=f"Speichere {conn.kind} ...")
+        res = db.upsert_items(conn.kind, items, now)
+        total_seen += res["seen"]
+        total_new += len(res["new"])
+        sources.append({"kind": conn.kind, "seen": res["seen"],
+                        "new": len(res["new"]), "removed": res["removed"], "ok": True})
+
+    _set(phase="Wende Regeln an ...")
     rule_res = rules.apply_all()
     db.set_meta("last_sync", now)
-    db.set_meta("last_sync_count", str(total))
+    db.set_meta("last_sync_count", str(total_seen))
 
     if total_new:
         notify.send("new_items", f"{total_new} neue Eintraege in der Mediathek", {"count": total_new})
 
-    return {"count": total, "new": total_new, "at": now,
+    return {"count": total_seen, "new": total_new, "at": now,
             "sources": sources, "rules": rule_res}
+
+
+# -- Hintergrundlauf --------------------------------------------------------
+def _run_guarded() -> None:
+    try:
+        result = run_sync()
+        _set(result=result, error=None, phase="Fertig",
+             at=datetime.now(timezone.utc).isoformat(timespec="seconds"))
+    except Exception as exc:  # noqa: BLE001
+        _set(error=str(exc), phase="Fehler")
+    finally:
+        _set(running=False)
+
+
+def start_background() -> dict:
+    """Sync in einem Hintergrund-Thread starten. Nie zwei gleichzeitig."""
+    global _thread
+    with _lock:
+        if _STATE.get("running"):
+            return {"started": False, "running": True}
+        _STATE.update({"running": True, "phase": "Starte ...", "processed": 0,
+                       "total": 0, "result": None, "error": None})
+    _thread = threading.Thread(target=_run_guarded, name="smh-sync", daemon=True)
+    _thread.start()
+    return {"started": True, "running": True}
