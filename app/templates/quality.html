@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% set active = 'quality' %}
+{% block title %}{{ app.APP_NAME }} - Qualitaetskontrolle{% endblock %}
+
+{% macro row(i, extra='') %}
+<tr>
+  <td class="name">{{ i.name }}{% if i.year %} <span class="mono" style="color:var(--self-text-3)">({{ i.year }})</span>{% endif %}</td>
+  <td class="mono" style="color:var(--self-text-2)">{{ i.library_name }}</td>
+  <td>{{ extra | safe }}</td>
+  <td style="text-align:right">
+    {% if allow_write and i.source_kind == 'emby' and i.fsk_suggested %}
+      <button class="btn btn-small fsk-write" data-id="{{ i.id }}" data-rating="{{ i.fsk_suggested }}">
+        {{ i.fsk_suggested }} in Emby setzen</button>
+    {% endif %}
+  </td>
+</tr>
+{% endmacro %}
+
+{% block body %}
+{% include '_topbar.html' %}
+<main class="wrap">
+  <section class="hero">
+    <p class="label">Qualitaetskontrolle</p>
+    <h1>Wo hakt es in der Sammlung?</h1>
+    <p>Gezielt die Problemfaelle - fehlende Freigaben, unplausible FSK, unvollstaendige
+       Serien und schwache Aufloesung.
+       {% if not tmdb %}<br><span style="color:var(--self-yellow)">Hinweis: Ohne TMDb-Key gibt es keine FSK-Vorschlaege und keine Vollstaendigkeitspruefung.</span>{% endif %}
+       {% if not allow_write %}<br><span style="color:var(--self-text-3)">FSK-Zurueckschreiben ist deaktiviert (read-only). Aktivieren mit <code>ALLOW_EMBY_WRITE=1</code>.</span>{% endif %}
+    </p>
+  </section>
+
+  <section class="qc">
+    <h2 class="qc-head">Ohne Freigabe <span class="badge-count">{{ problems.no_rating|length }}</span></h2>
+    {% if problems.no_rating %}
+    <table class="list"><tbody>
+      {% for i in problems.no_rating[:200] %}
+        {{ row(i, ('<span class="pill">Vorschlag: ' ~ i.fsk_suggested ~ '</span>') if i.fsk_suggested else '<span style="color:var(--self-text-3)">kein Vorschlag</span>') }}
+      {% endfor %}
+    </tbody></table>
+    {% else %}<p class="ok-note">Alles hat eine Freigabe.</p>{% endif %}
+
+    <h2 class="qc-head">Freigabe wirkt unplausibel <span class="badge-count">{{ problems.suspicious|length }}</span></h2>
+    {% if problems.suspicious %}
+    <table class="list"><tbody>
+      {% for i in problems.suspicious[:200] %}
+        {{ row(i, '<span class="pill bad">' ~ (i.official_rating or 'ohne') ~ '</span> <span style="color:var(--self-text-2)">' ~ i.fsk_reason ~ '</span>') }}
+      {% endfor %}
+    </tbody></table>
+    {% else %}<p class="ok-note">Keine auffaelligen Freigaben.</p>{% endif %}
+
+    <h2 class="qc-head">Unvollstaendige Serien <span class="badge-count">{{ problems.incomplete|length }}</span></h2>
+    {% if problems.incomplete %}
+    <table class="list"><tbody>
+      {% for i in problems.incomplete[:200] %}
+        {{ row(i, '<span class="pill bad">' ~ (i.have_episodes or 0) ~ ' / ' ~ (i.tmdb_episodes or '?') ~ ' Episoden</span>' ~ ('<span class="pill" style="margin-left:6px">fehlen ' ~ i.missing_episodes ~ '</span>' if i.missing_episodes else '')) }}
+      {% endfor %}
+    </tbody></table>
+    {% else %}<p class="ok-note">Keine Luecken erkannt (soweit pruefbar).</p>{% endif %}
+
+    <h2 class="qc-head">Filme unter 720p <span class="badge-count">{{ problems.lowres|length }}</span></h2>
+    {% if problems.lowres %}
+    <table class="list"><tbody>
+      {% for i in problems.lowres[:200] %}
+        {{ row(i, '<span class="pill bad">' ~ (i.resolution or 'unbekannt') ~ '</span>' ~ ('<span class="pill" style="margin-left:6px">' ~ i.video_codec ~ '</span>' if i.video_codec else '')) }}
+      {% endfor %}
+    </tbody></table>
+    {% else %}<p class="ok-note">Keine niedrig aufgeloesten Filme.</p>{% endif %}
+  </section>
+</main>
+
+<script>
+document.querySelectorAll(".fsk-write").forEach(function (b) {
+  b.onclick = function () {
+    b.disabled = true;
+    fetch("/api/fsk/write", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ item_id: +b.getAttribute("data-id"), rating: b.getAttribute("data-rating") }) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        if (!res.ok) { throw new Error(res.j.detail || "Fehler"); }
+        window.smhToast("Freigabe " + res.j.rating + " in Emby gesetzt", "ok");
+        b.closest("tr").style.opacity = 0.4; b.remove();
+      })
+      .catch(function (e) { window.smhToast("Fehlgeschlagen: " + e.message, "err"); b.disabled = false; });
+  };
+});
+</script>
+{% endblock %}

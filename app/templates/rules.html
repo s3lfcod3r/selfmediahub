@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% set active = 'rules' %}
+{% block title %}{{ app.APP_NAME }} - Regeln{% endblock %}
+{% block body %}
+{% include '_topbar.html' %}
+<main class="wrap">
+  <section class="hero">
+    <p class="label">Regel-Engine</p>
+    <h1>Automatisch taggen &amp; klassifizieren</h1>
+    <p>Bedingungen mit UND/ODER (NICHT ueber "ist nicht"/"enthaelt nicht"), mehrere Aktionen,
+       Prioritaeten. Regeln laufen bei jedem Sync und auf Knopfdruck.</p>
+    <button class="btn btn-primary" id="applyBtn" style="margin-top:14px">Alle Regeln jetzt anwenden</button>
+  </section>
+
+  <section class="panel-card">
+    <h2 class="card-h" id="editorTitle">Neue Regel</h2>
+    <div class="form-row">
+      <input class="field" id="rName" placeholder="Regelname (z.B. '4K markieren')" style="flex:2">
+      <select class="field" id="rMatch"><option value="all">Alle Bedingungen (UND)</option><option value="any">Eine Bedingung (ODER)</option></select>
+      <input class="field" id="rPrio" type="number" value="100" title="Prioritaet" style="width:90px">
+      <label class="chk"><input type="checkbox" id="rEnabled" checked> aktiv</label>
+    </div>
+
+    <p class="label" style="margin-top:16px">Bedingungen</p>
+    <div id="conds"></div>
+    <button class="btn btn-small" id="addCond">+ Bedingung</button>
+
+    <p class="label" style="margin-top:16px">Aktionen - Tag setzen</p>
+    <div id="acts"></div>
+    <button class="btn btn-small" id="addAct">+ Aktion</button>
+
+    <div class="form-row" style="margin-top:18px">
+      <button class="btn btn-primary" id="saveBtn">Regel speichern</button>
+      <button class="btn" id="resetBtn">Zuruecksetzen</button>
+    </div>
+  </section>
+
+  <section class="panel-card">
+    <h2 class="card-h">Vorhandene Regeln</h2>
+    <div id="ruleList" class="rulelist"></div>
+  </section>
+</main>
+
+<script>
+var FIELDS = {{ fields | tojson }};
+var OPS = {{ ops | tojson }};
+var TAGS = {{ tags | tojson }};
+var editId = null;
+
+var FIELD_LABELS = {item_type:"Typ",library_name:"Bibliothek",official_rating:"Freigabe",
+  community_rating:"Bewertung",year:"Jahr",genres:"Genre",audio_langs:"Audiosprache",
+  subtitle_langs:"Untertitel",audio_codecs:"Audio-Codec",video_codec:"Video-Codec",
+  resolution:"Aufloesung",hdr:"HDR",completeness:"Vollstaendigkeit",
+  missing_episodes:"Fehlende Episoden",fsk_suspicious:"FSK auffaellig",status:"Status",runtime_min:"Laufzeit (min)"};
+var OP_LABELS = {equals:"ist",not_equals:"ist nicht",contains:"enthaelt",not_contains:"enthaelt nicht",
+  gt:"groesser",lt:"kleiner",gte:"groesser/gleich",lte:"kleiner/gleich",is_empty:"ist leer",is_not_empty:"ist nicht leer"};
+
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function opt(v,l,sel){return '<option value="'+esc(v)+'"'+(sel===v?" selected":"")+'>'+esc(l)+'</option>';}
+
+function condRow(c){
+  c=c||{field:FIELDS[0],op:"equals",value:""};
+  var f=FIELDS.map(function(x){return opt(x,FIELD_LABELS[x]||x,c.field);}).join("");
+  var o=OPS.map(function(x){return opt(x,OP_LABELS[x]||x,c.op);}).join("");
+  var d=document.createElement("div");d.className="cond form-row";
+  d.innerHTML='<select class="field cf">'+f+'</select><select class="field co">'+o+'</select>'+
+    '<input class="field cv" placeholder="Wert" value="'+esc(c.value)+'" style="flex:1">'+
+    '<button class="btn btn-small crm">x</button>';
+  d.querySelector(".crm").onclick=function(){d.remove();};
+  return d;
+}
+function actRow(a){
+  a=a||{type:"add_tag",tag_id:(TAGS[0]||{}).id};
+  var t=TAGS.map(function(x){return opt(x.id,(x.icon?x.icon+" ":"")+x.name,String(a.tag_id));}).join("");
+  var d=document.createElement("div");d.className="act form-row";
+  d.innerHTML='<span class="mono" style="color:var(--self-text-2);align-self:center">Tag hinzufuegen:</span>'+
+    '<select class="field av" style="flex:1">'+t+'</select><button class="btn btn-small arm">x</button>';
+  d.querySelector(".arm").onclick=function(){d.remove();};
+  return d;
+}
+document.getElementById("addCond").onclick=function(){document.getElementById("conds").appendChild(condRow());};
+document.getElementById("addAct").onclick=function(){
+  if(!TAGS.length){window.smhToast("Erst einen Tag anlegen","err");return;}
+  document.getElementById("acts").appendChild(actRow());
+};
+
+function collect(){
+  var conds=[].map.call(document.querySelectorAll("#conds .cond"),function(d){
+    return {field:d.querySelector(".cf").value,op:d.querySelector(".co").value,value:d.querySelector(".cv").value};
+  });
+  var acts=[].map.call(document.querySelectorAll("#acts .act"),function(d){
+    return {type:"add_tag",tag_id:+d.querySelector(".av").value};
+  });
+  return {name:document.getElementById("rName").value.trim()||"Regel",
+    match_type:document.getElementById("rMatch").value,
+    priority:+document.getElementById("rPrio").value,
+    enabled:document.getElementById("rEnabled").checked,
+    conditions:conds,actions:acts};
+}
+function reset(){
+  editId=null;document.getElementById("editorTitle").textContent="Neue Regel";
+  document.getElementById("rName").value="";document.getElementById("rMatch").value="all";
+  document.getElementById("rPrio").value=100;document.getElementById("rEnabled").checked=true;
+  document.getElementById("conds").innerHTML="";document.getElementById("acts").innerHTML="";
+  document.getElementById("conds").appendChild(condRow());
+}
+document.getElementById("resetBtn").onclick=reset;
+
+document.getElementById("saveBtn").onclick=function(){
+  var body=collect();
+  if(!body.conditions.length){window.smhToast("Mindestens eine Bedingung","err");return;}
+  if(!body.actions.length){window.smhToast("Mindestens eine Aktion (Tag)","err");return;}
+  var url=editId?("/api/rules/"+editId):"/api/rules";
+  fetch(url,{method:editId?"PUT":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
+    .then(function(r){return r.json();}).then(function(){window.smhToast("Regel gespeichert","ok");reset();loadRules();});
+};
+
+function summary(r){
+  var conds=JSON.parse(r.conditions||"[]").map(function(c){
+    return (FIELD_LABELS[c.field]||c.field)+" "+(OP_LABELS[c.op]||c.op)+(c.value?" "+c.value:"");
+  }).join(r.match_type==="all"?" UND ":" ODER ");
+  var acts=JSON.parse(r.actions||"[]").map(function(a){
+    var t=TAGS.filter(function(x){return x.id===a.tag_id;})[0];
+    return t?("+"+(t.icon?t.icon+" ":"")+t.name):"+Tag";
+  }).join(" ");
+  return esc(conds||"(keine Bedingung)")+' &rarr; <span style="color:var(--self-teal-bright)">'+esc(acts)+"</span>";
+}
+function loadRules(){
+  fetch("/api/rules").then(function(r){return r.json();}).then(function(d){
+    var el=document.getElementById("ruleList");
+    if(!d.rules.length){el.innerHTML='<p style="color:var(--self-text-2)">Noch keine Regeln.</p>';return;}
+    el.innerHTML=d.rules.map(function(r){
+      return '<div class="rulerow">'+
+        '<div><strong>'+esc(r.name)+'</strong> '+(r.enabled?'':'<span class="pill">inaktiv</span>')+
+        '<span class="mono" style="color:var(--self-text-3);margin-left:8px">Prio '+r.priority+'</span>'+
+        '<div style="color:var(--self-text-2);margin-top:4px;font-size:13px">'+summary(r)+'</div></div>'+
+        '<span class="spacer"></span>'+
+        '<button class="btn btn-small redit" data-id="'+r.id+'">Bearbeiten</button>'+
+        '<button class="btn btn-small rdel" data-id="'+r.id+'">Loeschen</button></div>';
+    }).join("");
+    document.querySelectorAll(".rdel").forEach(function(b){b.onclick=function(){
+      fetch("/api/rules/"+b.getAttribute("data-id"),{method:"DELETE"}).then(function(){loadRules();window.smhToast("Regel geloescht");});
+    };});
+    document.querySelectorAll(".redit").forEach(function(b){b.onclick=function(){
+      var r=d.rules.filter(function(x){return String(x.id)===b.getAttribute("data-id");})[0];
+      editId=r.id;document.getElementById("editorTitle").textContent="Regel bearbeiten: "+r.name;
+      document.getElementById("rName").value=r.name;document.getElementById("rMatch").value=r.match_type;
+      document.getElementById("rPrio").value=r.priority;document.getElementById("rEnabled").checked=!!r.enabled;
+      var cc=document.getElementById("conds");cc.innerHTML="";
+      JSON.parse(r.conditions||"[]").forEach(function(c){cc.appendChild(condRow(c));});
+      var ac=document.getElementById("acts");ac.innerHTML="";
+      JSON.parse(r.actions||"[]").forEach(function(a){ac.appendChild(actRow(a));});
+      window.scrollTo({top:0,behavior:"smooth"});
+    };});
+  });
+}
+document.getElementById("applyBtn").onclick=function(){
+  var b=document.getElementById("applyBtn");b.disabled=true;
+  fetch("/api/rules/apply",{method:"POST"}).then(function(r){return r.json();}).then(function(j){
+    window.smhToast(j.assignments+" Tag-Zuordnungen aus "+j.rules+" Regeln","ok");b.disabled=false;
+  }).catch(function(){b.disabled=false;});
+};
+reset();loadRules();
+</script>
+{% endblock %}

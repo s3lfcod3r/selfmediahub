@@ -16,7 +16,15 @@
   <Icon>https://raw.githubusercontent.com/s3lfcod3r/selfmediahub/main/icon.png</Icon>
   <Config Name="WebUI Port" Target="8092" Default="8092" Mode="tcp" Description="Port der Weboberflaeche" Type="Port" Display="always" Required="true" Mask="false">8092</Config>
   <Config Name="Daten (DB)" Target="/data" Default="/mnt/user/appdata/selfmediahub" Mode="rw" Description="Ablage der eigenen Datenbank" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/selfmediahub</Config>
-  <Config Name="Emby URL" Target="EMBY_URL" Default="http://192.168.1.19:8096" Description="Adresse deines Emby-Servers (ohne Slash am Ende)" Type="Variable" Display="always" Required="true" Mask="false"></Config>
-  <Config Name="Emby API Key" Target="EMBY_API_KEY" Default="" Description="Emby: Einstellungen -> Erweitert -> API-Schluessel" Type="Variable" Display="always" Required="true" Mask="true"></Config>
-  <Config Name="TMDb API Key (optional)" Target="TMDB_API_KEY" Default="" Description="themoviedb.org v3-Key. Erst ab Phase 2 (Metadaten-Abgleich)." Type="Variable" Display="always" Required="false" Mask="true"></Config>
+  <Config Name="Emby URL" Target="EMBY_URL" Default="http://192.168.1.19:8096" Description="Adresse deines Emby-Servers (ohne Slash am Ende)" Type="Variable" Display="always" Required="false" Mask="false"></Config>
+  <Config Name="Emby API Key" Target="EMBY_API_KEY" Default="" Description="Emby: Einstellungen -> Erweitert -> API-Schluessel" Type="Variable" Display="always" Required="false" Mask="true"></Config>
+  <Config Name="Jellyfin URL (optional)" Target="JELLYFIN_URL" Default="" Description="Adresse deines Jellyfin-Servers (ohne Slash am Ende)" Type="Variable" Display="always" Required="false" Mask="false"></Config>
+  <Config Name="Jellyfin API Key (optional)" Target="JELLYFIN_API_KEY" Default="" Description="Jellyfin: Dashboard -> API-Schluessel" Type="Variable" Display="always" Required="false" Mask="true"></Config>
+  <Config Name="Plex URL (optional)" Target="PLEX_URL" Default="" Description="Adresse deines Plex-Servers, z.B. http://192.168.1.19:32400" Type="Variable" Display="always" Required="false" Mask="false"></Config>
+  <Config Name="Plex Token (optional)" Target="PLEX_TOKEN" Default="" Description="Plex X-Plex-Token" Type="Variable" Display="always" Required="false" Mask="true"></Config>
+  <Config Name="Lokale Ordner (optional)" Target="LOCAL_PATHS" Default="" Description="Komma-getrennte Pfade im Container (Volumes mounten)" Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="TMDb API Key (optional)" Target="TMDB_API_KEY" Default="" Description="themoviedb.org v3-Key. Fuer FSK-Vorschlaege, Genres und Vollstaendigkeit." Type="Variable" Display="always" Required="false" Mask="true"></Config>
+  <Config Name="Scan-Intervall Stunden" Target="SCAN_INTERVAL_HOURS" Default="0" Description="Hintergrund-Scan alle N Stunden (0 = aus)" Type="Variable" Display="advanced" Required="false" Mask="false">0</Config>
+  <Config Name="Benachrichtigungs-Webhook" Target="NOTIFY_WEBHOOK_URL" Default="" Description="Generischer JSON-Webhook (Discord/ntfy/Apprise). Leer = aus." Type="Variable" Display="advanced" Required="false" Mask="false"></Config>
+  <Config Name="Emby-Schreiben erlauben (FSK)" Target="ALLOW_EMBY_WRITE" Default="0" Description="1 = FSK aktiv nach Emby zurueckschreiben. Standard 0 (read-only)." Type="Variable" Display="advanced" Required="false" Mask="false">0</Config>
 </Container>

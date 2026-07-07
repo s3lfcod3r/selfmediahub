@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% set active = 'tags' %}
+{% block title %}{{ app.APP_NAME }} - Tags{% endblock %}
+{% block body %}
+{% include '_topbar.html' %}
+<main class="wrap">
+  <section class="hero">
+    <p class="label">Tag-System</p>
+    <h1>Eigene Tags &amp; Klassifizierung</h1>
+    <p>Lege Tags mit Farbe, Icon und Prioritaet an. Sie erscheinen an Cover und in der
+       Liste - und lassen sich per <a href="/regeln">Regeln</a> automatisch vergeben.</p>
+  </section>
+
+  <section class="panel-card">
+    <h2 class="card-h">Neuen Tag anlegen</h2>
+    <div class="form-row">
+      <input class="field" id="tName" placeholder="Name (z.B. 4K, Deutsch, Anime)" style="flex:2">
+      <input class="field" id="tIcon" placeholder="Icon (Emoji, optional)" style="width:150px">
+      <input class="field" id="tColor" type="color" value="#33a78c" style="width:56px;padding:4px">
+      <input class="field" id="tPrio" type="number" value="100" title="Prioritaet" style="width:90px">
+      <button class="btn btn-primary" id="tAdd">Anlegen</button>
+    </div>
+  </section>
+
+  <section class="panel-card">
+    <h2 class="card-h">Vorhandene Tags</h2>
+    <div id="tagList" class="taglist"></div>
+  </section>
+</main>
+
+<script>
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function load(){
+  fetch("/api/tags").then(function(r){return r.json();}).then(function(d){
+    var el=document.getElementById("tagList");
+    if(!d.tags.length){el.innerHTML='<p style="color:var(--self-text-2)">Noch keine Tags.</p>';return;}
+    el.innerHTML=d.tags.map(function(t){
+      return '<div class="tagrow" data-id="'+t.id+'">'+
+        '<span class="chip" style="border-color:'+esc(t.color)+';color:'+esc(t.color)+'">'+(t.icon?esc(t.icon)+" ":"")+esc(t.name)+'</span>'+
+        '<span class="mono" style="color:var(--self-text-3)">Prio '+t.priority+'</span>'+
+        '<span class="spacer"></span>'+
+        '<button class="btn btn-small tdel" data-id="'+t.id+'">Loeschen</button></div>';
+    }).join("");
+    document.querySelectorAll(".tdel").forEach(function(b){
+      b.onclick=function(){
+        fetch("/api/tags/"+b.getAttribute("data-id"),{method:"DELETE"}).then(function(){load();window.smhToast("Tag geloescht");});
+      };
+    });
+  });
+}
+document.getElementById("tAdd").onclick=function(){
+  var name=document.getElementById("tName").value.trim();
+  if(!name){window.smhToast("Name fehlt","err");return;}
+  fetch("/api/tags",{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({name:name,icon:document.getElementById("tIcon").value,
+      color:document.getElementById("tColor").value,priority:+document.getElementById("tPrio").value})})
+    .then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j};});})
+    .then(function(res){
+      if(!res.ok){throw new Error(res.j.detail||"Fehler");}
+      document.getElementById("tName").value="";document.getElementById("tIcon").value="";
+      window.smhToast("Tag angelegt","ok");load();
+    }).catch(function(e){window.smhToast(e.message,"err");});
+};
+load();
+</script>
+{% endblock %}

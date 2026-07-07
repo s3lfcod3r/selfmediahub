@@ -1,13 +1,23 @@
 """SelfMediaHub - FastAPI-Anwendung. Startpunkt fuer Container und lokal."""
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from . import config, db
 from .routes import api, health, pages
+from .services import scheduler
 
-app = FastAPI(title=config.APP_NAME, version=config.VERSION)
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    db.init_db()
+    scheduler.start()
+    yield
+
+
+app = FastAPI(title=config.APP_NAME, version=config.VERSION, lifespan=lifespan)
 
 _BASE = os.path.dirname(__file__)
 app.mount("/static", StaticFiles(directory=os.path.join(_BASE, "static")), name="static")
@@ -15,11 +25,6 @@ app.mount("/static", StaticFiles(directory=os.path.join(_BASE, "static")), name=
 app.include_router(health.router)
 app.include_router(api.router)
 app.include_router(pages.router)
-
-
-@app.on_event("startup")
-def _startup() -> None:
-    db.init_db()
 
 
 def main() -> None:

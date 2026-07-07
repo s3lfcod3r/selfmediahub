@@ -1,0 +1,19 @@
+<header class="topbar">
+  <div class="wrap topbar-inner">
+    <a href="/" class="wordmark" style="text-decoration:none">
+      <span class="self">Self</span><span class="rest">MediaHub</span>
+      <span class="badge">v{{ app.VERSION }}</span>
+    </a>
+    <nav class="nav" aria-label="Hauptnavigation">
+      <a href="/"          class="{{ 'active' if active == 'home' }}">Übersicht</a>
+      <a href="/qualitaet" class="{{ 'active' if active == 'quality' }}">Qualität</a>
+      <a href="/tags"      class="{{ 'active' if active == 'tags' }}">Tags</a>
+      <a href="/regeln"    class="{{ 'active' if active == 'rules' }}">Regeln</a>
+    </nav>
+    <div class="spacer"></div>
+    <button class="btn btn-icon" id="themeBtn" title="Hell/Dunkel" aria-label="Theme umschalten">◐</button>
+    <button class="btn btn-primary" id="syncBtn"><span id="syncLabel">Neu einlesen</span></button>
+  </div>
+</header>
+<div class="toast" id="toast"></div>
+<script src="/static/js/common.js"></script>
