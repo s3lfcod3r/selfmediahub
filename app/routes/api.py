@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, Request
 
 from .. import config, db
-from ..services import fsk, queries, rules, sync as sync_service, tags
+from ..services import fsk, queries, rules, sync as sync_service, tags, tmdb
 
 router = APIRouter(prefix="/api")
 
@@ -31,7 +31,7 @@ def api_item_detail(item_id: int):
         raise HTTPException(status_code=404, detail="Eintrag nicht gefunden")
     item["tags"] = tags.tags_for_items().get(item_id, [])
 
-    episodes, note = [], None
+    episodes, note, missing = [], None, []
     if item["item_type"] == "Serie":
         conn = sync_service.connector_for(item["source_kind"])
         if conn is not None and hasattr(conn, "fetch_episodes"):
@@ -41,7 +41,19 @@ def api_item_detail(item_id: int):
                 note = f"Episoden konnten nicht geladen werden: {exc}"
         else:
             note = "Episodendetails sind fuer diese Quelle nicht verfuegbar."
-    return {"item": item, "episodes": episodes, "note": note}
+
+        # Konkret fehlende Episoden ueber TMDb bestimmen
+        if episodes and item.get("tmdb_id"):
+            present = [(e["season"], e["episode"]) for e in episodes
+                       if e.get("season") is not None and e.get("episode") is not None]
+            missing = tmdb.missing_episodes(item["tmdb_id"], present)
+            for m in missing:
+                episodes.append({"season": m["season"], "episode": m["episode"],
+                                 "name": "", "missing": True})
+            episodes.sort(key=lambda e: ((e["season"] if e["season"] is not None else 999),
+                                         (e["episode"] if e["episode"] is not None else 999)))
+
+    return {"item": item, "episodes": episodes, "note": note, "missing_count": len(missing)}
 
 
 # -- Metadaten fuer den Regel-Builder --------------------------------------

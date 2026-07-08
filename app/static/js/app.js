@@ -236,9 +236,16 @@
         }
         var no = "S" + (e.season == null ? "?" : ("0" + e.season).slice(-2)) +
                  "E" + (e.episode == null ? "?" : ("0" + e.episode).slice(-2));
-        eps += '<div class="ep"><span class="no">' + no + '</span>' +
-          '<span class="en">' + esc(e.name || "") + '</span>' +
-          '<span class="et">' + epTech(e) + "</span></div>";
+        if (e.missing) {
+          eps += '<div class="ep missing"><span class="no">' + no + '</span>' +
+            '<span class="en">nicht vorhanden</span>' +
+            '<span class="et"><span class="pill bad">fehlt</span></span></div>';
+        } else {
+          var title = e.path ? ' title="' + esc(e.path) + '"' : "";
+          eps += '<div class="ep"' + title + '><span class="no">' + no + '</span>' +
+            '<span class="en">' + esc(e.name || "") + '</span>' +
+            '<span class="et">' + epTech(e) + "</span></div>";
+        }
       });
     }
     var note = d.note ? '<div class="modal-note">' + esc(d.note) + "</div>" : "";
@@ -251,6 +258,8 @@
         '<div class="modal-badges">' + badges.join("") + "</div></div></div>" +
       '<div class="modal-body">' +
         '<div class="meta-grid">' + meta + "</div>" +
+        (i.path ? '<div class="pathline"><div class="k">Pfad im Verzeichnis</div>' +
+                  '<div class="pv mono">' + esc(i.path) + "</div></div>" : "") +
         (i.overview ? '<div class="overview">' + esc(i.overview) + "</div>" : "") +
         note + eps + "</div>";
   }

@@ -11,7 +11,7 @@ IMAGE_MAX_HEIGHT = 450
 TICKS_PER_MINUTE = 600_000_000
 ITEM_FIELDS = (
     "OfficialRating,ProductionYear,Genres,CommunityRating,ChildCount,"
-    "RecursiveItemCount,Overview,SortName,ProviderIds,MediaSources,RunTimeTicks"
+    "RecursiveItemCount,Overview,SortName,ProviderIds,MediaSources,RunTimeTicks,Path"
 )
 LIBRARY_TYPES = ("movies", "tvshows", "mixed")
 
@@ -146,6 +146,7 @@ class EmbyConnector(Connector):
             "library_name": library_name,
             "child_count": it.get("ChildCount"),
             "overview": it.get("Overview") or "",
+            "path": it.get("Path") or "",
             "tmdb_id": providers.get("Tmdb") or providers.get("tmdb"),
             "imdb_id": providers.get("Imdb") or providers.get("imdb"),
             "runtime_min": round(ticks / TICKS_PER_MINUTE) if ticks else None,
@@ -168,7 +169,7 @@ class EmbyConnector(Connector):
             "Recursive": "true",
             "IncludeItemTypes": "Episode",
             "ParentId": series_id,
-            "Fields": "MediaSources,RunTimeTicks,Overview",
+            "Fields": "MediaSources,RunTimeTicks,Overview,Path",
             "EnableImages": "false",
         }
         data = self._get(f"/Users/{uid}/Items", params)
@@ -181,6 +182,7 @@ class EmbyConnector(Connector):
                 "season": it.get("ParentIndexNumber"),
                 "episode": it.get("IndexNumber"),
                 "name": it.get("Name", ""),
+                "path": it.get("Path") or "",
                 "size_bytes": sources[0].get("Size") if sources else None,
                 "runtime_min": round(ticks / TICKS_PER_MINUTE) if ticks else None,
             }

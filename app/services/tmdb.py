@@ -55,6 +55,32 @@ def _tv_cert(data: dict):
     return None
 
 
+def missing_episodes(tmdb_id, present) -> list:
+    """Fehlende Episoden ermitteln: TMDb-Staffeln vs. vorhandene (season, episode).
+
+    ``present`` = Iterable aus (season, episode). Rueckgabe: [{season, episode}].
+    Best-effort - leere Liste bei fehlendem Key/Fehler. Staffel 0 (Specials) wird
+    ignoriert.
+    """
+    if not config.tmdb_enabled() or not tmdb_id:
+        return []
+    try:
+        data = _get(f"/tv/{tmdb_id}")
+    except requests.RequestException:
+        return []
+    present_set = set(present)
+    missing = []
+    for season in data.get("seasons", []):
+        sn = season.get("season_number")
+        count = season.get("episode_count") or 0
+        if not sn or sn < 1:
+            continue
+        for ep in range(1, count + 1):
+            if (sn, ep) not in present_set:
+                missing.append({"season": sn, "episode": ep})
+    return missing
+
+
 def enrich(item: dict, cache: dict) -> dict:
     """Item mit TMDb-Daten anreichern (in-place). ``cache`` je Sync-Lauf."""
     if not config.tmdb_enabled():

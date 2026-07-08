@@ -61,6 +61,7 @@ class LocalConnector(Connector):
             "name": title,
             "sort_name": title,
             "year": year,
+            "path": path,
             "official_rating": "",
             "genres": [],
             "image_url": "",

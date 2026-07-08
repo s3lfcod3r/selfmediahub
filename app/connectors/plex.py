@@ -90,6 +90,7 @@ class PlexConnector(Connector):
                 parts = media[0].get("Part") or []
                 if parts:
                     item["size_bytes"] = parts[0].get("size")
+                    item["path"] = parts[0].get("file") or ""
         return item
 
     def _res(self, h):

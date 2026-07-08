@@ -415,8 +415,20 @@ table.list tbody tr { cursor: pointer; }
 .ep .no { font-family: var(--self-font-mono); color: var(--self-text-3); width: 54px; flex: none; }
 .ep .en { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ep .et { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.ep.missing { opacity: 0.72; }
+.ep.missing .no { color: var(--self-red); }
+.ep.missing .en { color: var(--self-text-3); font-style: italic; }
 .modal-note { color: var(--self-yellow); font-size: 13px; margin: 10px 0; }
 .modal-loading { text-align: center; color: var(--self-text-2); padding: 40px; }
+
+.pathline {
+  margin: 4px 0 18px; padding: 12px 14px;
+  background: var(--self-bg-0); border: 1px solid var(--self-line);
+  border-radius: var(--self-radius-sm);
+}
+.pathline .k { font-family: var(--self-font-mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--self-text-3); margin-bottom: 5px; }
+.pathline .pv { font-size: 13px; color: var(--self-ice-bright); word-break: break-all; }
 
 @media (max-width: 940px) { .modal-close { right: 20px; } }
 @media (max-width: 720px) {
