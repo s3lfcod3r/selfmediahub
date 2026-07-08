@@ -34,6 +34,7 @@ def index(request: Request):
         libraries=queries.get_libraries(),
         stats=queries.compute_stats(items),
         last_sync=db.get_meta("last_sync") or "",
+        allow_write=config.ALLOW_EMBY_WRITE,
     ))
 
 
@@ -56,15 +57,6 @@ def quality(request: Request):
     return templates.TemplateResponse(request, "quality.html", _ctx(
         request, problems=problems, stats=queries.compute_stats(items),
         allow_write=config.ALLOW_EMBY_WRITE, tmdb=config.tmdb_enabled(),
-    ))
-
-
-@router.get("/fsk", response_class=HTMLResponse)
-def fsk_page(request: Request):
-    items = [i for i in queries.get_items() if i["source_kind"] == "emby"]
-    return templates.TemplateResponse(request, "fsk.html", _ctx(
-        request, items=items, allow_write=config.ALLOW_EMBY_WRITE,
-        emby=config.emby_configured(),
     ))
 
 

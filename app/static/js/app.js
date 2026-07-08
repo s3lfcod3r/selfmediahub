@@ -98,6 +98,17 @@
     return rows;
   }
 
+  var FSK_STD = ["DE-0", "DE-6", "DE-12", "DE-16", "DE-18"];
+  function cardFsk(i) {
+    if (!window.__ALLOW_WRITE__ || i.source_kind !== "emby") { return ""; }
+    var cur = i.official_rating || "";
+    var opts = "";
+    if (cur && FSK_STD.indexOf(cur) === -1) { opts += '<option value="' + esc(cur) + '" selected>' + esc(cur) + "</option>"; }
+    FSK_STD.forEach(function (v) { opts += '<option value="' + v + '"' + (v === cur ? " selected" : "") + ">" + v + "</option>"; });
+    opts += '<option value=""' + (cur ? "" : " selected") + ">— keine —</option>";
+    return '<select class="cardfsk-sel" data-id="' + i.id + '" title="FSK setzen (speichert sofort)">' + opts + "</select>";
+  }
+
   function renderGrid(rows) {
     $("grid").innerHTML = rows.map(function (i) {
       var rating = i.official_rating
@@ -117,7 +128,8 @@
         '<div class="qrow">' + res + comp + "</div>" + img + "</div>" +
         '<div class="meta"><div class="t">' + esc(i.name) + "</div>" +
         '<div class="y">' + (i.year || "") + "</div>" +
-        (chips ? '<div class="chips">' + chips + "</div>" : "") + "</div></article>";
+        (chips ? '<div class="chips">' + chips + "</div>" : "") +
+        cardFsk(i) + "</div></article>";
     }).join("");
   }
 
@@ -184,10 +196,37 @@
     render();
   }
 
+  function saveCardFsk(sel) {
+    var id = sel.getAttribute("data-id");
+    var rating = sel.value;
+    sel.disabled = true;
+    fetch("/api/fsk/write", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ item_id: +id, rating: rating }) })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        if (!res.ok) { throw new Error(res.j.detail || "Fehler"); }
+        var item = ALL.filter(function (x) { return String(x.id) === String(id); })[0];
+        if (item) { item.official_rating = rating; }
+        var card = sel.closest(".card");
+        var badge = card ? card.querySelector(".rating") : null;
+        if (badge) {
+          badge.className = rating ? "rating" : "rating none";
+          badge.textContent = rating || "o. FSK";
+        }
+        window.smhToast("FSK " + (rating || "(entfernt)") + " gesetzt", "ok");
+      })
+      .catch(function (e) { window.smhToast("Fehlgeschlagen: " + e.message, "err"); })
+      .then(function () { sel.disabled = false; });
+  }
+
   function wire() {
     $("grid").onclick = function (e) {
+      if (e.target.closest(".cardfsk-sel")) { return; }
       var c = e.target.closest(".card"); if (c) { window.smhOpenDetail(c.getAttribute("data-id")); }
     };
+    $("grid").addEventListener("change", function (e) {
+      var sel = e.target.closest(".cardfsk-sel"); if (sel) { saveCardFsk(sel); }
+    });
     $("tbody").onclick = function (e) {
       var tr = e.target.closest("tr"); if (tr && tr.getAttribute("data-id")) { window.smhOpenDetail(tr.getAttribute("data-id")); }
     };

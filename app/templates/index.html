@@ -64,6 +64,7 @@
 
 <script>
   window.__DATA__ = {{ items_json | safe }};
+  window.__ALLOW_WRITE__ = {{ 'true' if allow_write else 'false' }};
 </script>
 <script src="/static/js/app.js"></script>
 {% endblock %}

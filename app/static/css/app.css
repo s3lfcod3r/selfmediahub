@@ -216,6 +216,15 @@ select.field {
   overflow: hidden; }
 .meta .y { color: var(--self-text-3); font-family: var(--self-font-mono);
   font-size: 12px; margin-top: 3px; }
+.cardfsk-sel {
+  width: 100%; margin-top: 8px; padding: 6px 8px;
+  background: var(--self-bg-2); border: 1px solid var(--self-line-strong);
+  border-radius: var(--self-radius-sm); color: var(--self-text);
+  font-family: var(--self-font-mono); font-size: 12px; cursor: pointer;
+  transition: border-color var(--self-dur-fast) var(--self-ease);
+}
+.cardfsk-sel:hover { border-color: var(--self-teal); }
+.cardfsk-sel:disabled { opacity: 0.6; cursor: progress; }
 
 /* --- Tabelle ------------------------------------------------ */
 .tablewrap { overflow-x: auto; padding-bottom: 60px; }
