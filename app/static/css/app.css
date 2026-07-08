@@ -342,6 +342,16 @@ table.list tr.changed td:first-child { box-shadow: inset 3px 0 0 var(--self-teal
   width: 34px; height: 51px; flex: none; object-fit: cover;
   border-radius: 4px; border: 1px solid var(--self-line); background: var(--self-bg-2);
 }
+.rec-apply {
+  cursor: pointer; background: transparent; color: var(--self-teal-bright);
+  border: 1px solid var(--self-line-strong);
+  transition: border-color var(--self-dur-fast) var(--self-ease),
+              background var(--self-dur-fast) var(--self-ease);
+}
+.rec-apply::after { content: " \2190"; opacity: 0.6; }
+.rec-apply:hover { border-color: var(--self-teal); background: rgba(51, 167, 140, 0.12); }
+.rec-apply[disabled] { cursor: default; opacity: 0.6; }
+.rec-apply[disabled]::after { content: ""; }
 
 /* --- Buttons klein ------------------------------------------ */
 .btn-small { font-size: 12px; padding: 6px 10px; }
