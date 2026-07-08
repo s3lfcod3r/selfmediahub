@@ -418,6 +418,20 @@ table.list tbody tr { cursor: pointer; }
 .ep.missing { opacity: 0.72; }
 .ep.missing .no { color: var(--self-red); }
 .ep.missing .en { color: var(--self-text-3); font-style: italic; }
+.ep-clickable { cursor: pointer; }
+.ep-clickable:hover { background: var(--self-bg-2); }
+.ep-chev { display: inline-block; margin-left: 6px; color: var(--self-text-3);
+  transition: transform var(--self-dur-fast) var(--self-ease); }
+.ep-clickable.open .ep-chev { transform: rotate(90deg); color: var(--self-teal-bright); }
+.ep-detail {
+  padding: 10px 14px 12px 68px; background: var(--self-bg-0);
+  border-bottom: 1px solid var(--self-line);
+}
+.epd-row { display: flex; gap: 12px; padding: 3px 0; font-size: 13px; }
+.epd-k { font-family: var(--self-font-mono); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--self-text-3); width: 120px; flex: none; }
+.epd-v { color: var(--self-text); }
+.epd-path { margin-top: 7px; font-size: 12px; color: var(--self-ice-bright); word-break: break-all; }
 .modal-note { color: var(--self-yellow); font-size: 13px; margin: 10px 0; }
 .modal-loading { text-align: center; color: var(--self-text-2); padding: 40px; }
 

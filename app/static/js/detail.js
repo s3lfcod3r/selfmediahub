@@ -38,6 +38,23 @@
     if ((e.subtitle_langs || []).length) { parts.push('<span class="pill">UT</span>'); }
     return parts.join("");
   }
+  function epDetailRow(k, v) {
+    if (v == null || v === "") { return ""; }
+    return '<div class="epd-row"><span class="epd-k">' + esc(k) + '</span><span class="epd-v">' + v + "</span></div>";
+  }
+  function epDetail(e) {
+    var h = "";
+    h += epDetailRow("Aufloesung", (e.width && e.height) ? (e.width + " × " + e.height) :
+                     (e.resolution ? esc(e.resolution) : null));
+    h += epDetailRow("HDR", (e.hdr && e.hdr !== "SDR") ? esc(e.hdr) : null);
+    h += epDetailRow("Video-Codec", e.video_codec ? esc(e.video_codec) : null);
+    h += epDetailRow("Audiosprachen", langList(e.audio_langs) || null);
+    h += epDetailRow("Untertitel", (e.subtitle_langs || []).length ? esc(langList(e.subtitle_langs)) : "keine");
+    h += epDetailRow("Groesse", fmtSize(e.size_bytes));
+    h += epDetailRow("Laufzeit", e.runtime_min ? e.runtime_min + " min" : null);
+    h += e.path ? '<div class="epd-path mono">' + esc(e.path) + "</div>" : "";
+    return h || '<div class="epd-row"><span class="epd-v" style="color:var(--self-text-3)">Keine weiteren Angaben</span></div>';
+  }
 
   function renderDetail(d) {
     var i = d.item;
@@ -74,7 +91,7 @@
     var eps = "";
     if (d.episodes && d.episodes.length) {
       var curSeason = null;
-      d.episodes.forEach(function (e) {
+      d.episodes.forEach(function (e, idx) {
         if (e.season !== curSeason) {
           curSeason = e.season;
           eps += '<div class="season-h">Staffel ' + (curSeason == null ? "?" : curSeason) + "</div>";
@@ -86,10 +103,10 @@
             '<span class="en">nicht vorhanden</span>' +
             '<span class="et"><span class="pill bad">fehlt</span></span></div>';
         } else {
-          var title = e.path ? ' title="' + esc(e.path) + '"' : "";
-          eps += '<div class="ep"' + title + '><span class="no">' + no + '</span>' +
+          eps += '<div class="ep ep-clickable" data-epidx="' + idx + '"><span class="no">' + no + '</span>' +
             '<span class="en">' + esc(e.name || "") + '</span>' +
-            '<span class="et">' + epTech(e) + "</span></div>";
+            '<span class="et">' + epTech(e) + '<span class="ep-chev">&rsaquo;</span></span></div>' +
+            '<div class="ep-detail hidden" id="epd-' + idx + '">' + epDetail(e) + "</div>";
         }
       });
     }
@@ -144,6 +161,13 @@
           .catch(function (e) { window.smhToast("Fehlgeschlagen: " + e.message, "err"); saveBtn.disabled = false; });
       };
     }
+
+    Array.prototype.forEach.call(document.querySelectorAll(".ep-clickable"), function (row) {
+      row.onclick = function () {
+        var det = document.getElementById("epd-" + row.getAttribute("data-epidx"));
+        if (det) { det.classList.toggle("hidden"); row.classList.toggle("open"); }
+      };
+    });
   }
 
   function openDetail(id) {
