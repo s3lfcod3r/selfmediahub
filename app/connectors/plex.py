@@ -93,15 +93,11 @@ class PlexConnector(Connector):
                     item["path"] = parts[0].get("file") or ""
         return item
 
-    def _res(self, h):
-        h = h or 0
-        if h >= 2000:
+    def _res(self, w, h):
+        w, h = w or 0, h or 0
+        if w >= 3800 or h >= 2000:
             return "4K"
-        if h >= 1000:
-            return "1080p"
-        if h >= 700:
-            return "720p"
-        return "SD" if h > 0 else None
+        return f"{h}p" if h > 0 else None
 
     def fetch_episodes(self, series_id: str) -> list:
         """Alle Episoden einer Serie (live, read-only)."""
@@ -118,7 +114,7 @@ class PlexConnector(Connector):
                 "name": m.get("title", ""),
                 "video_codec": v.get("videoCodec"),
                 "height": v.get("height"),
-                "resolution": self._res(v.get("height")),
+                "resolution": self._res(v.get("width"), v.get("height")),
                 "size_bytes": parts[0].get("size") if parts else None,
                 "runtime_min": round(dur / 60000) if dur else None,
                 "audio_langs": [], "subtitle_langs": [],

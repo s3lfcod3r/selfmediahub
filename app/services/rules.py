@@ -14,8 +14,8 @@ LIST_FIELDS = {"genres", "audio_langs", "subtitle_langs", "audio_codecs"}
 FIELDS = [
     "item_type", "library_name", "official_rating", "community_rating", "year",
     "genres", "audio_langs", "subtitle_langs", "audio_codecs", "video_codec",
-    "resolution", "hdr", "completeness", "missing_episodes", "fsk_suspicious",
-    "status", "runtime_min",
+    "resolution", "height", "width", "hdr", "completeness", "missing_episodes",
+    "fsk_suspicious", "status", "runtime_min",
 ]
 OPS = ["equals", "not_equals", "contains", "not_contains",
        "gt", "lt", "gte", "lte", "is_empty", "is_not_empty"]

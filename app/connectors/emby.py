@@ -24,19 +24,11 @@ def _dedupe(seq):
     return out
 
 
-def _resolution_label(height):
-    h = height or 0
-    if h >= 2000:
+def _resolution_label(width, height):
+    w, h = width or 0, height or 0
+    if w >= 3800 or h >= 2000:
         return "4K"
-    if h >= 1000:
-        return "1080p"
-    if h >= 700:
-        return "720p"
-    if h >= 570:
-        return "576p"
-    if h >= 400:
-        return "480p"
-    return "SD" if h > 0 else None
+    return f"{h}p" if h > 0 else None
 
 
 def tech_from_streams(streams: list) -> dict:
@@ -187,7 +179,7 @@ class EmbyConnector(Connector):
                 "runtime_min": round(ticks / TICKS_PER_MINUTE) if ticks else None,
             }
             ep.update(tech_from_streams(streams))
-            ep["resolution"] = _resolution_label(ep.get("height"))
+            ep["resolution"] = _resolution_label(ep.get("width"), ep.get("height"))
             episodes.append(ep)
         episodes.sort(key=lambda e: ((e["season"] if e["season"] is not None else 999),
                                      (e["episode"] if e["episode"] is not None else 999)))

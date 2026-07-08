@@ -14,7 +14,7 @@ router = APIRouter()
 _TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
 templates = Jinja2Templates(directory=_TEMPLATE_DIR)
 
-LOWRES = {"SD", "480p", "576p"}
+LOWRES_HEIGHT = 720  # Filme unter dieser Bildhoehe gelten als niedrig aufgeloest
 
 
 def _ctx(request: Request, **extra) -> dict:
@@ -50,7 +50,8 @@ def quality(request: Request):
         "no_rating": [i for i in items if not i.get("official_rating") and not is_acked(i)],
         "suspicious": [i for i in items if i.get("fsk_suspicious") and not is_acked(i)],
         "incomplete": [i for i in items if i.get("completeness") == "incomplete"],
-        "lowres": [i for i in items if i["item_type"] == "Film" and i.get("resolution") in LOWRES],
+        "lowres": [i for i in items if i["item_type"] == "Film"
+                   and i.get("height") and i["height"] < LOWRES_HEIGHT],
     }
     return templates.TemplateResponse(request, "quality.html", _ctx(
         request, problems=problems, stats=queries.compute_stats(items),

@@ -2,19 +2,14 @@
 
 
 def resolution_label(width, height):
+    """Echte Aufloesung nach Bildhoehe. Nur echtes UHD wird zu '4K'
+    zusammengefasst; alles andere zeigt die tatsaechliche Hoehe (z.B. 800p,
+    1600p), damit eigene Render-Aufloesungen korrekt erscheinen."""
     w, h = width or 0, height or 0
-    if h >= 2000 or w >= 3800:
+    if w >= 3800 or h >= 2000:
         return "4K"
-    if h >= 1000:
-        return "1080p"
-    if h >= 700:
-        return "720p"
-    if h >= 570:
-        return "576p"
-    if h >= 400:
-        return "480p"
     if h > 0:
-        return "SD"
+        return f"{h}p"
     return None
 
 

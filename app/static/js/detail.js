@@ -56,6 +56,8 @@
     var meta = "";
     meta += metaItem("Laufzeit", i.runtime_min ? i.runtime_min + " min" : null);
     meta += metaItem("Groesse", fmtSize(i.size_bytes));
+    meta += metaItem("Aufloesung", (i.width && i.height) ? (i.width + " × " + i.height) :
+                     (i.resolution ? esc(i.resolution) : null));
     meta += metaItem("Video-Codec", i.video_codec ? esc(i.video_codec) : null);
     meta += metaItem("Audiosprachen", langList(i.audio_langs) || null);
     meta += metaItem("Untertitel", (i.subtitle_langs || []).length ? esc(langList(i.subtitle_langs)) : "keine");
