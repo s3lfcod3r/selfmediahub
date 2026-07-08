@@ -176,6 +176,33 @@ def api_fsk_unack(item_id: int):
     return {"ok": True}
 
 
+@router.post("/fsk/write-bulk")
+async def api_fsk_write_bulk(request: Request):
+    """Mehrere FSK-Freigaben auf einmal nach Emby schreiben."""
+    d = await request.json()
+    changes = d.get("changes", [])
+    saved, errors = 0, []
+    for ch in changes:
+        rows = db.query("SELECT source_kind, source_id FROM media_items WHERE id=?",
+                        (int(ch["item_id"]),))
+        if not rows:
+            errors.append({"item_id": ch["item_id"], "error": "nicht gefunden"})
+            continue
+        r = dict(rows[0])
+        if r["source_kind"] != "emby":
+            errors.append({"item_id": ch["item_id"], "error": "nur Emby"})
+            continue
+        rating = (ch.get("rating") or "").strip()
+        try:
+            fsk.write_emby(r["source_id"], rating or None)
+            db.execute("UPDATE media_items SET official_rating=?, fsk_suspicious=0, fsk_reason='' WHERE id=?",
+                       (rating, int(ch["item_id"])))
+            saved += 1
+        except Exception as exc:  # noqa: BLE001
+            errors.append({"item_id": ch["item_id"], "error": str(exc)})
+    return {"ok": True, "saved": saved, "errors": errors}
+
+
 @router.post("/fsk/write")
 async def api_fsk_write(request: Request):
     d = await request.json()

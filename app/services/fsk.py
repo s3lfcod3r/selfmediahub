@@ -69,6 +69,21 @@ def analyze(item: dict) -> dict:
     return item
 
 
+_admin_uid = None
+
+
+def _emby_admin_uid(headers: dict) -> str:
+    """Admin-User-Id ermitteln und cachen (fuer Massen-Schreiben)."""
+    global _admin_uid
+    if _admin_uid:
+        return _admin_uid
+    users = requests.get(f"{config.EMBY_URL}/emby/Users", headers=headers, timeout=15).json()
+    _admin_uid = next((u["Id"] for u in users if u.get("Policy", {}).get("IsAdministrator")), None)
+    if not _admin_uid:
+        raise RuntimeError("Kein Emby-Admin gefunden")
+    return _admin_uid
+
+
 def write_emby(source_id: str, rating: str) -> None:
     """AUSNAHME: Freigabe aktiv nach Emby schreiben. Nur mit ALLOW_EMBY_WRITE."""
     if not config.ALLOW_EMBY_WRITE:
@@ -76,10 +91,7 @@ def write_emby(source_id: str, rating: str) -> None:
     if not config.emby_configured():
         raise RuntimeError("Emby ist nicht konfiguriert.")
     headers = {"X-Emby-Token": config.EMBY_API_KEY}
-    users = requests.get(f"{config.EMBY_URL}/emby/Users", headers=headers, timeout=15).json()
-    uid = next((u["Id"] for u in users if u.get("Policy", {}).get("IsAdministrator")), None)
-    if not uid:
-        raise RuntimeError("Kein Emby-Admin gefunden")
+    uid = _emby_admin_uid(headers)
     full = requests.get(
         f"{config.EMBY_URL}/emby/Users/{uid}/Items/{source_id}", headers=headers, timeout=15
     ).json()

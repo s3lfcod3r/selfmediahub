@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% set active = 'fsk' %}
+{% block title %}{{ app.APP_NAME }} - FSK-Freigaben{% endblock %}
+
+{% macro fsk_options(cur) %}
+  {% set standard = ['DE-0','DE-6','DE-12','DE-16','DE-18'] %}
+  {% if cur and cur not in standard %}<option value="{{ cur }}" selected>{{ cur }}</option>{% endif %}
+  {% for r in standard %}<option value="{{ r }}"{% if r == cur %} selected{% endif %}>{{ r }}</option>{% endfor %}
+  <option value=""{% if not cur %} selected{% endif %}>&mdash; keine &mdash;</option>
+{% endmacro %}
+
+{% block body %}
+{% include '_topbar.html' %}
+<main class="wrap">
+  <section class="hero">
+    <p class="label">FSK-Freigaben</p>
+    <h1>Alle Freigaben zentral setzen</h1>
+    <p>Waehle je Titel die Freigabe und speichere einzeln daneben - oder aendere mehrere
+       und klicke oben <strong>„Alle speichern"</strong>. Die Freigabe wird nach Emby geschrieben.</p>
+    {% if not emby %}
+      <p style="color:var(--self-yellow)">Keine Emby-Quelle konfiguriert.</p>
+    {% elif not allow_write %}
+      <p style="color:var(--self-yellow)">Schreiben ist deaktiviert. Setze am Container
+        <code>ALLOW_EMBY_WRITE=1</code>, um Freigaben zu aendern.</p>
+    {% endif %}
+  </section>
+
+  <div class="toolbar">
+    <label class="search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input type="search" id="fskSearch" placeholder="Titel suchen ..." autocomplete="off">
+    </label>
+    <select class="field" id="fskType"><option value="">Filme &amp; Serien</option>
+      <option value="Film">Nur Filme</option><option value="Serie">Nur Serien</option></select>
+    <label class="chk"><input type="checkbox" id="fskOnlyNone"> nur ohne Freigabe</label>
+    <div class="spacer"></div>
+    <button class="btn btn-primary" id="saveAll" disabled>Alle speichern (<span id="saveAllCount">0</span>)</button>
+  </div>
+
+  <div class="tablewrap">
+    <table class="list">
+      <thead><tr><th>Titel</th><th>Typ</th><th>Aktuell</th><th>Neue Freigabe</th><th></th></tr></thead>
+      <tbody id="fskBody">
+        {% for i in items %}
+        <tr data-id="{{ i.id }}" data-orig="{{ i.official_rating or '' }}"
+            data-name="{{ i.name|lower }}" data-type="{{ i.item_type }}">
+          <td class="name">{{ i.name }}{% if i.year %} <span class="mono" style="color:var(--self-text-3)">({{ i.year }})</span>{% endif %}</td>
+          <td class="mono" style="color:var(--self-text-2)">{{ i.item_type }}</td>
+          <td class="cur">{% if i.official_rating %}<span class="pill">{{ i.official_rating }}</span>{% else %}<span class="pill bad">ohne</span>{% endif %}</td>
+          <td><select class="field fsk-sel"{% if not allow_write %} disabled{% endif %}>{{ fsk_options(i.official_rating) }}</select></td>
+          <td style="text-align:right"><button class="btn btn-small fsk-row-save"{% if not allow_write %} disabled{% endif %}>Speichern</button></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="count-line" id="fskEmpty" {% if items %}style="display:none"{% endif %}>Keine Emby-Titel vorhanden.</div>
+</main>
+
+<div class="toast" id="toast"></div>
+<script src="/static/js/common.js"></script>
+<script>
+var allowWrite = {{ 'true' if allow_write else 'false' }};
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+
+function refreshCount(){
+  var n = document.querySelectorAll("#fskBody tr.changed").length;
+  document.getElementById("saveAllCount").textContent = n;
+  document.getElementById("saveAll").disabled = (n === 0) || !allowWrite;
+}
+function markChanged(tr){
+  var sel = tr.querySelector(".fsk-sel");
+  if (sel.value !== tr.getAttribute("data-orig")) { tr.classList.add("changed"); }
+  else { tr.classList.remove("changed"); }
+  refreshCount();
+}
+function setCurrent(tr, rating){
+  tr.setAttribute("data-orig", rating);
+  tr.querySelector(".cur").innerHTML = rating ? '<span class="pill">'+esc(rating)+'</span>' : '<span class="pill bad">ohne</span>';
+  tr.classList.remove("changed");
+}
+
+document.querySelectorAll(".fsk-sel").forEach(function(sel){
+  sel.onchange = function(){ markChanged(sel.closest("tr")); };
+});
+document.querySelectorAll(".fsk-row-save").forEach(function(b){
+  b.onclick = function(){
+    var tr = b.closest("tr"); var rating = tr.querySelector(".fsk-sel").value;
+    b.disabled = true;
+    fetch("/api/fsk/write", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({item_id:+tr.getAttribute("data-id"), rating:rating})})
+      .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
+      .then(function(res){ if(!res.ok){throw new Error(res.j.detail||"Fehler");}
+        setCurrent(tr, rating); refreshCount(); window.smhToast("Gespeichert: "+res.j.rating, "ok"); })
+      .catch(function(e){ window.smhToast("Fehlgeschlagen: "+e.message, "err"); })
+      .then(function(){ b.disabled = false; });
+  };
+});
+
+document.getElementById("saveAll").onclick = function(){
+  var changes = [];
+  document.querySelectorAll("#fskBody tr.changed").forEach(function(tr){
+    changes.push({item_id:+tr.getAttribute("data-id"), rating:tr.querySelector(".fsk-sel").value});
+  });
+  if(!changes.length){ return; }
+  var b = this; b.disabled = true; b.textContent = "Speichere " + changes.length + " ...";
+  fetch("/api/fsk/write-bulk", {method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({changes:changes})})
+    .then(function(r){return r.json();})
+    .then(function(res){
+      var msg = res.saved + " gespeichert" + (res.errors.length ? ", " + res.errors.length + " Fehler" : "");
+      window.smhToast(msg, res.errors.length ? "err" : "ok");
+      setTimeout(function(){ location.reload(); }, 1000);
+    })
+    .catch(function(){ window.smhToast("Fehlgeschlagen", "err"); b.disabled = false; b.innerHTML = 'Alle speichern (<span id="saveAllCount">0</span>)'; });
+};
+
+function applyFilters(){
+  var q = document.getElementById("fskSearch").value.toLowerCase();
+  var t = document.getElementById("fskType").value;
+  var only = document.getElementById("fskOnlyNone").checked;
+  document.querySelectorAll("#fskBody tr").forEach(function(tr){
+    var show = true;
+    if(q && tr.getAttribute("data-name").indexOf(q) === -1){ show = false; }
+    if(t && tr.getAttribute("data-type") !== t){ show = false; }
+    if(only && tr.getAttribute("data-orig") !== ""){ show = false; }
+    tr.style.display = show ? "" : "none";
+  });
+}
+document.getElementById("fskSearch").oninput = applyFilters;
+document.getElementById("fskType").onchange = applyFilters;
+document.getElementById("fskOnlyNone").onchange = applyFilters;
+</script>
+{% endblock %}

@@ -59,6 +59,15 @@ def quality(request: Request):
     ))
 
 
+@router.get("/fsk", response_class=HTMLResponse)
+def fsk_page(request: Request):
+    items = [i for i in queries.get_items() if i["source_kind"] == "emby"]
+    return templates.TemplateResponse(request, "fsk.html", _ctx(
+        request, items=items, allow_write=config.ALLOW_EMBY_WRITE,
+        emby=config.emby_configured(),
+    ))
+
+
 @router.get("/tags", response_class=HTMLResponse)
 def tags_page(request: Request):
     return templates.TemplateResponse(request, "tags.html", _ctx(

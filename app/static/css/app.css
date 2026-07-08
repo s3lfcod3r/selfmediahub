@@ -330,6 +330,10 @@ table.list td.name { font-weight: 600; }
 .pill.ok { color: var(--self-green); border-color: var(--self-green); }
 .pill.bad { color: var(--self-red); border-color: var(--self-red); }
 
+/* FSK-Seite: geaenderte Zeile hervorheben */
+table.list tr.changed td { background: rgba(51, 167, 140, 0.12); }
+table.list tr.changed td:first-child { box-shadow: inset 3px 0 0 var(--self-teal); }
+
 /* --- Buttons klein ------------------------------------------ */
 .btn-small { font-size: 12px; padding: 6px 10px; }
 
