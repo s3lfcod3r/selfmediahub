@@ -334,6 +334,15 @@ table.list td.name { font-weight: 600; }
 table.list tr.changed td { background: rgba(51, 167, 140, 0.12); }
 table.list tr.changed td:first-child { box-shadow: inset 3px 0 0 var(--self-teal); }
 
+/* FSK-Seite: Cover-Thumbnail + klickbarer Titel */
+.fsk-title { display: flex; align-items: center; gap: 12px; }
+.fsk-open { cursor: pointer; }
+.fsk-open:hover .fsk-t { color: var(--self-teal-bright); }
+.fsk-thumb {
+  width: 34px; height: 51px; flex: none; object-fit: cover;
+  border-radius: 4px; border: 1px solid var(--self-line); background: var(--self-bg-2);
+}
+
 /* --- Buttons klein ------------------------------------------ */
 .btn-small { font-size: 12px; padding: 6px 10px; }
 

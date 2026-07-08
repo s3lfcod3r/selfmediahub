@@ -45,7 +45,12 @@
         {% for i in items %}
         <tr data-id="{{ i.id }}" data-orig="{{ i.official_rating or '' }}"
             data-name="{{ i.name|lower }}" data-type="{{ i.item_type }}">
-          <td class="name">{{ i.name }}{% if i.year %} <span class="mono" style="color:var(--self-text-3)">({{ i.year }})</span>{% endif %}</td>
+          <td class="name">
+            <div class="fsk-title fsk-open" data-id="{{ i.id }}" title="Details anzeigen">
+              {% if i.image_url %}<img class="fsk-thumb" loading="lazy" src="{{ i.image_url }}" alt="" onerror="this.style.visibility='hidden'">{% else %}<span class="fsk-thumb"></span>{% endif %}
+              <span class="fsk-t">{{ i.name }}{% if i.year %} <span class="mono" style="color:var(--self-text-3)">({{ i.year }})</span>{% endif %}</span>
+            </div>
+          </td>
           <td class="mono" style="color:var(--self-text-2)">{{ i.item_type }}</td>
           <td class="cur">{% if i.official_rating %}<span class="pill">{{ i.official_rating }}</span>{% else %}<span class="pill bad">ohne</span>{% endif %}</td>
           <td><select class="field fsk-sel"{% if not allow_write %} disabled{% endif %}>{{ fsk_options(i.official_rating) }}</select></td>
@@ -58,6 +63,7 @@
   <div class="count-line" id="fskEmpty" {% if items %}style="display:none"{% endif %}>Keine Emby-Titel vorhanden.</div>
 </main>
 
+{% include '_modal.html' %}
 <div class="toast" id="toast"></div>
 <script src="/static/js/common.js"></script>
 <script>
@@ -131,5 +137,10 @@ function applyFilters(){
 document.getElementById("fskSearch").oninput = applyFilters;
 document.getElementById("fskType").onchange = applyFilters;
 document.getElementById("fskOnlyNone").onchange = applyFilters;
+
+// Titel/Cover anklicken -> Detail-Fenster
+document.querySelectorAll(".fsk-open").forEach(function(el){
+  el.onclick = function(){ window.smhOpenDetail(el.getAttribute("data-id")); };
+});
 </script>
 {% endblock %}
