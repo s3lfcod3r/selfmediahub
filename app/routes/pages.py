@@ -40,9 +40,15 @@ def index(request: Request):
 @router.get("/qualitaet", response_class=HTMLResponse)
 def quality(request: Request):
     items = queries.get_items()
+    acked = {(r["source_kind"], r["source_id"])
+             for r in db.query("SELECT source_kind, source_id FROM fsk_acks")}
+
+    def is_acked(i):
+        return (i["source_kind"], i["source_id"]) in acked
+
     problems = {
-        "no_rating": [i for i in items if not i.get("official_rating")],
-        "suspicious": [i for i in items if i.get("fsk_suspicious")],
+        "no_rating": [i for i in items if not i.get("official_rating") and not is_acked(i)],
+        "suspicious": [i for i in items if i.get("fsk_suspicious") and not is_acked(i)],
         "incomplete": [i for i in items if i.get("completeness") == "incomplete"],
         "lowres": [i for i in items if i["item_type"] == "Film" and i.get("resolution") in LOWRES],
     }

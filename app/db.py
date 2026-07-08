@@ -89,6 +89,13 @@ CREATE TABLE IF NOT EXISTS rules (
   conditions TEXT, actions TEXT,
   created_at TEXT
 );
+
+-- Vom Benutzer als "passt so" bestaetigte FSK-Faelle (ueberlebt Re-Sync).
+CREATE TABLE IF NOT EXISTS fsk_acks (
+  source_kind TEXT NOT NULL,
+  source_id   TEXT NOT NULL,
+  PRIMARY KEY (source_kind, source_id)
+);
 """
 
 

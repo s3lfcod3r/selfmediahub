@@ -151,6 +151,30 @@ def api_rules_apply():
 
 
 # -- FSK schreiben (Ausnahme, nur mit ALLOW_EMBY_WRITE) ---------------------
+@router.post("/fsk/ack")
+async def api_fsk_ack(request: Request):
+    """Einen FSK-Fall als 'passt so' bestaetigen (ueberlebt Re-Sync)."""
+    d = await request.json()
+    rows = db.query("SELECT source_kind, source_id FROM media_items WHERE id=?", (int(d["item_id"]),))
+    if not rows:
+        raise HTTPException(status_code=404, detail="Eintrag nicht gefunden")
+    db.execute(
+        "INSERT INTO fsk_acks(source_kind, source_id) VALUES(?, ?) "
+        "ON CONFLICT(source_kind, source_id) DO NOTHING",
+        (rows[0]["source_kind"], rows[0]["source_id"]),
+    )
+    return {"ok": True}
+
+
+@router.delete("/fsk/ack/{item_id}")
+def api_fsk_unack(item_id: int):
+    rows = db.query("SELECT source_kind, source_id FROM media_items WHERE id=?", (item_id,))
+    if rows:
+        db.execute("DELETE FROM fsk_acks WHERE source_kind=? AND source_id=?",
+                   (rows[0]["source_kind"], rows[0]["source_id"]))
+    return {"ok": True}
+
+
 @router.post("/fsk/write")
 async def api_fsk_write(request: Request):
     d = await request.json()
