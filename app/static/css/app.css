@@ -495,6 +495,15 @@ table.list tbody tr { cursor: pointer; }
 .fsk-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 .fsk-row .field { min-width: 130px; }
 
+.fsk-ack-box {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  margin: 4px 0 18px; padding: 12px 14px;
+  background: var(--self-bg-0); border: 1px solid var(--self-yellow);
+  border-radius: var(--self-radius-sm);
+}
+.fsk-ack-box span { color: var(--self-yellow); font-size: 13px; }
+.fsk-ack-box .btn { flex: none; }
+
 @media (max-width: 940px) { .modal-close { right: 20px; } }
 @media (max-width: 720px) {
   .stats { grid-template-columns: repeat(2, 1fr); }

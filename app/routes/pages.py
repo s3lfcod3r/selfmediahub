@@ -1,4 +1,4 @@
-"""HTML-Seiten: Uebersicht, Qualitaetskontrolle, Tags, Regeln, Setup."""
+"""HTML-Seiten: Uebersicht, Tags, Regeln, Setup."""
 import json
 import os
 
@@ -13,8 +13,6 @@ router = APIRouter()
 
 _TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
 templates = Jinja2Templates(directory=_TEMPLATE_DIR)
-
-LOWRES_HEIGHT = 720  # Filme unter dieser Bildhoehe gelten als niedrig aufgeloest
 
 
 def _ctx(request: Request, **extra) -> dict:
@@ -35,28 +33,6 @@ def index(request: Request):
         stats=queries.compute_stats(items),
         last_sync=db.get_meta("last_sync") or "",
         allow_write=config.ALLOW_EMBY_WRITE,
-    ))
-
-
-@router.get("/qualitaet", response_class=HTMLResponse)
-def quality(request: Request):
-    items = queries.get_items()
-    acked = {(r["source_kind"], r["source_id"])
-             for r in db.query("SELECT source_kind, source_id FROM fsk_acks")}
-
-    def is_acked(i):
-        return (i["source_kind"], i["source_id"]) in acked
-
-    problems = {
-        "no_rating": [i for i in items if not i.get("official_rating") and not is_acked(i)],
-        "suspicious": [i for i in items if i.get("fsk_suspicious") and not is_acked(i)],
-        "incomplete": [i for i in items if i.get("completeness") == "incomplete"],
-        "lowres": [i for i in items if i["item_type"] == "Film"
-                   and i.get("height") and i["height"] < LOWRES_HEIGHT],
-    }
-    return templates.TemplateResponse(request, "quality.html", _ctx(
-        request, problems=problems, stats=queries.compute_stats(items),
-        allow_write=config.ALLOW_EMBY_WRITE, tmdb=config.tmdb_enabled(),
     ))
 
 

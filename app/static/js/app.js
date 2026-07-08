@@ -5,7 +5,7 @@
 
   var ALL = window.__DATA__ || [];
   var state = { view: "cover", q: "", library: "", type: "", rating: "", tag: "", complete: "",
-                sortKey: "sort_name", sortDir: 1 };
+                res: "", sortKey: "sort_name", sortDir: 1 };
 
   var COLUMNS = [
     { key: "name",             label: "Titel",         on: true,  cls: "name" },
@@ -60,13 +60,18 @@
   }
 
   function fillFilters() {
-    var ratings = {}, tagNames = {};
+    var ratings = {}, tagNames = {}, resHeight = {};
     ALL.forEach(function (i) {
       if (i.official_rating) { ratings[i.official_rating] = 1; }
       (i.tags || []).forEach(function (t) { tagNames[t.name] = 1; });
+      if (i.resolution) { resHeight[i.resolution] = i.resolution === "4K" ? 100000 : (parseInt(i.resolution, 10) || 0); }
     });
     Object.keys(ratings).sort().forEach(function (r) {
       var o = document.createElement("option"); o.value = r; o.textContent = r; $("fRating").appendChild(o);
+    });
+    // Aufloesungen nach Bildhoehe absteigend (hoechste zuerst)
+    Object.keys(resHeight).sort(function (a, b) { return resHeight[b] - resHeight[a]; }).forEach(function (r) {
+      var o = document.createElement("option"); o.value = r; o.textContent = r; $("fRes").appendChild(o);
     });
     Object.keys(tagNames).sort().forEach(function (n) {
       var o = document.createElement("option"); o.value = n; o.textContent = n; $("fTag").appendChild(o);
@@ -79,7 +84,10 @@
       if (state.library && i.library_name !== state.library) { return false; }
       if (state.type && i.item_type !== state.type) { return false; }
       if (state.rating === "__none__" && i.official_rating) { return false; }
-      if (state.rating && state.rating !== "__none__" && i.official_rating !== state.rating) { return false; }
+      if (state.rating === "__suspicious__" && !(i.fsk_suspicious && !i.fsk_acked)) { return false; }
+      if (state.rating && state.rating !== "__none__" && state.rating !== "__suspicious__" && i.official_rating !== state.rating) { return false; }
+      if (state.res === "__lt720__" && !(i.height && i.height < 720)) { return false; }
+      if (state.res && state.res !== "__lt720__" && i.resolution !== state.res) { return false; }
       if (state.tag && !(i.tags || []).some(function (t) { return t.name === state.tag; })) { return false; }
       if (state.complete && i.completeness !== state.complete) { return false; }
       if (q && i.name.toLowerCase().indexOf(q) === -1) { return false; }
@@ -259,6 +267,7 @@
     $("fLibrary").onchange = function () { state.library = this.value; render(); };
     $("fType").onchange = function () { state.type = this.value; render(); };
     $("fRating").onchange = function () { state.rating = this.value; render(); };
+    $("fRes").onchange = function () { state.res = this.value; render(); };
     $("fTag").onchange = function () { state.tag = this.value; render(); };
     $("fComplete").onchange = function () { state.complete = this.value; render(); };
     $("viewToggle").querySelectorAll("button").forEach(function (b) {

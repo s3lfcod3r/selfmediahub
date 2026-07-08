@@ -131,6 +131,13 @@
         "</div>";
     }
 
+    var ackBox = "";
+    if (i.fsk_suspicious && !i.fsk_acked) {
+      ackBox = '<div class="fsk-ack-box"><span>Freigabe wirkt unplausibel' +
+        (i.fsk_reason ? ": " + esc(i.fsk_reason) : "") + "</span>" +
+        '<button class="btn btn-small" id="ackBtn" data-id="' + i.id + '">Passt so</button></div>';
+    }
+
     document.getElementById("modalPanel").innerHTML =
       '<div class="modal-head">' + poster +
         '<div><div class="modal-title">' + esc(i.name) + "</div>" +
@@ -139,7 +146,7 @@
         '<div class="modal-badges">' + badges.join("") + "</div></div></div>" +
       '<div class="modal-body">' +
         '<div class="meta-grid">' + meta + "</div>" +
-        fskEditor +
+        fskEditor + ackBox +
         (i.path ? '<div class="pathline"><div class="k">Pfad im Verzeichnis</div>' +
                   '<div class="pv mono">' + esc(i.path) + "</div></div>" : "") +
         (i.overview ? '<div class="overview">' + esc(i.overview) + "</div>" : "") +
@@ -159,6 +166,21 @@
             setTimeout(function () { location.reload(); }, 900);
           })
           .catch(function (e) { window.smhToast("Fehlgeschlagen: " + e.message, "err"); saveBtn.disabled = false; });
+      };
+    }
+
+    var ackB = document.getElementById("ackBtn");
+    if (ackB) {
+      ackB.onclick = function () {
+        ackB.disabled = true;
+        fetch("/api/fsk/ack", { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ item_id: +ackB.getAttribute("data-id") }) })
+          .then(function (r) { return r.json(); })
+          .then(function () {
+            window.smhToast("Als korrekt bestaetigt", "ok");
+            var box = ackB.closest(".fsk-ack-box"); if (box) { box.remove(); }
+          })
+          .catch(function () { window.smhToast("Fehlgeschlagen", "err"); ackB.disabled = false; });
       };
     }
 
