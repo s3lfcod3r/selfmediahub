@@ -1,138 +1,88 @@
 <div align="center">
 
-# SelfMediaHub
+<img src="assets/logo.png" width="260" alt="SelfMediaHub logo" />
 
-**Read-only Analyse-, Monitoring- und Qualitätskontroll-Schicht für deine Mediathek.**
-Kein weiterer Medienserver – eine intelligente Sicht auf das, was du schon hast.
+**Read-only analysis, monitoring &amp; quality-control layer for your media library — Emby, Jellyfin, Plex and local folders. Never a media server, never writes back.**
 
-![Status](https://img.shields.io/badge/status-aktiv-33a78c?style=flat-square)
-![Python](https://img.shields.io/badge/Python-3.12-1db8d4?style=flat-square&logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-GHCR-2496ed?style=flat-square&logo=docker&logoColor=white)
-![License](https://img.shields.io/badge/license-MIT-8a9caa?style=flat-square)
+[![Build](https://github.com/s3lfcod3r/selfmediahub/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/s3lfcod3r/selfmediahub/actions/workflows/docker-publish.yml)
+![Version](https://img.shields.io/badge/version-0.2.0-33A78C)
+![License](https://img.shields.io/badge/license-MIT-8A9CAA)
+![Backend](https://img.shields.io/badge/backend-FastAPI-009688)
+![Database](https://img.shields.io/badge/db-SQLite-1DB8D4)
+![Docker](https://img.shields.io/badge/docker-GHCR-2496ED)
 
-[Deutsch](#deutsch) · [English](#english)
+**Works with:** Emby · Jellyfin · Plex · local folders · TMDb
+
+[English](#-english) · [Deutsch](#-deutsch)
 
 </div>
 
 ---
 
-## Deutsch
+<a id="-english"></a>
 
-**SelfMediaHub** legt sich als eigenständige **Analyse-, Monitoring- und Qualitätskontroll-Schicht**
-über deine bestehende Mediathek. Es ist ausdrücklich **kein** Medienserver und **kein** Manager:
-Es liest deine Bibliotheken **nur lesend** über die jeweilige API, speichert alles in einer
-**eigenen Datenbank** und fasst deine Originaldaten niemals an.
+## 🇬🇧 English
 
-Ziel: auf einen Blick sehen, **was vorhanden ist, was fehlt, was verbessert werden kann und
-was neu dazugekommen ist.**
+**SelfMediaHub** is a standalone **analysis, monitoring and quality-control layer** on top of the
+media library you already have. It is deliberately **not** a media server and **not** a manager:
+it reads your libraries **read-only** through their APIs, stores everything in its **own database**,
+and never touches your originals.
 
-### Funktionen
+The goal: see at a glance **what you have, what's missing, what can be improved, and what's new.**
 
-**Quellen (alle read-only)**
-- **Emby**, **Jellyfin**, **Plex** über deren API + **lokale Ordner** (Dateinamen-Analyse)
-- Mehrere Quellen gleichzeitig; eine defekte Quelle stoppt die anderen nicht
+Part of the **Self** family (SelfMailer, SelfDashboard, SelfArchiver …) — same design system, same
+deploy style (GHCR → Unraid).
 
-**Analyse & Übersicht**
-- **Coveransicht** (Poster-Grid) mit Freigabe-, Auflösungs- und Vollständigkeits-Badges
-- **Frei konfigurierbare Listenansicht** (Spalten zuschaltbar, sortierbar)
-- Technik: **Auflösung, HDR/Dolby Vision, Video-Codec, Audio-/Untertitelspuren, Laufzeit**
-- **TMDb-Abgleich**: deutsche FSK, Genres, Staffel-/Episodenzahl, Serienstatus
+> **TL;DR** — read-only layer over Emby/Jellyfin/Plex/local · cover + list views with rich filters ·
+> per-title detail with episodes, tracks &amp; file paths · exact resolutions · FSK ratings you can set
+> from the cover · own tag system + rule engine · background scans &amp; webhook alerts · one container,
+> own SQLite DB.
 
-**Qualitätskontrolle** (eigene Seite)
-- Inhalte **ohne Freigabe**, **unplausible FSK** (Genre-vs-Alter-Check, aus emby-fsk-manager portiert)
-- **Unvollständige Serien** (vorhandene vs. veröffentlichte Episoden via TMDb)
-- **Filme unter 720p**
-- **FSK-Vorschlag** aus TMDb; optionales Zurückschreiben nach Emby (Schalter `ALLOW_EMBY_WRITE`, Standard aus)
+### 📑 Table of contents
+[Features](#-features) · [Views &amp; interaction](#️-views--interaction) · [Age ratings (FSK)](#-age-ratings-fsk) · [Tags &amp; rules](#️-tags--rules) · [Monitoring](#-monitoring--notifications) · [Quick start](#-quick-start-docker) · [Unraid](#-unraid) · [Configuration](#️-configuration) · [Architecture](#-architecture) · [Development](#️-development) · [Roadmap](#️-roadmap)
 
-**Tags & Automatik**
-- **Eigenes Tag-System** (Name, Farbe, Icon, Priorität), manuell + automatisch
-- **Regel-Engine** mit **UND/ODER/NICHT**, mehreren Bedingungen & Aktionen, Prioritäten, aktiv/inaktiv
+### ✨ Features
 
-**Automatik & Monitoring**
-- **Hintergrund-Scan** alle N Stunden (`SCAN_INTERVAL_HOURS`)
-- **Benachrichtigung** bei neuen Inhalten über generischen JSON-Webhook (Discord/ntfy/Apprise)
+**📥 Sources — all read-only**
+- **Emby**, **Jellyfin**, **Plex** via their APIs + **local folders** (filename parsing)
+- Several sources at once; a broken source never stops the others
+- **Own SQLite database** under `/data` — fully independent from your media servers
 
-### Roadmap
+**🔎 Analysis &amp; enrichment**
+- Technical data: **exact resolution, HDR / Dolby Vision, video codec, audio &amp; subtitle tracks, file size, runtime**
+- **TMDb** enrichment: German age rating, genres, season/episode counts, series status
+- **Completeness**: present vs. released episodes, missing-episode detection
+- **Real resolutions** — an 800p downscale shows `800p`, not rounded to `720p`; only true UHD is `4K`
 
-| Phase | Inhalt | Stand |
-|-------|--------|-------|
-| 1 | Fundament: Import, eigene DB, Cover- + Listenansicht | ✅ |
-| 2 | Technik-/Qualitätsanalyse + TMDb | ✅ |
-| 3 | Vollständigkeit: fehlende Episoden/Staffeln | ✅ |
-| 4 | Tag-System + Regel-Engine | ✅ |
-| 5 | Monitoring & Benachrichtigungen, Hintergrundscans | ✅ |
-| 6 | Weitere Quellen (Jellyfin, Plex, lokale Ordner) | ✅ |
-| + | FSK-Qualitätskontrolle (aus emby-fsk-manager) | ✅ |
+### 🖥️ Views &amp; interaction
 
-> Weiter geplant: pro-Episode-Technik für Serien, ffprobe für lokale Dateien, Filmreihen-/Sequel-Tracking, DB-gestützte Quellenverwaltung im UI.
+- **Cover view** (poster grid) with rating, resolution and completeness badges + tag chips
+- **List view** with toggleable, sortable columns
+- **Filters**: search · library · type (movie/series) · rating (incl. *no rating* &amp; *FSK suspicious*) · **resolution** (incl. *under 720p* and every real height) · tags · series status
+- **Stat tiles**: total · films · series · 4K/UHD · incomplete · without rating
+- **Detail window** (click a poster/title): resolution `W × H`, HDR, codec, size, runtime, **audio &amp; subtitle languages**, genres, TMDb data and the **file path**
+- For series: the **full episode list per season** — every episode **expandable** with its own resolution, codec, size, languages, subtitles and path; **missing episodes are highlighted**
 
-### Schnellstart (Docker)
+### 🎫 Age ratings (FSK)
 
-```bash
-docker run -d --name selfmediahub -p 8092:8092 \
-  -v /pfad/zu/daten:/data \
-  -e EMBY_URL=http://192.168.1.19:8096 \
-  -e EMBY_API_KEY=DEIN_EMBY_KEY \
-  -e TMDB_API_KEY=DEIN_TMDB_KEY \
-  ghcr.io/s3lfcod3r/selfmediahub:latest
-```
+- **Set the rating right on the cover** — click the FSK corner → a small popup → pick a value → **saved to Emby instantly**
+- Or from the **detail window** (dropdown + save)
+- **TMDb suggestions** (recommended German rating)
+- **Plausibility check** flags implausible ratings (e.g. family genre but FSK 18); **“Passt so”** acknowledges deliberate ones so they stop being reported
+- Writing to Emby is the **one exception** to the read-only rule — enabled via `ALLOW_EMBY_WRITE=1` (off by default). It powers parental control: set the rating here, and Emby's per-account max-rating does the blocking.
 
-Dann `http://<host>:8092/` öffnen und oben rechts **„Neu einlesen"** klicken.
+### 🏷️ Tags &amp; rules
 
-### Konfiguration (Variablen)
+- **Own tag system** — name, colour, icon, priority; assigned manually or automatically
+- **Rule engine** with **AND / OR / NOT**, multiple conditions &amp; actions, priorities and on/off
+- Rule fields include resolution/height/width, codecs, languages, completeness, rating, genres and more
 
-| Variable | Bedeutung |
-|----------|-----------|
-| `EMBY_URL` / `EMBY_API_KEY` | Emby-Server (read-only) |
-| `JELLYFIN_URL` / `JELLYFIN_API_KEY` | Jellyfin-Server (optional) |
-| `PLEX_URL` / `PLEX_TOKEN` | Plex-Server (optional) |
-| `LOCAL_PATHS` | lokale Ordner, Komma-getrennt (im Container) |
-| `TMDB_API_KEY` | themoviedb.org v3 – FSK, Genres, Vollständigkeit |
-| `SCAN_INTERVAL_HOURS` | Hintergrund-Scan alle N Stunden (0 = aus) |
-| `NOTIFY_WEBHOOK_URL` | JSON-Webhook für Benachrichtigungen |
-| `ALLOW_EMBY_WRITE` | `1` = FSK aktiv nach Emby schreiben (Standard `0`, read-only) |
-| `PORT` / `DATA_DIR` | Web-Port (8092) / DB-Ablage (`/data`) |
+### 🔔 Monitoring &amp; notifications
 
-### Unraid
+- **Background scan** every N hours (`SCAN_INTERVAL_HOURS`)
+- **Webhook notification** (Discord / ntfy / Apprise) when new content appears
 
-Template unter [`unraid/selfmediahub.xml`](unraid/selfmediahub.xml). Über **Add Container → Template**
-einbinden, `/data` auf `/mnt/user/appdata/selfmediahub` mappen, gewünschte Quellen ausfüllen.
-
-### Architektur
-
-```
-app/
-├── connectors/   emby · jellyfin · plex · local   (nur lesend)
-├── services/     sync · tmdb · analysis · completeness · fsk · rules · tags · scheduler · notify
-├── routes/       pages (HTML) · api (JSON) · health
-├── templates/    index · quality · tags · rules · setup
-└── db.py         SQLite (eigene Daten unter /data)
-```
-
-### Lokal entwickeln
-
-```bash
-pip install -r requirements.txt
-cp .env.example .env         # Werte eintragen, DATA_DIR=./data
-python -m app.main
-```
-
----
-
-## English
-
-**SelfMediaHub** is a standalone **analysis, monitoring and quality-control layer** on top of your
-existing media library. It is deliberately **not** a media server and **not** a manager: it reads your
-libraries **read-only**, stores everything in its **own database**, and never touches your originals.
-
-**Sources (read-only):** Emby, Jellyfin, Plex, and local folders — several at once.
-**Analysis:** cover + configurable list view, resolution/HDR/codec/audio/subtitle tracks, TMDb enrichment (DE rating, genres, season/episode counts, status).
-**Quality control:** missing ratings, implausible age ratings (ported from emby-fsk-manager), incomplete series, low-resolution films; TMDb rating suggestions with optional write-back to Emby (`ALLOW_EMBY_WRITE`, off by default).
-**Tags & automation:** own tag system + rule engine (AND/OR/NOT, priorities).
-**Monitoring:** background scans (`SCAN_INTERVAL_HOURS`) and webhook notifications for new content.
-
-### Quick start (Docker)
+### 🚀 Quick start (Docker)
 
 ```bash
 docker run -d --name selfmediahub -p 8092:8092 \
@@ -143,14 +93,191 @@ docker run -d --name selfmediahub -p 8092:8092 \
   ghcr.io/s3lfcod3r/selfmediahub:latest
 ```
 
-Open `http://<host>:8092/` and click **"Neu einlesen"** (re-scan) in the top right.
+Open `http://<host>:8092/` and click **“Neu einlesen”** (re-scan) in the top right.
 
-### License
+### 🧩 Unraid
 
-MIT
+Template at [`unraid/selfmediahub.xml`](unraid/selfmediahub.xml). Add via **Add Container → Template**,
+map `/data` to `/mnt/user/appdata/selfmediahub`, and fill in the sources you use.
+
+### ⚙️ Configuration
+
+| Variable | Meaning |
+|----------|---------|
+| `EMBY_URL` / `EMBY_API_KEY` | Emby server (read-only) |
+| `JELLYFIN_URL` / `JELLYFIN_API_KEY` | Jellyfin server (optional) |
+| `PLEX_URL` / `PLEX_TOKEN` | Plex server (optional) |
+| `LOCAL_PATHS` | local folders, comma-separated (inside the container) |
+| `TMDB_API_KEY` | themoviedb.org v3 — ratings, genres, completeness |
+| `SCAN_INTERVAL_HOURS` | background scan every N hours (`0` = off) |
+| `NOTIFY_WEBHOOK_URL` | JSON webhook for notifications |
+| `ALLOW_EMBY_WRITE` | `1` = write FSK ratings back to Emby (default `0`, read-only) |
+| `PORT` / `DATA_DIR` | web port (`8092`) / DB location (`/data`) |
+
+### 🧱 Architecture
+
+```
+app/
+├── connectors/   emby · jellyfin · plex · local        (read-only)
+├── services/     sync · tmdb · analysis · completeness · fsk · rules · tags · scheduler · notify
+├── routes/       pages (HTML) · api (JSON) · health
+├── templates/    index · tags · rules · setup · _topbar · _modal
+├── static/       css/tokens · css/app · js/common · js/app · js/detail
+└── db.py         SQLite (own data under /data)
+```
+
+**Stack:** Python 3.12 · FastAPI · Uvicorn · Jinja2 (server-rendered) · vanilla JS · SQLite · Docker.
+No Node build step — the UI is server-rendered.
+
+### 🛠️ Development
+
+```bash
+pip install -r requirements.txt
+cp .env.example .env         # fill in values, DATA_DIR=./data
+python -m app.main
+```
+
+### 🗺️ Roadmap
+
+All core phases are **live**: read-only import, own DB, cover + list views, technical/quality analysis,
+TMDb enrichment, completeness, tag system + rule engine, monitoring &amp; notifications, and the FSK
+quality control ported from `emby-fsk-manager`.
+
+**Planned:** ffprobe for local files (per-file technical), movie-series / sequel tracking,
+DB-backed source management in the UI.
+
+---
+
+<a id="-deutsch"></a>
+
+## 🇩🇪 Deutsch
+
+**SelfMediaHub** legt sich als eigenständige **Analyse-, Monitoring- und Qualitätskontroll-Schicht**
+über deine bestehende Mediathek. Es ist ausdrücklich **kein** Medienserver und **kein** Manager:
+Es liest deine Bibliotheken **nur lesend** über deren APIs, speichert alles in einer **eigenen
+Datenbank** und fasst deine Originaldaten niemals an.
+
+Ziel: auf einen Blick sehen, **was vorhanden ist, was fehlt, was verbessert werden kann und was neu
+dazugekommen ist.**
+
+Teil der **Self**-Familie (SelfMailer, SelfDashboard, SelfArchiver …) — gleiches Design-System,
+gleiche Deploy-Art (GHCR → Unraid).
+
+> **Kurz gesagt** — read-only Schicht über Emby/Jellyfin/Plex/lokal · Cover- + Listenansicht mit
+> vielen Filtern · Detail je Titel mit Episoden, Spuren &amp; Pfaden · echte Auflösungen · FSK direkt
+> am Cover setzbar · eigenes Tag-System + Regel-Engine · Hintergrund-Scans &amp; Webhook-Meldungen ·
+> ein Container, eigene SQLite-DB.
+
+### 📑 Inhalt
+[Funktionen](#-funktionen) · [Ansichten &amp; Bedienung](#️-ansichten--bedienung) · [Freigaben (FSK)](#-freigaben-fsk) · [Tags &amp; Regeln](#️-tags--regeln) · [Monitoring](#-monitoring--benachrichtigungen) · [Schnellstart](#-schnellstart-docker) · [Unraid](#-unraid-1) · [Konfiguration](#️-konfiguration) · [Architektur](#-architektur) · [Entwicklung](#️-entwicklung) · [Roadmap](#️-roadmap-1)
+
+### ✨ Funktionen
+
+**📥 Quellen — alle read-only**
+- **Emby**, **Jellyfin**, **Plex** über deren APIs + **lokale Ordner** (Dateinamen-Analyse)
+- Mehrere Quellen gleichzeitig; eine defekte Quelle stoppt die anderen nie
+- **Eigene SQLite-Datenbank** unter `/data` — komplett unabhängig vom Medienserver
+
+**🔎 Analyse &amp; Anreicherung**
+- Technik: **exakte Auflösung, HDR / Dolby Vision, Video-Codec, Audio- &amp; Untertitelspuren, Dateigröße, Laufzeit**
+- **TMDb**-Abgleich: deutsche Freigabe, Genres, Staffel-/Episodenzahl, Serienstatus
+- **Vollständigkeit**: vorhandene vs. veröffentlichte Episoden, Erkennung fehlender Folgen
+- **Echte Auflösungen** — ein 800p-Downscale zeigt `800p` statt gerundet `720p`; nur echtes UHD ist `4K`
+
+### 🖥️ Ansichten &amp; Bedienung
+
+- **Coveransicht** (Poster-Grid) mit Freigabe-, Auflösungs- und Vollständigkeits-Badges + Tag-Chips
+- **Listenansicht** mit zuschaltbaren, sortierbaren Spalten
+- **Filter**: Suche · Bibliothek · Typ (Film/Serie) · Freigabe (inkl. *ohne Freigabe* &amp; *FSK auffällig*) · **Auflösung** (inkl. *unter 720p* und jede echte Höhe) · Tags · Serien-Status
+- **Statistik-Kacheln**: Gesamt · Filme · Serien · 4K/UHD · unvollständig · ohne Freigabe
+- **Detail-Fenster** (Klick auf Poster/Titel): Auflösung `B × H`, HDR, Codec, Größe, Laufzeit, **Audio- &amp; Untertitelsprachen**, Genres, TMDb-Daten und der **Pfad im Verzeichnis**
+- Bei Serien: die **komplette Episodenliste je Staffel** — jede Folge **aufklappbar** mit eigener Auflösung, Codec, Größe, Sprachen, Untertiteln und Pfad; **fehlende Folgen sind markiert**
+
+### 🎫 Freigaben (FSK)
+
+- **FSK direkt am Cover setzen** — Klick auf die FSK-Ecke → kleines Popup → Wert wählen → **sofort nach Emby gespeichert**
+- Oder im **Detail-Fenster** (Dropdown + Speichern)
+- **TMDb-Vorschläge** (empfohlene deutsche Freigabe)
+- **Plausibilitätscheck** markiert unplausible Freigaben (z. B. Familien-Genre, aber FSK 18); **„Passt so“** bestätigt bewusste Freigaben, damit sie nicht mehr gemeldet werden
+- Das Schreiben nach Emby ist die **einzige Ausnahme** zur read-only-Regel — aktivierbar über `ALLOW_EMBY_WRITE=1` (Standard aus). Damit steuerst du die Kindersicherung: hier die Freigabe setzen, die Sperre übernimmt Embys maximale Freigabe je Konto.
+
+### 🏷️ Tags &amp; Regeln
+
+- **Eigenes Tag-System** — Name, Farbe, Icon, Priorität; manuell oder automatisch vergeben
+- **Regel-Engine** mit **UND / ODER / NICHT**, mehreren Bedingungen &amp; Aktionen, Prioritäten und aktiv/inaktiv
+- Regel-Felder u. a. Auflösung/Höhe/Breite, Codecs, Sprachen, Vollständigkeit, Freigabe, Genres
+
+### 🔔 Monitoring &amp; Benachrichtigungen
+
+- **Hintergrund-Scan** alle N Stunden (`SCAN_INTERVAL_HOURS`)
+- **Webhook-Benachrichtigung** (Discord / ntfy / Apprise) bei neuen Inhalten
+
+### 🚀 Schnellstart (Docker)
+
+```bash
+docker run -d --name selfmediahub -p 8092:8092 \
+  -v /pfad/zu/daten:/data \
+  -e EMBY_URL=http://192.168.1.19:8096 \
+  -e EMBY_API_KEY=DEIN_EMBY_KEY \
+  -e TMDB_API_KEY=DEIN_TMDB_KEY \
+  ghcr.io/s3lfcod3r/selfmediahub:latest
+```
+
+Dann `http://<host>:8092/` öffnen und oben rechts **„Neu einlesen“** klicken.
+
+### 🧩 Unraid
+
+Template unter [`unraid/selfmediahub.xml`](unraid/selfmediahub.xml). Über **Add Container → Template**
+einbinden, `/data` auf `/mnt/user/appdata/selfmediahub` mappen und die gewünschten Quellen ausfüllen.
+
+### ⚙️ Konfiguration
+
+| Variable | Bedeutung |
+|----------|-----------|
+| `EMBY_URL` / `EMBY_API_KEY` | Emby-Server (read-only) |
+| `JELLYFIN_URL` / `JELLYFIN_API_KEY` | Jellyfin-Server (optional) |
+| `PLEX_URL` / `PLEX_TOKEN` | Plex-Server (optional) |
+| `LOCAL_PATHS` | lokale Ordner, Komma-getrennt (im Container) |
+| `TMDB_API_KEY` | themoviedb.org v3 — Freigaben, Genres, Vollständigkeit |
+| `SCAN_INTERVAL_HOURS` | Hintergrund-Scan alle N Stunden (`0` = aus) |
+| `NOTIFY_WEBHOOK_URL` | JSON-Webhook für Benachrichtigungen |
+| `ALLOW_EMBY_WRITE` | `1` = FSK-Freigaben nach Emby schreiben (Standard `0`, read-only) |
+| `PORT` / `DATA_DIR` | Web-Port (`8092`) / DB-Ablage (`/data`) |
+
+### 🧱 Architektur
+
+```
+app/
+├── connectors/   emby · jellyfin · plex · local        (nur lesend)
+├── services/     sync · tmdb · analysis · completeness · fsk · rules · tags · scheduler · notify
+├── routes/       pages (HTML) · api (JSON) · health
+├── templates/    index · tags · rules · setup · _topbar · _modal
+├── static/       css/tokens · css/app · js/common · js/app · js/detail
+└── db.py         SQLite (eigene Daten unter /data)
+```
+
+**Stack:** Python 3.12 · FastAPI · Uvicorn · Jinja2 (server-gerendert) · Vanilla-JS · SQLite · Docker.
+Kein Node-Build — die Oberfläche wird server-seitig gerendert.
+
+### 🛠️ Entwicklung
+
+```bash
+pip install -r requirements.txt
+cp .env.example .env         # Werte eintragen, DATA_DIR=./data
+python -m app.main
+```
+
+### 🗺️ Roadmap
+
+Alle Kern-Phasen sind **live**: read-only Import, eigene DB, Cover- + Listenansicht, Technik-/Qualitäts-
+analyse, TMDb-Abgleich, Vollständigkeit, Tag-System + Regel-Engine, Monitoring &amp; Benachrichtigungen
+sowie die FSK-Qualitätskontrolle (portiert aus `emby-fsk-manager`).
+
+**Geplant:** ffprobe für lokale Dateien (Technik pro Datei), Filmreihen-/Sequel-Tracking,
+DB-gestützte Quellenverwaltung im UI.
 
 ---
 
 <div align="center">
-<sub>Part of the <strong>Self</strong> suite · built read-only, your data stays yours.</sub>
+<sub>Part of the <strong>Self</strong> family · built read-only, your data stays yours.</sub>
 </div>
