@@ -55,12 +55,38 @@ def _tv_cert(data: dict):
     return None
 
 
+def compute_missing(seasons: dict, present) -> list:
+    """Fehlende Episoden aus {staffel: episodenzahl} vs. vorhandenen (s, e).
+
+    Gibt [] zurueck, wenn Embys Nummerierung offensichtlich von TMDb abweicht
+    (Anime mit Fake-Staffeln, Absolut-Nummerierung o.Ae.) - dann werden keine
+    Einzelfolgen geraten. Staffel 0 (Specials) ist bereits ausgeschlossen.
+    """
+    if not seasons:
+        return []
+    present_set = {p for p in present if p[0] is not None and p[1] is not None}
+    present_seasons = {s for (s, _e) in present_set}
+
+    # 1) Emby kennt hoehere Staffeln als TMDb -> Nummerierung passt nicht.
+    if present_seasons and max(present_seasons) > max(seasons):
+        return []
+    # 2) Viele vorhandene Folgen liegen ausserhalb der TMDb-Struktur.
+    expected = {(sn, ep) for sn, cnt in seasons.items() for ep in range(1, cnt + 1)}
+    outside = [p for p in present_set if p not in expected]
+    if present_set and len(outside) > max(3, 0.2 * len(present_set)):
+        return []
+
+    return [{"season": sn, "episode": ep}
+            for sn, cnt in sorted(seasons.items())
+            for ep in range(1, cnt + 1)
+            if (sn, ep) not in present_set]
+
+
 def missing_episodes(tmdb_id, present) -> list:
     """Fehlende Episoden ermitteln: TMDb-Staffeln vs. vorhandene (season, episode).
 
-    ``present`` = Iterable aus (season, episode). Rueckgabe: [{season, episode}].
-    Best-effort - leere Liste bei fehlendem Key/Fehler. Staffel 0 (Specials) wird
-    ignoriert.
+    ``present`` = Iterable aus (season, episode). Best-effort - leere Liste bei
+    fehlendem Key/Fehler oder bei abweichender Nummerierung (siehe compute_missing).
     """
     if not config.tmdb_enabled() or not tmdb_id:
         return []
@@ -68,17 +94,12 @@ def missing_episodes(tmdb_id, present) -> list:
         data = _get(f"/tv/{tmdb_id}")
     except requests.RequestException:
         return []
-    present_set = set(present)
-    missing = []
-    for season in data.get("seasons", []):
-        sn = season.get("season_number")
-        count = season.get("episode_count") or 0
-        if not sn or sn < 1:
-            continue
-        for ep in range(1, count + 1):
-            if (sn, ep) not in present_set:
-                missing.append({"season": sn, "episode": ep})
-    return missing
+    seasons = {
+        s["season_number"]: (s.get("episode_count") or 0)
+        for s in data.get("seasons", [])
+        if s.get("season_number") and s["season_number"] >= 1
+    }
+    return compute_missing(seasons, list(present))
 
 
 def enrich(item: dict, cache: dict) -> dict:

@@ -52,6 +52,9 @@ def api_item_detail(item_id: int):
                                  "name": "", "missing": True})
             episodes.sort(key=lambda e: ((e["season"] if e["season"] is not None else 999),
                                          (e["episode"] if e["episode"] is not None else 999)))
+            if not missing and item.get("completeness") == "incomplete" and not note:
+                note = ("Fehlende Folgen lassen sich hier nicht sicher bestimmen - "
+                        "die Staffelnummerierung in Emby weicht von TMDb ab.")
 
     return {"item": item, "episodes": episodes, "note": note,
             "missing_count": len(missing), "allow_write": config.ALLOW_EMBY_WRITE}
