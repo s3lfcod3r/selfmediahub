@@ -53,7 +53,8 @@ def api_item_detail(item_id: int):
             episodes.sort(key=lambda e: ((e["season"] if e["season"] is not None else 999),
                                          (e["episode"] if e["episode"] is not None else 999)))
 
-    return {"item": item, "episodes": episodes, "note": note, "missing_count": len(missing)}
+    return {"item": item, "episodes": episodes, "note": note,
+            "missing_count": len(missing), "allow_write": config.ALLOW_EMBY_WRITE}
 
 
 # -- Metadaten fuer den Regel-Builder --------------------------------------
@@ -184,13 +185,15 @@ async def api_fsk_write(request: Request):
     item = dict(rows[0])
     if item["source_kind"] != "emby":
         raise HTTPException(status_code=400, detail="Schreiben nur fuer Emby-Quellen moeglich")
-    rating = d.get("rating") or item.get("fsk_suggested") or item.get("official_rating")
-    if not rating:
-        raise HTTPException(status_code=400, detail="Keine Freigabe zum Schreiben")
+    # "rating" im Body (auch leer) = expliziter Wunsch; sonst Vorschlag nutzen.
+    if "rating" in d:
+        rating = (d.get("rating") or "").strip()
+    else:
+        rating = item.get("fsk_suggested") or item.get("official_rating") or ""
     try:
-        fsk.write_emby(item["source_id"], rating)
+        fsk.write_emby(item["source_id"], rating or None)
         db.execute("UPDATE media_items SET official_rating=?, fsk_suspicious=0, fsk_reason='' WHERE id=?",
                    (rating, item["id"]))
-        return {"ok": True, "rating": rating}
+        return {"ok": True, "rating": rating or "(entfernt)"}
     except Exception as exc:  # noqa: BLE001
         _fail(exc)

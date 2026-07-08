@@ -430,6 +430,16 @@ table.list tbody tr { cursor: pointer; }
   text-transform: uppercase; color: var(--self-text-3); margin-bottom: 5px; }
 .pathline .pv { font-size: 13px; color: var(--self-ice-bright); word-break: break-all; }
 
+.fsk-editor {
+  margin: 4px 0 18px; padding: 14px 16px;
+  background: var(--self-bg-0); border: 1px solid var(--self-line-strong);
+  border-radius: var(--self-radius-sm);
+}
+.fsk-editor .k { font-family: var(--self-font-mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--self-text-3); margin-bottom: 9px; }
+.fsk-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.fsk-row .field { min-width: 130px; }
+
 @media (max-width: 940px) { .modal-close { right: 20px; } }
 @media (max-width: 720px) {
   .stats { grid-template-columns: repeat(2, 1fr); }

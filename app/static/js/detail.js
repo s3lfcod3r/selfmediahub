@@ -95,6 +95,25 @@
     }
     var note = d.note ? '<div class="modal-note">' + esc(d.note) + "</div>" : "";
 
+    var fskEditor = "";
+    if (i.source_kind === "emby") {
+      var opts = ["DE-0", "DE-6", "DE-12", "DE-16", "DE-18"].map(function (v) {
+        return '<option value="' + v + '"' + (i.official_rating === v ? " selected" : "") + ">" + v + "</option>";
+      }).join("");
+      var dis = d.allow_write ? "" : " disabled";
+      fskEditor =
+        '<div class="fsk-editor"><div class="k">FSK-Freigabe selbst festlegen</div>' +
+        '<div class="fsk-row">' +
+          '<select class="field" id="fskSel"' + dis + ">" + opts +
+            '<option value="">&mdash; keine &mdash;</option></select>' +
+          '<button class="btn btn-primary" id="fskSave" data-id="' + i.id + '"' + dis +
+            ">In Emby speichern</button>" +
+        "</div>" +
+        (d.allow_write ? "" :
+          '<div class="modal-note">Zum Aendern am Container <code>ALLOW_EMBY_WRITE=1</code> setzen (Standard: read-only).</div>') +
+        "</div>";
+    }
+
     document.getElementById("modalPanel").innerHTML =
       '<div class="modal-head">' + poster +
         '<div><div class="modal-title">' + esc(i.name) + "</div>" +
@@ -103,10 +122,28 @@
         '<div class="modal-badges">' + badges.join("") + "</div></div></div>" +
       '<div class="modal-body">' +
         '<div class="meta-grid">' + meta + "</div>" +
+        fskEditor +
         (i.path ? '<div class="pathline"><div class="k">Pfad im Verzeichnis</div>' +
                   '<div class="pv mono">' + esc(i.path) + "</div></div>" : "") +
         (i.overview ? '<div class="overview">' + esc(i.overview) + "</div>" : "") +
         note + eps + "</div>";
+
+    var saveBtn = document.getElementById("fskSave");
+    if (saveBtn) {
+      saveBtn.onclick = function () {
+        var rating = document.getElementById("fskSel").value;
+        saveBtn.disabled = true;
+        fetch("/api/fsk/write", { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ item_id: +saveBtn.getAttribute("data-id"), rating: rating }) })
+          .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+          .then(function (res) {
+            if (!res.ok) { throw new Error(res.j.detail || "Fehler"); }
+            window.smhToast("FSK " + res.j.rating + " gesetzt - Seite wird aktualisiert ...", "ok");
+            setTimeout(function () { location.reload(); }, 900);
+          })
+          .catch(function (e) { window.smhToast("Fehlgeschlagen: " + e.message, "err"); saveBtn.disabled = false; });
+      };
+    }
   }
 
   function openDetail(id) {
