@@ -99,21 +99,15 @@
   }
 
   var FSK_STD = ["DE-0", "DE-6", "DE-12", "DE-16", "DE-18"];
-  function cardFsk(i) {
-    if (!window.__ALLOW_WRITE__ || i.source_kind !== "emby") { return ""; }
-    var cur = i.official_rating || "";
-    var opts = "";
-    if (cur && FSK_STD.indexOf(cur) === -1) { opts += '<option value="' + esc(cur) + '" selected>' + esc(cur) + "</option>"; }
-    FSK_STD.forEach(function (v) { opts += '<option value="' + v + '"' + (v === cur ? " selected" : "") + ">" + v + "</option>"; });
-    opts += '<option value=""' + (cur ? "" : " selected") + ">— keine —</option>";
-    return '<select class="cardfsk-sel" data-id="' + i.id + '" title="FSK setzen (speichert sofort)">' + opts + "</select>";
-  }
 
   function renderGrid(rows) {
     $("grid").innerHTML = rows.map(function (i) {
-      var rating = i.official_rating
-        ? '<span class="rating">' + esc(i.official_rating) + "</span>"
-        : '<span class="rating none">o. FSK</span>';
+      var editable = window.__ALLOW_WRITE__ && i.source_kind === "emby";
+      var cls = "rating" + (i.official_rating ? "" : " none") + (editable ? " editable" : "");
+      var did = editable ? ' data-id="' + i.id + '"' : "";
+      var rating = '<span class="' + cls + '"' + did +
+        (editable ? ' title="FSK aendern"' : "") + ">" +
+        (i.official_rating ? esc(i.official_rating) : "o. FSK") + "</span>";
       var res = i.resolution ? '<span class="qbadge">' + esc(i.resolution) + "</span>" : "";
       var comp = i.completeness === "incomplete"
         ? '<span class="qbadge bad">unvollst.</span>' : "";
@@ -128,8 +122,7 @@
         '<div class="qrow">' + res + comp + "</div>" + img + "</div>" +
         '<div class="meta"><div class="t">' + esc(i.name) + "</div>" +
         '<div class="y">' + (i.year || "") + "</div>" +
-        (chips ? '<div class="chips">' + chips + "</div>" : "") +
-        cardFsk(i) + "</div></article>";
+        (chips ? '<div class="chips">' + chips + "</div>" : "") + "</div></article>";
     }).join("");
   }
 
@@ -196,10 +189,39 @@
     render();
   }
 
-  function saveCardFsk(sel) {
-    var id = sel.getAttribute("data-id");
-    var rating = sel.value;
-    sel.disabled = true;
+  var fskMenu = null;
+  function buildFskMenu() {
+    if (fskMenu) { return fskMenu; }
+    fskMenu = document.createElement("div");
+    fskMenu.className = "fsk-menu hidden";
+    fskMenu.innerHTML = FSK_STD.concat([""]).map(function (v) {
+      return '<button class="fsk-menu-item" data-val="' + v + '">' + (v || "— keine —") + "</button>";
+    }).join("");
+    document.body.appendChild(fskMenu);
+    fskMenu.addEventListener("click", function (e) {
+      var b = e.target.closest(".fsk-menu-item"); if (!b) { return; }
+      saveFsk(fskMenu.getAttribute("data-id"), b.getAttribute("data-val"), fskMenu._badge);
+      hideFskMenu();
+    });
+    return fskMenu;
+  }
+  function hideFskMenu() { if (fskMenu) { fskMenu.classList.add("hidden"); } }
+  function openFskMenu(badge) {
+    var m = buildFskMenu();
+    var id = badge.getAttribute("data-id");
+    m.setAttribute("data-id", id);
+    m._badge = badge;
+    var item = ALL.filter(function (x) { return String(x.id) === String(id); })[0] || {};
+    var cur = item.official_rating || "";
+    Array.prototype.forEach.call(m.querySelectorAll(".fsk-menu-item"), function (b) {
+      b.classList.toggle("active", b.getAttribute("data-val") === cur);
+    });
+    var r = badge.getBoundingClientRect();
+    m.style.left = Math.round(r.left) + "px";
+    m.style.top = Math.round(r.bottom + 6) + "px";
+    m.classList.remove("hidden");
+  }
+  function saveFsk(id, rating, badge) {
     fetch("/api/fsk/write", { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ item_id: +id, rating: rating }) })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
@@ -207,26 +229,28 @@
         if (!res.ok) { throw new Error(res.j.detail || "Fehler"); }
         var item = ALL.filter(function (x) { return String(x.id) === String(id); })[0];
         if (item) { item.official_rating = rating; }
-        var card = sel.closest(".card");
-        var badge = card ? card.querySelector(".rating") : null;
         if (badge) {
-          badge.className = rating ? "rating" : "rating none";
+          badge.className = (rating ? "rating" : "rating none") + " editable";
           badge.textContent = rating || "o. FSK";
         }
         window.smhToast("FSK " + (rating || "(entfernt)") + " gesetzt", "ok");
       })
-      .catch(function (e) { window.smhToast("Fehlgeschlagen: " + e.message, "err"); })
-      .then(function () { sel.disabled = false; });
+      .catch(function (e) { window.smhToast("Fehlgeschlagen: " + e.message, "err"); });
   }
 
   function wire() {
     $("grid").onclick = function (e) {
-      if (e.target.closest(".cardfsk-sel")) { return; }
+      var badge = e.target.closest(".rating.editable");
+      if (badge) { e.stopPropagation(); openFskMenu(badge); return; }
       var c = e.target.closest(".card"); if (c) { window.smhOpenDetail(c.getAttribute("data-id")); }
     };
-    $("grid").addEventListener("change", function (e) {
-      var sel = e.target.closest(".cardfsk-sel"); if (sel) { saveCardFsk(sel); }
+    document.addEventListener("click", function (e) {
+      if (fskMenu && !fskMenu.classList.contains("hidden") &&
+          !e.target.closest(".fsk-menu") && !e.target.closest(".rating.editable")) {
+        hideFskMenu();
+      }
     });
+    window.addEventListener("scroll", hideFskMenu, true);
     $("tbody").onclick = function (e) {
       var tr = e.target.closest("tr"); if (tr && tr.getAttribute("data-id")) { window.smhOpenDetail(tr.getAttribute("data-id")); }
     };
