@@ -1,4 +1,4 @@
-/* SelfMediaHub - Uebersicht: Ansichten, Filter, Sortierung, Tags.
+/* SelfMediaHub - Übersicht: Ansichten, Filter, Sortierung, Tags.
    Theme/Sync/Toast liegen in common.js. */
 (function () {
   "use strict";
@@ -13,13 +13,13 @@
     { key: "year",             label: "Jahr",          on: true,  num: true },
     { key: "library_name",     label: "Bibliothek",    on: false },
     { key: "official_rating",  label: "Freigabe",      on: true,  rating: true },
-    { key: "resolution",       label: "Aufloesung",    on: true },
+    { key: "resolution",       label: "Auflösung",    on: true },
     { key: "hdr",              label: "HDR",           on: false },
     { key: "video_codec",      label: "Codec",         on: false },
     { key: "audio_langs",      label: "Sprachen",      on: false, list: true },
-    { key: "completeness",     label: "Vollstaendig",  on: true,  comp: true },
+    { key: "completeness",     label: "Vollständig",  on: true,  comp: true },
     { key: "community_rating", label: "Bewertung",     on: false, num: true },
-    { key: "size_bytes",       label: "Groesse",       on: false, size: true },
+    { key: "size_bytes",       label: "Größe",       on: false, size: true },
     { key: "tags",             label: "Tags",          on: true,  tags: true }
   ];
 
@@ -85,7 +85,7 @@
     Object.keys(ratings).sort().forEach(function (r) {
       var o = document.createElement("option"); o.value = r; o.textContent = r; $("fRating").appendChild(o);
     });
-    // Aufloesungen nach Bildhoehe absteigend (hoechste zuerst)
+    // Auflösungen nach Bildhöhe absteigend (hoechste zuerst)
     Object.keys(resHeight).sort(function (a, b) { return resHeight[b] - resHeight[a]; }).forEach(function (r) {
       var o = document.createElement("option"); o.value = r; o.textContent = r; $("fRes").appendChild(o);
     });
@@ -130,7 +130,7 @@
       var cls = "rating" + (i.official_rating ? "" : " none") + (editable ? " editable" : "");
       var did = editable ? ' data-id="' + i.id + '"' : "";
       var rating = '<span class="' + cls + '"' + did +
-        (editable ? ' title="FSK aendern"' : "") + ">" +
+        (editable ? ' title="FSK ändern"' : "") + ">" +
         (i.official_rating ? esc(i.official_rating) : "o. FSK") + "</span>";
       var res = i.resolution ? '<span class="qbadge res">' + esc(i.resolution) + "</span>" : "";
       var comp = i.completeness === "incomplete"
@@ -207,7 +207,7 @@
     });
   }
 
-  // Cover-Anzeige-Optionen (FSK-Ecke / Aufloesung / Sprache) merken in localStorage
+  // Cover-Anzeige-Optionen (FSK-Ecke / Auflösung / Sprache) merken in localStorage
   function initDisp() {
     var saved = {};
     try { saved = JSON.parse(localStorage.getItem("smh-disp") || "{}"); } catch (e) { saved = {}; }

@@ -1,7 +1,7 @@
-"""FSK-Qualitaetskontrolle (aus emby-fsk-manager portiert).
+"""FSK-Qualitätskontrolle (aus emby-fsk-manager portiert).
 
-- analyze(): read-only. Prueft Freigabe auf Plausibilitaet, nutzt TMDb-Vorschlag.
-- write_emby(): AUSNAHME - schreibt eine Freigabe aktiv nach Emby zurueck.
+- analyze(): read-only. Prüft Freigabe auf Plausibilität, nutzt TMDb-Vorschlag.
+- write_emby(): AUSNAHME - schreibt eine Freigabe aktiv nach Emby zurück.
   Nur wenn ALLOW_EMBY_WRITE=1. SelfMediaHub ist sonst strikt read-only.
 """
 import json
@@ -73,7 +73,7 @@ _admin_uid = None
 
 
 def _emby_admin_uid(headers: dict) -> str:
-    """Admin-User-Id ermitteln und cachen (fuer Massen-Schreiben)."""
+    """Admin-User-Id ermitteln und cachen (für Massen-Schreiben)."""
     global _admin_uid
     if _admin_uid:
         return _admin_uid
@@ -87,7 +87,7 @@ def _emby_admin_uid(headers: dict) -> str:
 def write_emby(source_id: str, rating: str) -> None:
     """AUSNAHME: Freigabe aktiv nach Emby schreiben. Nur mit ALLOW_EMBY_WRITE."""
     if not config.ALLOW_EMBY_WRITE:
-        raise RuntimeError("Zurueckschreiben ist deaktiviert (ALLOW_EMBY_WRITE=0).")
+        raise RuntimeError("Zurückschreiben ist deaktiviert (ALLOW_EMBY_WRITE=0).")
     if not config.emby_configured():
         raise RuntimeError("Emby ist nicht konfiguriert.")
     headers = {"X-Emby-Token": config.EMBY_API_KEY}

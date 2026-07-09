@@ -1,1 +1,1 @@
-"""Medienserver-Connectoren. Jeder Connector liest nur - er schreibt nie zurueck."""
+"""Medienserver-Connectoren. Jeder Connector liest nur - er schreibt nie zurück."""

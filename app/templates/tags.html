@@ -7,7 +7,7 @@
   <section class="hero">
     <p class="label">Tag-System</p>
     <h1>Eigene Tags &amp; Klassifizierung</h1>
-    <p>Lege Tags mit Farbe, Icon und Prioritaet an. Sie erscheinen an Cover und in der
+    <p>Lege Tags mit Farbe, Icon und Priorität an. Sie erscheinen an Cover und in der
        Liste - und lassen sich per <a href="/regeln">Regeln</a> automatisch vergeben.</p>
   </section>
 
@@ -17,7 +17,7 @@
       <input class="field" id="tName" placeholder="Name (z.B. 4K, Deutsch, Anime)" style="flex:2">
       <input class="field" id="tIcon" placeholder="Icon (Emoji, optional)" style="width:150px">
       <input class="field" id="tColor" type="color" value="#33a78c" style="width:56px;padding:4px">
-      <input class="field" id="tPrio" type="number" value="100" title="Prioritaet" style="width:90px">
+      <input class="field" id="tPrio" type="number" value="100" title="Priorität" style="width:90px">
       <button class="btn btn-primary" id="tAdd">Anlegen</button>
     </div>
   </section>
@@ -39,11 +39,11 @@ function load(){
         '<span class="chip" style="border-color:'+esc(t.color)+';color:'+esc(t.color)+'">'+(t.icon?esc(t.icon)+" ":"")+esc(t.name)+'</span>'+
         '<span class="mono" style="color:var(--self-text-3)">Prio '+t.priority+'</span>'+
         '<span class="spacer"></span>'+
-        '<button class="btn btn-small tdel" data-id="'+t.id+'">Loeschen</button></div>';
+        '<button class="btn btn-small tdel" data-id="'+t.id+'">Löschen</button></div>';
     }).join("");
     document.querySelectorAll(".tdel").forEach(function(b){
       b.onclick=function(){
-        fetch("/api/tags/"+b.getAttribute("data-id"),{method:"DELETE"}).then(function(){load();window.smhToast("Tag geloescht");});
+        fetch("/api/tags/"+b.getAttribute("data-id"),{method:"DELETE"}).then(function(){load();window.smhToast("Tag gelöscht");});
       };
     });
   });

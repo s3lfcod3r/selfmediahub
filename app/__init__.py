@@ -1,1 +1,1 @@
-"""SelfMediaHub - read-only Analyse- und Uebersichtsschicht fuer Mediatheken."""
+"""SelfMediaHub - read-only Analyse- und Übersichtsschicht für Mediatheken."""

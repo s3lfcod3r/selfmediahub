@@ -1,7 +1,7 @@
 """Regel-Engine: setzt automatisch Tags anhand definierbarer Bedingungen.
 
 Regel = {match_type: 'all'|'any', conditions: [...], actions: [...]}.
-Bedingung = {field, op, value}. NICHT wird ueber not_equals/not_contains
+Bedingung = {field, op, value}. NICHT wird über not_equals/not_contains
 ausgedrueckt. Aktion = {type:'add_tag', tag_id}.
 """
 import json
@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from .. import db
 
 LIST_FIELDS = {"genres", "audio_langs", "subtitle_langs", "audio_codecs"}
-# Felder, die in Regeln verwendet werden duerfen (aus media_items).
+# Felder, die in Regeln verwendet werden dürfen (aus media_items).
 FIELDS = [
     "item_type", "library_name", "official_rating", "community_rating", "year",
     "genres", "audio_langs", "subtitle_langs", "audio_codecs", "video_codec",
@@ -105,7 +105,7 @@ def delete_rule(rule_id) -> None:
     db.execute("DELETE FROM rules WHERE id=?", (rule_id,))
 
 
-# -- Ausfuehrung ------------------------------------------------------------
+# -- Ausführung ------------------------------------------------------------
 def _load_items(conn) -> list:
     cols = "id, " + ", ".join(FIELDS)
     items = []

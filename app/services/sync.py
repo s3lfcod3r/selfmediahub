@@ -1,6 +1,6 @@
 """Import/Scan-Pipeline: liest alle Quellen, reichert an (parallel), speichert.
 
-Laeuft im Hintergrund mit Fortschritts-State, damit die UI nicht blockiert.
+Läuft im Hintergrund mit Fortschritts-State, damit die UI nicht blockiert.
 """
 import json
 import threading
@@ -16,7 +16,7 @@ from . import analysis, completeness, fsk, notify, rules, tmdb
 
 # Wieviele TMDb-Abfragen gleichzeitig (TMDb erlaubt reichlich).
 TMDB_WORKERS = 8
-# TMDb-Felder, die aus einem frueheren Sync uebernommen werden koennen.
+# TMDb-Felder, die aus einem frueheren Sync übernommen werden können.
 _CARRY = ("tmdb_id", "tmdb_seasons", "tmdb_episodes", "status", "fsk_suggested")
 
 _lock = threading.Lock()
@@ -50,7 +50,7 @@ def build_connectors() -> list:
 
 
 def connector_for(kind: str):
-    """Einzelnen Connector fuer eine Quelle bauen (z.B. fuer Detail-Abrufe)."""
+    """Einzelnen Connector für eine Quelle bauen (z.B. für Detail-Abrufe)."""
     if kind == "emby" and config.emby_configured():
         return EmbyConnector(config.EMBY_URL, config.EMBY_API_KEY)
     if kind == "jellyfin" and config.jellyfin_configured():
@@ -64,7 +64,7 @@ def _enrich_one(item: dict, existing: dict, cache: dict) -> None:
     analysis.enrich(item)
     prev = existing.get(item["source_id"])
     if prev and prev.get("tmdb_id"):
-        # Bereits abgeglichen -> TMDb-Daten uebernehmen, kein Netzabruf.
+        # Bereits abgeglichen -> TMDb-Daten übernehmen, kein Netzabruf.
         for field in _CARRY:
             if item.get(field) is None:
                 item[field] = prev.get(field)
@@ -77,7 +77,7 @@ def _enrich_one(item: dict, existing: dict, cache: dict) -> None:
 
 
 def run_sync() -> dict:
-    """Vollen Re-Sync aller Quellen ausfuehren (aktualisiert den Fortschritt)."""
+    """Vollen Re-Sync aller Quellen ausführen (aktualisiert den Fortschritt)."""
     connectors = build_connectors()
     if not connectors:
         raise RuntimeError("Keine Medienquelle konfiguriert.")
@@ -134,7 +134,7 @@ def run_sync() -> dict:
     db.set_meta("last_sync_count", str(total_seen))
 
     if total_new:
-        notify.send("new_items", f"{total_new} neue Eintraege in der Mediathek", {"count": total_new})
+        notify.send("new_items", f"{total_new} neue Einträge in der Mediathek", {"count": total_new})
 
     return {"count": total_seen, "new": total_new, "at": now,
             "sources": sources, "rules": rule_res}

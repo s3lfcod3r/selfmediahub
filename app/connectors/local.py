@@ -1,8 +1,8 @@
 """Lokaler-Ordner-Connector - katalogisiert Videodateien anhand ihrer Namen.
 
 Bewusst leichtgewichtig: parst Titel/Jahr und SxxExx, gruppiert Episoden zu
-Serien und zaehlt Staffeln/Episoden. Tiefe Technik-Analyse (Codec/Aufloesung)
-braucht ffprobe und folgt spaeter.
+Serien und zählt Staffeln/Episoden. Tiefe Technik-Analyse (Codec/Auflösung)
+braucht ffprobe und folgt später.
 """
 import os
 import re

@@ -34,7 +34,7 @@ SCAN_INTERVAL_HOURS = float(os.environ.get("SCAN_INTERVAL_HOURS", "0") or "0")
 # Generischer JSON-Webhook (z.B. Apprise, Discord, ntfy-Bridge). Leer = aus.
 NOTIFY_WEBHOOK_URL = os.environ.get("NOTIFY_WEBHOOK_URL", "").strip()
 
-# --- Ausnahme: aktives Zurueckschreiben nach Emby (FSK) ----------------
+# --- Ausnahme: aktives Zurückschreiben nach Emby (FSK) ----------------
 # Standard AUS - SelfMediaHub ist read-only. Nur bewusst aktivieren.
 ALLOW_EMBY_WRITE = os.environ.get("ALLOW_EMBY_WRITE", "0").strip() in ("1", "true", "yes")
 

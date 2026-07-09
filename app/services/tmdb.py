@@ -58,7 +58,7 @@ def _tv_cert(data: dict):
 def compute_missing(seasons: dict, present) -> list:
     """Fehlende Episoden aus {staffel: episodenzahl} vs. vorhandenen (s, e).
 
-    Gibt [] zurueck, wenn Embys Nummerierung offensichtlich von TMDb abweicht
+    Gibt [] zurück, wenn Embys Nummerierung offensichtlich von TMDb abweicht
     (Anime mit Fake-Staffeln, Absolut-Nummerierung o.Ae.) - dann werden keine
     Einzelfolgen geraten. Staffel 0 (Specials) ist bereits ausgeschlossen.
     """
@@ -67,7 +67,7 @@ def compute_missing(seasons: dict, present) -> list:
     present_set = {p for p in present if p[0] is not None and p[1] is not None}
     present_seasons = {s for (s, _e) in present_set}
 
-    # 1) Emby kennt hoehere Staffeln als TMDb -> Nummerierung passt nicht.
+    # 1) Emby kennt höhere Staffeln als TMDb -> Nummerierung passt nicht.
     if present_seasons and max(present_seasons) > max(seasons):
         return []
     # 2) Viele vorhandene Folgen liegen ausserhalb der TMDb-Struktur.

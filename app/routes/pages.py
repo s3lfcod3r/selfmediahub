@@ -1,4 +1,4 @@
-"""HTML-Seiten: Uebersicht, Tags, Regeln, Setup."""
+"""HTML-Seiten: Übersicht, Tags, Regeln, Setup."""
 import json
 import os
 

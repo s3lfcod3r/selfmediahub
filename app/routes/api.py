@@ -14,7 +14,7 @@ def _fail(exc: Exception):
 # -- Sync -------------------------------------------------------------------
 @router.post("/sync")
 def api_sync():
-    """Startet den Sync im Hintergrund und kehrt sofort zurueck."""
+    """Startet den Sync im Hintergrund und kehrt sofort zurück."""
     return {"ok": True, **sync_service.start_background()}
 
 
@@ -40,9 +40,9 @@ def api_item_detail(item_id: int):
             except Exception as exc:  # noqa: BLE001
                 note = f"Episoden konnten nicht geladen werden: {exc}"
         else:
-            note = "Episodendetails sind fuer diese Quelle nicht verfuegbar."
+            note = "Episodendetails sind für diese Quelle nicht verfügbar."
 
-        # Konkret fehlende Episoden ueber TMDb bestimmen
+        # Konkret fehlende Episoden über TMDb bestimmen
         if episodes and item.get("tmdb_id"):
             present = [(e["season"], e["episode"]) for e in episodes
                        if e.get("season") is not None and e.get("episode") is not None]
@@ -60,7 +60,7 @@ def api_item_detail(item_id: int):
             "missing_count": len(missing), "allow_write": config.ALLOW_EMBY_WRITE}
 
 
-# -- Metadaten fuer den Regel-Builder --------------------------------------
+# -- Metadaten für den Regel-Builder --------------------------------------
 @router.get("/meta/fields")
 def api_fields():
     return {"fields": rules.FIELDS, "ops": rules.OPS, "tags": tags.list_tags()}
@@ -157,7 +157,7 @@ def api_rules_apply():
 # -- FSK schreiben (Ausnahme, nur mit ALLOW_EMBY_WRITE) ---------------------
 @router.post("/fsk/ack")
 async def api_fsk_ack(request: Request):
-    """Einen FSK-Fall als 'passt so' bestaetigen (ueberlebt Re-Sync)."""
+    """Einen FSK-Fall als 'passt so' bestätigen (überlebt Re-Sync)."""
     d = await request.json()
     rows = db.query("SELECT source_kind, source_id FROM media_items WHERE id=?", (int(d["item_id"]),))
     if not rows:
@@ -214,7 +214,7 @@ async def api_fsk_write(request: Request):
         raise HTTPException(status_code=404, detail="Eintrag nicht gefunden")
     item = dict(rows[0])
     if item["source_kind"] != "emby":
-        raise HTTPException(status_code=400, detail="Schreiben nur fuer Emby-Quellen moeglich")
+        raise HTTPException(status_code=400, detail="Schreiben nur für Emby-Quellen möglich")
     # "rating" im Body (auch leer) = expliziter Wunsch; sonst Vorschlag nutzen.
     if "rating" in d:
         rating = (d.get("rating") or "").strip()

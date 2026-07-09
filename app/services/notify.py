@@ -1,4 +1,4 @@
-"""Benachrichtigungen ueber einen generischen JSON-Webhook (best-effort).
+"""Benachrichtigungen über einen generischen JSON-Webhook (best-effort).
 
 Kompatibel mit ntfy-Bridges, Discord-Webhooks, Apprise-Endpunkten usw.
 """

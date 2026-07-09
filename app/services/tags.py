@@ -45,7 +45,7 @@ def remove(item_id: int, tag_id: int) -> None:
 
 
 def tags_for_items() -> dict:
-    """{item_id: [ {id,name,color,icon,auto} ... ]} - eine Abfrage fuer alle."""
+    """{item_id: [ {id,name,color,icon,auto} ... ]} - eine Abfrage für alle."""
     rows = db.query(
         "SELECT it.item_id AS item_id, t.id AS id, t.name AS name, "
         "t.color AS color, t.icon AS icon, it.auto AS auto, t.priority AS priority "

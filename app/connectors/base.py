@@ -1,7 +1,7 @@
 """Gemeinsame Schnittstelle aller Connectoren.
 
 Ein Connector liest eine fremde Mediathek und liefert *normalisierte* Items.
-So kommen spaeter Plex/Jellyfin/lokale Ordner dazu, ohne den Rest zu aendern.
+So kommen später Plex/Jellyfin/lokale Ordner dazu, ohne den Rest zu ändern.
 
 Normalisiertes Item (dict):
     source_id, item_type ("Film"|"Serie"), name, sort_name, year,
@@ -16,8 +16,8 @@ class Connector(ABC):
 
     @abstractmethod
     def test_connection(self) -> None:
-        """Verbindung pruefen. Wirft bei Fehler eine Exception."""
+        """Verbindung prüfen. Wirft bei Fehler eine Exception."""
 
     @abstractmethod
     def fetch_items(self) -> list:
-        """Alle Filme + Serien als normalisierte Item-Dicts zurueckgeben."""
+        """Alle Filme + Serien als normalisierte Item-Dicts zurückgeben."""

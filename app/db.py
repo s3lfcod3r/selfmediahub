@@ -1,4 +1,4 @@
-"""SQLite-Zugriff. Haelt SelfMediaHubs eigene Daten - schreibt nie in Fremdsysteme."""
+"""SQLite-Zugriff. Hält SelfMediaHubs eigene Daten - schreibt nie in Fremdsysteme."""
 import json
 import os
 import sqlite3
@@ -18,7 +18,7 @@ ITEM_COLUMNS = [
 ]
 JSON_COLUMNS = {"genres", "audio_codecs", "audio_langs", "subtitle_langs"}
 
-# Typ je Spalte - fuer Migration bestehender (v0.1) Datenbanken.
+# Typ je Spalte - für Migration bestehender (v0.1) Datenbanken.
 _ITEM_COLDEF = {
     "source_kind": "TEXT", "source_id": "TEXT", "item_type": "TEXT",
     "name": "TEXT", "sort_name": "TEXT", "year": "INTEGER",
@@ -90,7 +90,7 @@ CREATE TABLE IF NOT EXISTS rules (
   created_at TEXT
 );
 
--- Vom Benutzer als "passt so" bestaetigte FSK-Faelle (ueberlebt Re-Sync).
+-- Vom Benutzer als "passt so" bestätigte FSK-Fälle (überlebt Re-Sync).
 CREATE TABLE IF NOT EXISTS fsk_acks (
   source_kind TEXT NOT NULL,
   source_id   TEXT NOT NULL,
@@ -156,9 +156,9 @@ def _item_values(source_kind: str, it: dict, synced_at: str) -> tuple:
 
 
 def upsert_items(source_kind: str, items: list, synced_at: str) -> dict:
-    """Items einer Quelle einspielen (id bleibt stabil -> Tags ueberleben).
+    """Items einer Quelle einspielen (id bleibt stabil -> Tags überleben).
 
-    Gibt {seen, new, removed} zurueck; ``new`` ist die Liste neuer source_ids.
+    Gibt {seen, new, removed} zurück; ``new`` ist die Liste neuer source_ids.
     """
     existing = {
         r["source_id"]

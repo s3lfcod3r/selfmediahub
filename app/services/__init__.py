@@ -1,1 +1,1 @@
-"""Anwendungslogik: Sync (Import) und Abfragen fuer die Ansichten."""
+"""Anwendungslogik: Sync (Import) und Abfragen für die Ansichten."""

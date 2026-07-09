@@ -1,4 +1,4 @@
-"""Health-/Status-Endpunkt fuer Monitoring und Container-Checks."""
+"""Health-/Status-Endpunkt für Monitoring und Container-Checks."""
 from fastapi import APIRouter
 
 from .. import config, db

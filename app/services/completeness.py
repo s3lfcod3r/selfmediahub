@@ -1,4 +1,4 @@
-"""Vollstaendigkeit: vorhandene vs. veroeffentlichte Episoden (aus TMDb)."""
+"""Vollständigkeit: vorhandene vs. veroeffentlichte Episoden (aus TMDb)."""
 
 
 def compute(item: dict) -> dict:

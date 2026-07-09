@@ -1,4 +1,4 @@
-"""SelfMediaHub - FastAPI-Anwendung. Startpunkt fuer Container und lokal."""
+"""SelfMediaHub - FastAPI-Anwendung. Startpunkt für Container und lokal."""
 import os
 from contextlib import asynccontextmanager
 
@@ -30,7 +30,7 @@ app.include_router(pages.router)
 def main() -> None:
     import uvicorn
 
-    print(f"{config.APP_NAME} laeuft auf http://0.0.0.0:{config.PORT}", flush=True)
+    print(f"{config.APP_NAME} läuft auf http://0.0.0.0:{config.PORT}", flush=True)
     uvicorn.run(app, host="0.0.0.0", port=config.PORT)
 
 

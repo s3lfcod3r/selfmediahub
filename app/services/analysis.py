@@ -1,10 +1,10 @@
-"""Technische Analyse: Aufloesung und HDR-Format aus Rohwerten ableiten."""
+"""Technische Analyse: Auflösung und HDR-Format aus Rohwerten ableiten."""
 
 
 def resolution_label(width, height):
-    """Echte Aufloesung nach Bildhoehe. Nur echtes UHD wird zu '4K'
-    zusammengefasst; alles andere zeigt die tatsaechliche Hoehe (z.B. 800p,
-    1600p), damit eigene Render-Aufloesungen korrekt erscheinen."""
+    """Echte Auflösung nach Bildhöhe. Nur echtes UHD wird zu '4K'
+    zusammengefasst; alles andere zeigt die tatsaechliche Höhe (z.B. 800p,
+    1600p), damit eigene Render-Auflösungen korrekt erscheinen."""
     w, h = width or 0, height or 0
     if w >= 3800 or h >= 2000:
         return "4K"

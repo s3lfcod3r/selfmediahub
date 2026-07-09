@@ -1,4 +1,4 @@
-/* Gemeinsame Logik fuer alle Seiten: Theme-Umschalter, Sync, Toast. */
+/* Gemeinsame Logik für alle Seiten: Theme-Umschalter, Sync, Toast. */
 (function () {
   "use strict";
 
@@ -50,7 +50,7 @@
       if (!s.running) {
         clearInterval(pollTimer);
         var n = s.result ? s.result.count : 0;
-        toast(n + " Eintraege - Seite wird aktualisiert ...", "ok");
+        toast(n + " Einträge - Seite wird aktualisiert ...", "ok");
         setTimeout(function () { location.reload(); }, 900);
         return;
       }

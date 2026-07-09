@@ -216,7 +216,7 @@ select.field {
   overflow: hidden; }
 .meta .y { color: var(--self-text-3); font-family: var(--self-font-mono);
   font-size: 12px; margin-top: 3px; }
-/* FSK-Ecke anklickbar + Popup-Menue */
+/* FSK-Ecke anklickbar + Popup-Menü */
 .rating.editable { cursor: pointer; }
 .rating.editable:hover { border-color: var(--self-teal); color: var(--self-teal-bright); }
 .fsk-menu {
@@ -328,7 +328,7 @@ table.list td.name { font-weight: 600; }
 
 .stats { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 
-/* --- Qualitaets-Badges auf Cover ---------------------------- */
+/* --- Qualitäts-Badges auf Cover ---------------------------- */
 .qrow { position: absolute; bottom: 8px; left: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
 .qbadge {
   font-family: var(--self-font-mono); font-size: 10px; font-weight: 600;
@@ -360,7 +360,7 @@ table.list td.name { font-weight: 600; }
 }
 .smh-tip.hidden { display: none; }
 
-/* Cover-Badges ein-/ausblendbar (Einstellungs-Menue) */
+/* Cover-Badges ein-/ausblendbar (Einstellungs-Menü) */
 .grid.hide-fsk .rating { display: none; }
 .grid.hide-res .qbadge.res { display: none; }
 .grid.hide-lang .langrow { display: none; }
@@ -372,7 +372,7 @@ table.list td.name { font-weight: 600; }
   white-space: nowrap;
 }
 
-/* --- Pills (Tabellen/Qualitaet) ----------------------------- */
+/* --- Pills (Tabellen/Qualität) ----------------------------- */
 .pill.ok { color: var(--self-green); border-color: var(--self-green); }
 .pill.bad { color: var(--self-red); border-color: var(--self-red); }
 .pill.ut { color: var(--self-teal-bright); }
@@ -425,7 +425,7 @@ table.list tr.changed td:first-child { box-shadow: inset 3px 0 0 var(--self-teal
 
 .cond, .act { margin-bottom: 8px; }
 
-/* --- Qualitaetskontrolle ------------------------------------ */
+/* --- Qualitätskontrolle ------------------------------------ */
 .qc-head { font-size: 16px; margin: 30px 0 10px; display: flex; align-items: center; gap: 10px; }
 .badge-count {
   font-family: var(--self-font-mono); font-size: 12px; font-weight: 600;
@@ -435,7 +435,7 @@ table.list tr.changed td:first-child { box-shadow: inset 3px 0 0 var(--self-teal
 .ok-note { color: var(--self-green); font-size: 14px; margin: 6px 0 10px; }
 .qc table.list th { top: 0; }
 
-/* --- Klickbare Eintraege ------------------------------------ */
+/* --- Klickbare Einträge ------------------------------------ */
 .card { cursor: pointer; }
 table.list tbody tr { cursor: pointer; }
 

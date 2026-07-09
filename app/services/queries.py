@@ -1,4 +1,4 @@
-"""Leseabfragen fuer die Ansichten - immer aus der eigenen lokalen DB."""
+"""Leseabfragen für die Ansichten - immer aus der eigenen lokalen DB."""
 import json
 
 from .. import db

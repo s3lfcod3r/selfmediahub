@@ -1,4 +1,4 @@
-"""Emby-Connector - liest Filme und Serien ausschliesslich ueber die Emby-API.
+"""Emby-Connector - liest Filme und Serien ausschließlich über die Emby-API.
 
 Jellyfin erbt hiervon (fast identische API), siehe jellyfin.py.
 """

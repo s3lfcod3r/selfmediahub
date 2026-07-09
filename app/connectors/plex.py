@@ -1,4 +1,4 @@
-"""Plex-Connector - liest Filme und Serien nur lesend ueber die Plex-API (JSON)."""
+"""Plex-Connector - liest Filme und Serien nur lesend über die Plex-API (JSON)."""
 import requests
 
 from .base import Connector

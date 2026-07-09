@@ -46,13 +46,13 @@
   }
   function epDetail(e) {
     var h = "";
-    h += epDetailRow("Aufloesung", (e.width && e.height) ? (e.width + " × " + e.height) :
+    h += epDetailRow("Auflösung", (e.width && e.height) ? (e.width + " × " + e.height) :
                      (e.resolution ? esc(e.resolution) : null));
     h += epDetailRow("HDR", (e.hdr && e.hdr !== "SDR") ? esc(e.hdr) : null);
     h += epDetailRow("Video-Codec", e.video_codec ? esc(e.video_codec) : null);
     h += epDetailRow("Audiosprachen", langList(e.audio_langs) || null);
     h += epDetailRow("Untertitel", (e.subtitle_langs || []).length ? esc(langList(e.subtitle_langs)) : "keine");
-    h += epDetailRow("Groesse", fmtSize(e.size_bytes));
+    h += epDetailRow("Größe", fmtSize(e.size_bytes));
     h += epDetailRow("Laufzeit", e.runtime_min ? e.runtime_min + " min" : null);
     h += e.path ? '<div class="epd-path mono">' + esc(e.path) + "</div>" : "";
     return h || '<div class="epd-row"><span class="epd-v" style="color:var(--self-text-3)">Keine weiteren Angaben</span></div>';
@@ -74,8 +74,8 @@
 
     var meta = "";
     meta += metaItem("Laufzeit", i.runtime_min ? i.runtime_min + " min" : null);
-    meta += metaItem("Groesse", fmtSize(i.size_bytes));
-    meta += metaItem("Aufloesung", (i.width && i.height) ? (i.width + " × " + i.height) :
+    meta += metaItem("Größe", fmtSize(i.size_bytes));
+    meta += metaItem("Auflösung", (i.width && i.height) ? (i.width + " × " + i.height) :
                      (i.resolution ? esc(i.resolution) : null));
     meta += metaItem("Video-Codec", i.video_codec ? esc(i.video_codec) : null);
     meta += metaItem("Audiosprachen", langList(i.audio_langs) || null);
@@ -129,7 +129,7 @@
             ">In Emby speichern</button>" +
         "</div>" +
         (d.allow_write ? "" :
-          '<div class="modal-note">Zum Aendern am Container <code>ALLOW_EMBY_WRITE=1</code> setzen (Standard: read-only).</div>') +
+          '<div class="modal-note">Zum Ändern am Container <code>ALLOW_EMBY_WRITE=1</code> setzen (Standard: read-only).</div>') +
         "</div>";
     }
 
@@ -179,7 +179,7 @@
           body: JSON.stringify({ item_id: +ackB.getAttribute("data-id") }) })
           .then(function (r) { return r.json(); })
           .then(function () {
-            window.smhToast("Als korrekt bestaetigt", "ok");
+            window.smhToast("Als korrekt bestätigt", "ok");
             var box = ackB.closest(".fsk-ack-box"); if (box) { box.remove(); }
           })
           .catch(function () { window.smhToast("Fehlgeschlagen", "err"); ackB.disabled = false; });

@@ -7,8 +7,8 @@
   <section class="hero">
     <p class="label">Regel-Engine</p>
     <h1>Automatisch taggen &amp; klassifizieren</h1>
-    <p>Bedingungen mit UND/ODER (NICHT ueber "ist nicht"/"enthaelt nicht"), mehrere Aktionen,
-       Prioritaeten. Regeln laufen bei jedem Sync und auf Knopfdruck.</p>
+    <p>Bedingungen mit UND/ODER (NICHT über "ist nicht"/"enthält nicht"), mehrere Aktionen,
+       Prioritäten. Regeln laufen bei jedem Sync und auf Knopfdruck.</p>
     <button class="btn btn-primary" id="applyBtn" style="margin-top:14px">Alle Regeln jetzt anwenden</button>
   </section>
 
@@ -17,7 +17,7 @@
     <div class="form-row">
       <input class="field" id="rName" placeholder="Regelname (z.B. '4K markieren')" style="flex:2">
       <select class="field" id="rMatch"><option value="all">Alle Bedingungen (UND)</option><option value="any">Eine Bedingung (ODER)</option></select>
-      <input class="field" id="rPrio" type="number" value="100" title="Prioritaet" style="width:90px">
+      <input class="field" id="rPrio" type="number" value="100" title="Priorität" style="width:90px">
       <label class="chk"><input type="checkbox" id="rEnabled" checked> aktiv</label>
     </div>
 
@@ -31,7 +31,7 @@
 
     <div class="form-row" style="margin-top:18px">
       <button class="btn btn-primary" id="saveBtn">Regel speichern</button>
-      <button class="btn" id="resetBtn">Zuruecksetzen</button>
+      <button class="btn" id="resetBtn">Zurücksetzen</button>
     </div>
   </section>
 
@@ -50,10 +50,10 @@ var editId = null;
 var FIELD_LABELS = {item_type:"Typ",library_name:"Bibliothek",official_rating:"Freigabe",
   community_rating:"Bewertung",year:"Jahr",genres:"Genre",audio_langs:"Audiosprache",
   subtitle_langs:"Untertitel",audio_codecs:"Audio-Codec",video_codec:"Video-Codec",
-  resolution:"Aufloesung",height:"Bildhoehe (px)",width:"Bildbreite (px)",hdr:"HDR",completeness:"Vollstaendigkeit",
-  missing_episodes:"Fehlende Episoden",fsk_suspicious:"FSK auffaellig",status:"Status",runtime_min:"Laufzeit (min)"};
-var OP_LABELS = {equals:"ist",not_equals:"ist nicht",contains:"enthaelt",not_contains:"enthaelt nicht",
-  gt:"groesser",lt:"kleiner",gte:"groesser/gleich",lte:"kleiner/gleich",is_empty:"ist leer",is_not_empty:"ist nicht leer"};
+  resolution:"Auflösung",height:"Bildhöhe (px)",width:"Bildbreite (px)",hdr:"HDR",completeness:"Vollständigkeit",
+  missing_episodes:"Fehlende Episoden",fsk_suspicious:"FSK auffällig",status:"Status",runtime_min:"Laufzeit (min)"};
+var OP_LABELS = {equals:"ist",not_equals:"ist nicht",contains:"enthält",not_contains:"enthält nicht",
+  gt:"größer",lt:"kleiner",gte:"größer/gleich",lte:"kleiner/gleich",is_empty:"ist leer",is_not_empty:"ist nicht leer"};
 
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function opt(v,l,sel){return '<option value="'+esc(v)+'"'+(sel===v?" selected":"")+'>'+esc(l)+'</option>';}
@@ -136,10 +136,10 @@ function loadRules(){
         '<div style="color:var(--self-text-2);margin-top:4px;font-size:13px">'+summary(r)+'</div></div>'+
         '<span class="spacer"></span>'+
         '<button class="btn btn-small redit" data-id="'+r.id+'">Bearbeiten</button>'+
-        '<button class="btn btn-small rdel" data-id="'+r.id+'">Loeschen</button></div>';
+        '<button class="btn btn-small rdel" data-id="'+r.id+'">Löschen</button></div>';
     }).join("");
     document.querySelectorAll(".rdel").forEach(function(b){b.onclick=function(){
-      fetch("/api/rules/"+b.getAttribute("data-id"),{method:"DELETE"}).then(function(){loadRules();window.smhToast("Regel geloescht");});
+      fetch("/api/rules/"+b.getAttribute("data-id"),{method:"DELETE"}).then(function(){loadRules();window.smhToast("Regel gelöscht");});
     };});
     document.querySelectorAll(".redit").forEach(function(b){b.onclick=function(){
       var r=d.rules.filter(function(x){return String(x.id)===b.getAttribute("data-id");})[0];

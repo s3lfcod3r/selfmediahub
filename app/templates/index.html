@@ -1,12 +1,12 @@
 {% extends "base.html" %}
 {% set active = 'home' %}
-{% block title %}{{ app.APP_NAME }} - Uebersicht{% endblock %}
+{% block title %}{{ app.APP_NAME }} - Übersicht{% endblock %}
 {% block body %}
 {% include '_topbar.html' %}
 
 <main class="wrap">
   <section class="hero">
-    <p class="label">Read-only Analyse &amp; Uebersicht</p>
+    <p class="label">Read-only Analyse &amp; Übersicht</p>
     <h1>Deine Mediathek auf einen Blick</h1>
   </section>
 
@@ -15,7 +15,7 @@
     <div class="stat"><div class="num">{{ stats.films }}</div><div class="cap label">Filme</div></div>
     <div class="stat"><div class="num">{{ stats.series }}</div><div class="cap label">Serien</div></div>
     <div class="stat"><div class="num">{{ stats.uhd }}</div><div class="cap label">4K / UHD</div></div>
-    <div class="stat warn"><div class="num">{{ stats.incomplete }}</div><div class="cap label">Unvollstaendig</div></div>
+    <div class="stat warn"><div class="num">{{ stats.incomplete }}</div><div class="cap label">Unvollständig</div></div>
     <div class="stat warn"><div class="num">{{ stats.no_rating }}</div><div class="cap label">FSK Ohne Freigabe</div></div>
   </section>
 
@@ -32,13 +32,13 @@
       <option value="Film">Nur Filme</option><option value="Serie">Nur Serien</option></select>
     <select class="field" id="fRating"><option value="">Alle Freigaben</option>
       <option value="__none__">Ohne Freigabe</option>
-      <option value="__suspicious__">FSK auffaellig</option></select>
-    <select class="field" id="fRes"><option value="">Alle Aufloesungen</option>
+      <option value="__suspicious__">FSK auffällig</option></select>
+    <select class="field" id="fRes"><option value="">Alle Auflösungen</option>
       <option value="__lt720__">unter 720p</option></select>
     <select class="field" id="fTag"><option value="">Alle Tags</option></select>
     <select class="field" id="fComplete"><option value="">Alle Serien-Status</option>
-      <option value="complete">Vollstaendig</option>
-      <option value="incomplete">Unvollstaendig</option>
+      <option value="complete">Vollständig</option>
+      <option value="incomplete">Unvollständig</option>
       <option value="unknown">Unbekannt</option></select>
 
     <div class="viewtoggle" id="viewToggle">
@@ -51,13 +51,13 @@
     </div>
   </div>
 
-  <div class="count-line"><span id="count">0</span> Eintraege</div>
+  <div class="count-line"><span id="count">0</span> Einträge</div>
 
   <section id="coverView"><div class="grid" id="grid"></div></section>
   <section id="listView" class="hidden">
     <div class="tablewrap"><table class="list"><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
   </section>
-  <div class="empty hidden" id="empty">Keine Eintraege - passe die Filter an oder lies neu ein.</div>
+  <div class="empty hidden" id="empty">Keine Einträge - passe die Filter an oder lies neu ein.</div>
 </main>
 
 {% include '_modal.html' %}
