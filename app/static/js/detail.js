@@ -50,7 +50,8 @@
   }
   function epTech(e) {
     var pref = prefLang();
-    var pflag = flag(pref) || esc(shortLang(pref));
+    var svg = (window.smhFlag && window.smhFlag(pref)) || null;
+    var pflag = svg || ('<span class="fl-code">' + esc(shortLang(pref)) + "</span>");
     var name = esc(langName(pref));
     var audioOk = hasLang(e.audio_langs, pref);
     var subOk = hasLang(e.subtitle_langs, pref);
@@ -61,7 +62,7 @@
         (e.video_codec ? esc(e.video_codec) : "–") + "</span>" +
       '<span class="pill et-badge et-size' + (fmtSize(e.size_bytes) ? "" : " et-empty") + '">' +
         (fmtSize(e.size_bytes) || "–") + "</span>" +
-      '<span class="lbadge flag et-badge et-lang' + (audioOk ? "" : " et-off") + '" title="' +
+      '<span class="lbadge et-badge et-lang' + (audioOk ? "" : " et-off") + '" title="' +
         name + "-Tonspur " + (audioOk ? "vorhanden" : "fehlt") + '">' + pflag + "</span>" +
       '<span class="pill et-badge et-ut' + (subOk ? "" : " et-off") + '" title="' +
         name + "-Untertitel " + (subOk ? "vorhanden" : "fehlt") + '">' + pflag + " UT</span>"
