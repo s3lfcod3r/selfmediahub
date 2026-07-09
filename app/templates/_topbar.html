@@ -10,6 +10,16 @@
       <a href="/regeln"    class="{{ 'active' if active == 'rules' }}">Regeln</a>
     </nav>
     <div class="spacer"></div>
+    {% if active == 'home' %}
+    <div class="colmenu" id="dispmenu">
+      <button class="btn btn-icon" id="dispBtn" title="Cover-Anzeige">&#9881;</button>
+      <div class="colmenu-panel" id="dispPanel">
+        <label><input type="checkbox" data-disp="fsk" checked> FSK-Ecke</label>
+        <label><input type="checkbox" data-disp="res" checked> Aufloesung</label>
+        <label><input type="checkbox" data-disp="lang" checked> Sprache/Untertitel</label>
+      </div>
+    </div>
+    {% endif %}
     <button class="btn btn-icon" id="themeBtn" title="Hell/Dunkel" aria-label="Theme umschalten">◐</button>
     <button class="btn btn-primary" id="syncBtn"><span id="syncLabel">Neu einlesen</span></button>
   </div>

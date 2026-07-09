@@ -38,6 +38,13 @@
     return SHORTLANG[k] || k.slice(0, 2).toUpperCase();
   }
 
+  var FLAG = { ger: "🇩🇪", deu: "🇩🇪", de: "🇩🇪", eng: "🇬🇧", en: "🇬🇧",
+    fre: "🇫🇷", fra: "🇫🇷", fr: "🇫🇷", spa: "🇪🇸", es: "🇪🇸", ita: "🇮🇹", it: "🇮🇹",
+    jpn: "🇯🇵", ja: "🇯🇵", rus: "🇷🇺", ru: "🇷🇺", tur: "🇹🇷", tr: "🇹🇷", pol: "🇵🇱", pl: "🇵🇱",
+    nld: "🇳🇱", dut: "🇳🇱", nl: "🇳🇱", por: "🇵🇹", pt: "🇵🇹", kor: "🇰🇷", ko: "🇰🇷",
+    chi: "🇨🇳", zho: "🇨🇳", zh: "🇨🇳", ara: "🇸🇦", ar: "🇸🇦" };
+  function flag(c) { return FLAG[String(c || "").toLowerCase()] || null; }
+
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -128,13 +135,18 @@
       var res = i.resolution ? '<span class="qbadge res">' + esc(i.resolution) + "</span>" : "";
       var comp = i.completeness === "incomplete"
         ? '<span class="qbadge bad">unvollst.</span>' : "";
-      var alangs = (i.audio_langs || []).slice(0, 3).map(shortLang);
-      var hasUt = (i.subtitle_langs || []).length > 0;
-      var lang = (alangs.length || hasUt)
-        ? '<div class="langrow">' +
-            alangs.map(function (l) { return '<span class="lbadge">' + esc(l) + "</span>"; }).join("") +
-            (hasUt ? '<span class="lbadge ut">UT</span>' : "") + "</div>"
-        : "";
+      var lang = "";
+      if (i.item_type === "Film") {
+        var flags = (i.audio_langs || []).slice(0, 4).map(function (l) {
+          var f = flag(l);
+          return '<span class="lbadge flag" title="' + esc(langName(l)) + '">' +
+            (f || esc(shortLang(l))) + "</span>";
+        }).join("");
+        var subs = (i.subtitle_langs || []).length > 0;
+        var ut = '<span class="lbadge ut' + (subs ? "" : " none") + '" title="' +
+          (subs ? esc(langList(i.subtitle_langs)) : "keine Untertitel") + '">UT</span>';
+        lang = '<div class="langrow">' + flags + ut + "</div>";
+      }
       var img = i.image_url
         ? '<img loading="lazy" src="' + esc(i.image_url) + '" alt="" ' +
           'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'">' +
@@ -215,6 +227,33 @@
     });
   }
 
+  function fmtDate(iso) {
+    try {
+      var d = new Date(iso);
+      if (isNaN(d.getTime())) { return iso; }
+      return d.toLocaleString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric",
+        hour: "2-digit", minute: "2-digit" });
+    } catch (e) { return iso; }
+  }
+  function initSyncTooltip() {
+    var btn = $("syncBtn");
+    if (!btn) { return; }
+    var ls = window.__LASTSYNC__;
+    var text = ls ? ("Zuletzt eingelesen: " + fmtDate(ls)) : "Noch nie eingelesen";
+    btn.title = text;
+    var tip = document.createElement("div");
+    tip.className = "smh-tip hidden";
+    tip.textContent = text;
+    document.body.appendChild(tip);
+    btn.addEventListener("mouseenter", function () {
+      var r = btn.getBoundingClientRect();
+      tip.style.top = Math.round(r.bottom + 8) + "px";
+      tip.style.right = Math.round(window.innerWidth - r.right) + "px";
+      tip.classList.remove("hidden");
+    });
+    btn.addEventListener("mouseleave", function () { tip.classList.add("hidden"); });
+  }
+
   function render() {
     var rows = filtered();
     $("count").textContent = rows.length;
@@ -227,7 +266,6 @@
     $("coverView").classList.toggle("hidden", v !== "cover");
     $("listView").classList.toggle("hidden", v !== "list");
     $("colmenu").hidden = v !== "list";
-    $("dispmenu").hidden = v !== "cover";
     $("viewToggle").querySelectorAll("button").forEach(function (b) {
       b.classList.toggle("active", b.getAttribute("data-view") === v);
     });
@@ -318,8 +356,7 @@
     $("colPanel").onclick = function (e) { e.stopPropagation(); };
     $("dispPanel").onclick = function (e) { e.stopPropagation(); };
 
-    var sb = $("syncBtn");
-    if (sb) { sb.title = window.__LASTSYNC__ ? ("Letzter Scan: " + window.__LASTSYNC__) : "Noch nie eingelesen"; }
+    initSyncTooltip();
   }
 
   fillFilters();

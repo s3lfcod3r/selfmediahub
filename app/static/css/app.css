@@ -263,7 +263,7 @@ table.list td.name { font-weight: 600; }
 
 .colmenu { position: relative; }
 .colmenu-panel {
-  position: absolute; right: 0; top: calc(100% + 8px);
+  position: absolute; right: 0; top: calc(100% + 8px); z-index: 40;
   background: var(--self-bg-2); border: 1px solid var(--self-line-strong);
   border-radius: var(--self-radius); padding: 10px; min-width: 180px;
   box-shadow: 0 16px 40px -20px rgba(0, 0, 0, 0.9); display: none;
@@ -347,6 +347,18 @@ table.list td.name { font-weight: 600; }
   border: 1px solid var(--self-line-strong);
 }
 .lbadge.ut { color: var(--self-teal-bright); }
+.lbadge.flag { font-size: 13px; line-height: 1; padding: 2px 4px; }
+.lbadge.ut.none { color: var(--self-text-3); text-decoration: line-through; }
+
+/* Sichtbarer Tooltip (z.B. letzter Scan an 'Neu einlesen') */
+.smh-tip {
+  position: fixed; z-index: 80; pointer-events: none; white-space: nowrap;
+  background: var(--self-bg-3); border: 1px solid var(--self-line-strong);
+  color: var(--self-text); border-radius: var(--self-radius-sm);
+  padding: 7px 11px; font-size: 13px; font-family: var(--self-font-mono);
+  box-shadow: 0 12px 30px -14px rgba(0, 0, 0, 0.9);
+}
+.smh-tip.hidden { display: none; }
 
 /* Cover-Badges ein-/ausblendbar (Einstellungs-Menue) */
 .grid.hide-fsk .rating { display: none; }
