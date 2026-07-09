@@ -86,23 +86,32 @@
     return h || '<div class="epd-row"><span class="epd-v" style="color:var(--self-text-3)">Keine weiteren Angaben</span></div>';
   }
 
-  function seasonSummary(s) {
-    if (!s || !s.seasons || !s.seasons.length) { return ""; }
-    var rows = s.seasons.map(function (r) {
-      var miss = Math.max(0, r.tmdb_total - r.have);
-      var cls = miss > 0 ? " miss" : " full";
-      var right = miss > 0 ? (miss + (miss === 1 ? " fehlt" : " fehlen")) : "komplett";
-      return '<div class="ssum-row' + cls + '">' +
-        '<span class="ssum-s">Staffel ' + r.season + "</span>" +
-        '<span class="ssum-c">' + r.have + " / " + r.tmdb_total + "</span>" +
-        '<span class="ssum-b">' + right + "</span></div>";
-    }).join("");
-    return '<div class="ssum">' +
-      '<div class="ssum-h">Fehlende Folgen nach Staffel &middot; ' +
-        s.total_have + " / " + s.total_tmdb + " vorhanden</div>" + rows +
-      '<div class="ssum-foot">Einzelne Folgennummern lassen sich bei dieser Serie nicht ' +
-        "sicher zuordnen (Emby-Nummerierung weicht von TMDb ab) - daher nur die Staffel-Summen.</div>" +
-      "</div>";
+  function seasonSummary(s, item) {
+    if (!s || !s.total_tmdb) { return ""; }
+    var miss = Math.max(0, s.total_tmdb - s.total_have);
+    var head = "Folgen-Vollständigkeit &middot; " + s.total_have + " / " + s.total_tmdb +
+      " vorhanden" + (miss > 0 ? " &middot; " + miss + (miss === 1 ? " fehlt" : " fehlen") : " &middot; komplett");
+    // Verlaessliche Staffel-Zuordnung -> Pro-Staffel-Aufschluesselung
+    if (s.reliable && s.seasons && s.seasons.length) {
+      var rows = s.seasons.map(function (r) {
+        var m = Math.max(0, r.tmdb_total - r.have);
+        var cls = m > 0 ? " miss" : " full";
+        var right = m > 0 ? (m + (m === 1 ? " fehlt" : " fehlen")) : "komplett";
+        return '<div class="ssum-row' + cls + '">' +
+          '<span class="ssum-s">Staffel ' + r.season + "</span>" +
+          '<span class="ssum-c">' + r.have + " / " + r.tmdb_total + "</span>" +
+          '<span class="ssum-b">' + right + "</span></div>";
+      }).join("");
+      return '<div class="ssum"><div class="ssum-h">' + head + "</div>" + rows +
+        '<div class="ssum-foot">Einzelne Folgennummern lassen sich bei dieser Serie nicht ' +
+        "sicher zuordnen (Emby-Nummerierung weicht von TMDb ab) - daher nur die Staffel-Summen.</div></div>";
+    }
+    // Nummerierung passt gar nicht -> wenigstens die Gesamtzahl ehrlich nennen
+    var hs = (item && item.have_seasons != null) ? item.have_seasons : "?";
+    var ts = (item && item.tmdb_seasons != null) ? item.tmdb_seasons : "?";
+    return '<div class="ssum"><div class="ssum-h">' + head + "</div>" +
+      '<div class="ssum-foot">Emby teilt die Serie in ' + esc(hs) + " Staffeln ein, TMDb in " +
+      esc(ts) + " - deshalb lässt sich nur die Gesamtzahl bestimmen, nicht welche Folgen genau fehlen.</div></div>";
   }
 
   function renderDetail(d) {
@@ -199,7 +208,7 @@
         (i.path ? '<div class="pathline"><div class="k">Pfad im Verzeichnis</div>' +
                   '<div class="pv mono">' + esc(i.path) + "</div></div>" : "") +
         (i.overview ? '<div class="overview">' + esc(i.overview) + "</div>" : "") +
-        note + seasonSummary(d.season_summary) + eps + "</div>";
+        note + seasonSummary(d.season_summary, i) + eps + "</div>";
 
     var saveBtn = document.getElementById("fskSave");
     if (saveBtn) {

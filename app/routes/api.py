@@ -53,10 +53,11 @@ def api_item_detail(item_id: int):
                                  "name": "", "missing": True})
             episodes.sort(key=lambda e: ((e["season"] if e["season"] is not None else 999),
                                          (e["episode"] if e["episode"] is not None else 999)))
-            # Einzelfolgen nicht sicher zuzuordnen -> wenigstens Pro-Staffel-Summen zeigen
+            # Einzelfolgen nicht sicher zuzuordnen -> wenigstens Zahlen zeigen:
+            # verlaesslich = Pro-Staffel-Summen, sonst wenigstens die Gesamtzahl.
             if not missing and item.get("completeness") == "incomplete":
                 summ = tmdb.season_summary(seasons, present)
-                if summ["reliable"] and summ["seasons"]:
+                if summ["total_tmdb"] > 0:
                     season_summary = summ
                 elif not note:
                     note = ("Fehlende Folgen lassen sich hier nicht sicher bestimmen - "
