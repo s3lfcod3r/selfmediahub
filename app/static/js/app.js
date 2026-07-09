@@ -24,9 +24,9 @@
   ];
 
   var LANG = { ger: "Deutsch", deu: "Deutsch", de: "Deutsch", eng: "Englisch", en: "Englisch",
-    fre: "Franzoesisch", fra: "Franzoesisch", spa: "Spanisch", ita: "Italienisch",
-    jpn: "Japanisch", rus: "Russisch", tur: "Tuerkisch", pol: "Polnisch",
-    nld: "Niederlaendisch", dut: "Niederlaendisch", por: "Portugiesisch",
+    fre: "Französisch", fra: "Französisch", spa: "Spanisch", ita: "Italienisch",
+    jpn: "Japanisch", rus: "Russisch", tur: "Türkisch", pol: "Polnisch",
+    nld: "Niederländisch", dut: "Niederländisch", por: "Portugiesisch",
     kor: "Koreanisch", chi: "Chinesisch", zho: "Chinesisch", ara: "Arabisch", und: "unbekannt" };
 
   var SHORTLANG = { ger: "DE", deu: "DE", de: "DE", eng: "EN", en: "EN", fre: "FR", fra: "FR", fr: "FR",

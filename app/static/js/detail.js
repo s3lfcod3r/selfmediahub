@@ -4,9 +4,9 @@
   "use strict";
 
   var LANG = { ger: "Deutsch", deu: "Deutsch", de: "Deutsch", eng: "Englisch", en: "Englisch",
-    fre: "Franzoesisch", fra: "Franzoesisch", spa: "Spanisch", ita: "Italienisch",
-    jpn: "Japanisch", rus: "Russisch", tur: "Tuerkisch", pol: "Polnisch",
-    nld: "Niederlaendisch", dut: "Niederlaendisch", por: "Portugiesisch",
+    fre: "Französisch", fra: "Französisch", spa: "Spanisch", ita: "Italienisch",
+    jpn: "Japanisch", rus: "Russisch", tur: "Türkisch", pol: "Polnisch",
+    nld: "Niederländisch", dut: "Niederländisch", por: "Portugiesisch",
     kor: "Koreanisch", chi: "Chinesisch", zho: "Chinesisch", ara: "Arabisch", und: "unbekannt" };
 
   function esc(s) {
@@ -21,6 +21,17 @@
   }
   function langName(c) { return c ? (LANG[String(c).toLowerCase()] || c) : c; }
   function langList(a) { return (a || []).map(langName).join(", "); }
+
+  var SHORTLANG = { ger: "DE", deu: "DE", de: "DE", eng: "EN", en: "EN", fre: "FR", fra: "FR", fr: "FR",
+    spa: "ES", es: "ES", ita: "IT", it: "IT", jpn: "JP", ja: "JP", rus: "RU", ru: "RU", tur: "TR", tr: "TR",
+    pol: "PL", pl: "PL", nld: "NL", dut: "NL", nl: "NL", por: "PT", pt: "PT", kor: "KO", ko: "KO",
+    chi: "ZH", zho: "ZH", zh: "ZH", ara: "AR", ar: "AR", und: "?" };
+  function shortLang(c) { if (!c) { return "?"; } var k = String(c).toLowerCase(); return SHORTLANG[k] || k.slice(0, 2).toUpperCase(); }
+  var FLAG = { ger: "🇩🇪", deu: "🇩🇪", de: "🇩🇪", eng: "🇬🇧", en: "🇬🇧", fre: "🇫🇷", fra: "🇫🇷", fr: "🇫🇷",
+    spa: "🇪🇸", es: "🇪🇸", ita: "🇮🇹", it: "🇮🇹", jpn: "🇯🇵", ja: "🇯🇵", rus: "🇷🇺", ru: "🇷🇺", tur: "🇹🇷", tr: "🇹🇷",
+    pol: "🇵🇱", pl: "🇵🇱", nld: "🇳🇱", dut: "🇳🇱", nl: "🇳🇱", por: "🇵🇹", pt: "🇵🇹", kor: "🇰🇷", ko: "🇰🇷",
+    chi: "🇨🇳", zho: "🇨🇳", zh: "🇨🇳", ara: "🇸🇦", ar: "🇸🇦" };
+  function flag(c) { return FLAG[String(c || "").toLowerCase()] || null; }
   function tagChip(t) {
     var ic = t.icon ? esc(t.icon) + " " : "";
     return '<span class="chip" style="border-color:' + esc(t.color) + ";color:" + esc(t.color) +
@@ -31,14 +42,21 @@
     return '<div><div class="k">' + esc(k) + '</div><div class="v">' + v + "</div></div>";
   }
   function epTech(e) {
-    var parts = [];
-    if (e.resolution) { parts.push('<span class="qbadge">' + esc(e.resolution) + "</span>"); }
-    if (e.video_codec) { parts.push('<span class="pill">' + esc(e.video_codec) + "</span>"); }
-    if (fmtSize(e.size_bytes)) { parts.push('<span class="pill">' + fmtSize(e.size_bytes) + "</span>"); }
+    var mainLang = (e.audio_langs || [])[0];
+    var mf = mainLang ? (flag(mainLang) || esc(shortLang(mainLang))) : null;
     var subs = (e.subtitle_langs || []).length > 0;
-    parts.push('<span class="pill ut' + (subs ? "" : " none") + '" title="' +
-      (subs ? esc(langList(e.subtitle_langs)) : "keine Untertitel") + '">UT</span>');
-    return parts.join("");
+    return (
+      '<span class="qbadge et-badge et-res' + (e.resolution ? "" : " et-empty") + '">' +
+        (e.resolution ? esc(e.resolution) : "–") + "</span>" +
+      '<span class="pill et-badge et-codec' + (e.video_codec ? "" : " et-empty") + '">' +
+        (e.video_codec ? esc(e.video_codec) : "–") + "</span>" +
+      '<span class="pill et-badge et-size' + (fmtSize(e.size_bytes) ? "" : " et-empty") + '">' +
+        (fmtSize(e.size_bytes) || "–") + "</span>" +
+      '<span class="lbadge et-badge et-lang' + (mf ? " flag" : " et-empty") + '" title="' +
+        (mainLang ? esc(langName(mainLang)) : "keine Tonspur-Info") + '">' + (mf || "–") + "</span>" +
+      '<span class="pill ut et-badge et-ut' + (subs ? "" : " none") + '" title="' +
+        (subs ? esc(langList(e.subtitle_langs)) : "keine Untertitel") + '">UT</span>'
+    );
   }
   function epDetailRow(k, v) {
     if (v == null || v === "") { return ""; }

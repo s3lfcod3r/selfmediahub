@@ -486,6 +486,13 @@ table.list tbody tr { cursor: pointer; }
 .ep .no { font-family: var(--self-font-mono); color: var(--self-text-3); width: 54px; flex: none; }
 .ep .en { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ep .et { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.et-badge { text-align: center; box-sizing: border-box; flex: none; }
+.et .et-res { min-width: 56px; }
+.et .et-codec { min-width: 54px; }
+.et .et-size { min-width: 68px; }
+.et .et-lang { min-width: 40px; display: inline-flex; align-items: center; justify-content: center; }
+.et .et-ut { min-width: 40px; }
+.et-empty { color: var(--self-text-3); opacity: 0.45; }
 .ep.missing { opacity: 0.72; }
 .ep.missing .no { color: var(--self-red); }
 .ep.missing .en { color: var(--self-text-3); font-style: italic; }
