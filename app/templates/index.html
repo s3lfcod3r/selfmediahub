@@ -8,9 +8,6 @@
   <section class="hero">
     <p class="label">Read-only Analyse &amp; Uebersicht</p>
     <h1>Deine Mediathek auf einen Blick</h1>
-    <p>Filme und Serien - gelesen, nie veraendert. Filtere nach Qualitaet,
-       Freigabe, Vollstaendigkeit und Tags. Letzter Scan:
-       <span class="mono" id="lastSync">{{ last_sync or "noch nie" }}</span>.</p>
   </section>
 
   <section class="stats">
@@ -19,7 +16,7 @@
     <div class="stat"><div class="num">{{ stats.series }}</div><div class="cap label">Serien</div></div>
     <div class="stat"><div class="num">{{ stats.uhd }}</div><div class="cap label">4K / UHD</div></div>
     <div class="stat warn"><div class="num">{{ stats.incomplete }}</div><div class="cap label">Unvollstaendig</div></div>
-    <div class="stat warn"><div class="num">{{ stats.no_rating }}</div><div class="cap label">Ohne Freigabe</div></div>
+    <div class="stat warn"><div class="num">{{ stats.no_rating }}</div><div class="cap label">FSK Ohne Freigabe</div></div>
   </section>
 
   <div class="toolbar">
@@ -52,6 +49,14 @@
       <button class="btn btn-icon" id="colBtn" title="Spalten">&#9646;</button>
       <div class="colmenu-panel" id="colPanel"></div>
     </div>
+    <div class="colmenu" id="dispmenu">
+      <button class="btn btn-icon" id="dispBtn" title="Cover-Anzeige">&#9881;</button>
+      <div class="colmenu-panel" id="dispPanel">
+        <label><input type="checkbox" data-disp="fsk" checked> FSK-Ecke</label>
+        <label><input type="checkbox" data-disp="res" checked> Aufloesung</label>
+        <label><input type="checkbox" data-disp="lang" checked> Sprache/Untertitel</label>
+      </div>
+    </div>
   </div>
 
   <div class="count-line"><span id="count">0</span> Eintraege</div>
@@ -68,6 +73,7 @@
 <script>
   window.__DATA__ = {{ items_json | safe }};
   window.__ALLOW_WRITE__ = {{ 'true' if allow_write else 'false' }};
+  window.__LASTSYNC__ = {{ (last_sync or "")|tojson }};
 </script>
 <script src="/static/js/app.js"></script>
 {% endblock %}
