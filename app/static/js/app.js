@@ -135,18 +135,6 @@
       var res = i.resolution ? '<span class="qbadge res">' + esc(i.resolution) + "</span>" : "";
       var comp = i.completeness === "incomplete"
         ? '<span class="qbadge bad">unvollst.</span>' : "";
-      var lang = "";
-      if (i.item_type === "Film") {
-        var flags = (i.audio_langs || []).slice(0, 4).map(function (l) {
-          var f = flag(l);
-          return '<span class="lbadge flag" title="' + esc(langName(l)) + '">' +
-            (f || esc(shortLang(l))) + "</span>";
-        }).join("");
-        var subs = (i.subtitle_langs || []).length > 0;
-        var ut = '<span class="lbadge ut' + (subs ? "" : " none") + '" title="' +
-          (subs ? esc(langList(i.subtitle_langs)) : "keine Untertitel") + '">UT</span>';
-        lang = '<div class="langrow">' + flags + ut + "</div>";
-      }
       var img = i.image_url
         ? '<img loading="lazy" src="' + esc(i.image_url) + '" alt="" ' +
           'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'">' +
@@ -155,7 +143,7 @@
       var chips = (i.tags || []).slice(0, 3).map(tagChip).join("");
       return '<article class="card" data-id="' + i.id + '">' +
         '<div class="poster">' + rating + '<span class="type">' + esc(i.item_type) + "</span>" +
-        '<div class="qrow">' + res + comp + "</div>" + lang + img + "</div>" +
+        '<div class="qrow">' + res + comp + "</div>" + img + "</div>" +
         '<div class="meta"><div class="t">' + esc(i.name) + "</div>" +
         '<div class="y">' + (i.year || "") + "</div>" +
         (chips ? '<div class="chips">' + chips + "</div>" : "") + "</div></article>";
@@ -207,11 +195,11 @@
     });
   }
 
-  // Cover-Anzeige-Optionen (FSK-Ecke / Auflösung / Sprache) merken in localStorage
+  // Cover-Anzeige-Optionen (FSK-Ecke / Auflösung) + Wunschsprache merken (localStorage)
   function initDisp() {
     var saved = {};
     try { saved = JSON.parse(localStorage.getItem("smh-disp") || "{}"); } catch (e) { saved = {}; }
-    ["fsk", "res", "lang"].forEach(function (key) {
+    ["fsk", "res"].forEach(function (key) {
       var on = saved[key] !== false;
       $("grid").classList.toggle("hide-" + key, !on);
       var cb = $("dispPanel").querySelector('[data-disp="' + key + '"]');
@@ -225,6 +213,15 @@
         try { localStorage.setItem("smh-disp", JSON.stringify(saved)); } catch (e) { /* ignore */ }
       };
     });
+    var pl = $("prefLang");
+    if (pl) {
+      var cur = "ger";
+      try { cur = localStorage.getItem("smh-lang") || "ger"; } catch (e) { /* ignore */ }
+      pl.value = cur;
+      pl.onchange = function () {
+        try { localStorage.setItem("smh-lang", pl.value); } catch (e) { /* ignore */ }
+      };
+    }
   }
 
   function fmtDate(iso) {

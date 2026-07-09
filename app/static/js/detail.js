@@ -41,10 +41,19 @@
     if (v == null || v === "") { return ""; }
     return '<div><div class="k">' + esc(k) + '</div><div class="v">' + v + "</div></div>";
   }
+  function prefLang() {
+    try { return localStorage.getItem("smh-lang") || "ger"; } catch (e) { return "ger"; }
+  }
+  function hasLang(list, pref) {
+    var p = shortLang(pref);
+    return (list || []).some(function (l) { return shortLang(l) === p; });
+  }
   function epTech(e) {
-    var mainLang = (e.audio_langs || [])[0];
-    var mf = mainLang ? (flag(mainLang) || esc(shortLang(mainLang))) : null;
-    var subs = (e.subtitle_langs || []).length > 0;
+    var pref = prefLang();
+    var pflag = flag(pref) || esc(shortLang(pref));
+    var name = esc(langName(pref));
+    var audioOk = hasLang(e.audio_langs, pref);
+    var subOk = hasLang(e.subtitle_langs, pref);
     return (
       '<span class="qbadge et-badge et-res' + (e.resolution ? "" : " et-empty") + '">' +
         (e.resolution ? esc(e.resolution) : "–") + "</span>" +
@@ -52,10 +61,10 @@
         (e.video_codec ? esc(e.video_codec) : "–") + "</span>" +
       '<span class="pill et-badge et-size' + (fmtSize(e.size_bytes) ? "" : " et-empty") + '">' +
         (fmtSize(e.size_bytes) || "–") + "</span>" +
-      '<span class="lbadge et-badge et-lang' + (mf ? " flag" : " et-empty") + '" title="' +
-        (mainLang ? esc(langName(mainLang)) : "keine Tonspur-Info") + '">' + (mf || "–") + "</span>" +
-      '<span class="pill ut et-badge et-ut' + (subs ? "" : " none") + '" title="' +
-        (subs ? esc(langList(e.subtitle_langs)) : "keine Untertitel") + '">UT</span>'
+      '<span class="lbadge flag et-badge et-lang' + (audioOk ? "" : " et-off") + '" title="' +
+        name + "-Tonspur " + (audioOk ? "vorhanden" : "fehlt") + '">' + pflag + "</span>" +
+      '<span class="pill et-badge et-ut' + (subOk ? "" : " et-off") + '" title="' +
+        name + "-Untertitel " + (subOk ? "vorhanden" : "fehlt") + '">' + pflag + " UT</span>"
     );
   }
   function epDetailRow(k, v) {

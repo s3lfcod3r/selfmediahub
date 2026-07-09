@@ -274,6 +274,13 @@ table.list td.name { font-weight: 600; }
   font-size: 13px; cursor: pointer; color: var(--self-text-2);
 }
 .colmenu-panel input { accent-color: var(--self-teal); }
+.disp-lang {
+  flex-direction: column; align-items: stretch; gap: 6px;
+  margin-top: 6px; padding-top: 10px; border-top: 1px solid var(--self-line);
+  font-family: var(--self-font-mono); font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--self-text-3); cursor: default;
+}
+.disp-lang select { width: 100%; text-transform: none; letter-spacing: 0; }
 
 .empty {
   text-align: center; color: var(--self-text-2);
@@ -491,8 +498,10 @@ table.list tbody tr { cursor: pointer; }
 .et .et-codec { min-width: 54px; }
 .et .et-size { min-width: 68px; }
 .et .et-lang { min-width: 40px; display: inline-flex; align-items: center; justify-content: center; }
-.et .et-ut { min-width: 40px; }
+.et .et-ut { min-width: 58px; display: inline-flex; align-items: center; justify-content: center; gap: 3px; }
 .et-empty { color: var(--self-text-3); opacity: 0.45; }
+/* Wunschsprache nicht vorhanden -> ausgegraut (Flagge entfärbt) */
+.et-off { opacity: 0.4; filter: grayscale(1); }
 .ep.missing { opacity: 0.72; }
 .ep.missing .no { color: var(--self-red); }
 .ep.missing .en { color: var(--self-text-3); font-style: italic; }
