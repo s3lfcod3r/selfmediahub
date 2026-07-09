@@ -31,7 +31,7 @@ def api_item_detail(item_id: int):
         raise HTTPException(status_code=404, detail="Eintrag nicht gefunden")
     item["tags"] = tags.tags_for_items().get(item_id, [])
 
-    episodes, note, missing = [], None, []
+    episodes, note, missing, season_summary = [], None, [], None
     if item["item_type"] == "Serie":
         conn = sync_service.connector_for(item["source_kind"])
         if conn is not None and hasattr(conn, "fetch_episodes"):
@@ -46,17 +46,24 @@ def api_item_detail(item_id: int):
         if episodes and item.get("tmdb_id"):
             present = [(e["season"], e["episode"]) for e in episodes
                        if e.get("season") is not None and e.get("episode") is not None]
-            missing = tmdb.missing_episodes(item["tmdb_id"], present)
+            seasons = tmdb.tv_season_counts(item["tmdb_id"])
+            missing = tmdb.compute_missing(seasons, present)
             for m in missing:
                 episodes.append({"season": m["season"], "episode": m["episode"],
                                  "name": "", "missing": True})
             episodes.sort(key=lambda e: ((e["season"] if e["season"] is not None else 999),
                                          (e["episode"] if e["episode"] is not None else 999)))
-            if not missing and item.get("completeness") == "incomplete" and not note:
-                note = ("Fehlende Folgen lassen sich hier nicht sicher bestimmen - "
-                        "die Staffelnummerierung in Emby weicht von TMDb ab.")
+            # Einzelfolgen nicht sicher zuzuordnen -> wenigstens Pro-Staffel-Summen zeigen
+            if not missing and item.get("completeness") == "incomplete":
+                summ = tmdb.season_summary(seasons, present)
+                if summ["reliable"] and summ["seasons"]:
+                    season_summary = summ
+                elif not note:
+                    note = ("Fehlende Folgen lassen sich hier nicht sicher bestimmen - "
+                            "die Staffelnummerierung in Emby weicht von TMDb ab.")
 
     return {"item": item, "episodes": episodes, "note": note,
+            "season_summary": season_summary,
             "missing_count": len(missing), "allow_write": config.ALLOW_EMBY_WRITE}
 
 

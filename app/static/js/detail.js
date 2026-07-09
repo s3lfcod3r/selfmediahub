@@ -86,6 +86,25 @@
     return h || '<div class="epd-row"><span class="epd-v" style="color:var(--self-text-3)">Keine weiteren Angaben</span></div>';
   }
 
+  function seasonSummary(s) {
+    if (!s || !s.seasons || !s.seasons.length) { return ""; }
+    var rows = s.seasons.map(function (r) {
+      var miss = Math.max(0, r.tmdb_total - r.have);
+      var cls = miss > 0 ? " miss" : " full";
+      var right = miss > 0 ? (miss + (miss === 1 ? " fehlt" : " fehlen")) : "komplett";
+      return '<div class="ssum-row' + cls + '">' +
+        '<span class="ssum-s">Staffel ' + r.season + "</span>" +
+        '<span class="ssum-c">' + r.have + " / " + r.tmdb_total + "</span>" +
+        '<span class="ssum-b">' + right + "</span></div>";
+    }).join("");
+    return '<div class="ssum">' +
+      '<div class="ssum-h">Fehlende Folgen nach Staffel &middot; ' +
+        s.total_have + " / " + s.total_tmdb + " vorhanden</div>" + rows +
+      '<div class="ssum-foot">Einzelne Folgennummern lassen sich bei dieser Serie nicht ' +
+        "sicher zuordnen (Emby-Nummerierung weicht von TMDb ab) - daher nur die Staffel-Summen.</div>" +
+      "</div>";
+  }
+
   function renderDetail(d) {
     var i = d.item;
     var poster = i.image_url
@@ -180,7 +199,7 @@
         (i.path ? '<div class="pathline"><div class="k">Pfad im Verzeichnis</div>' +
                   '<div class="pv mono">' + esc(i.path) + "</div></div>" : "") +
         (i.overview ? '<div class="overview">' + esc(i.overview) + "</div>" : "") +
-        note + eps + "</div>";
+        note + seasonSummary(d.season_summary) + eps + "</div>";
 
     var saveBtn = document.getElementById("fskSave");
     if (saveBtn) {

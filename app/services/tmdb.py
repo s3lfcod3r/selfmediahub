@@ -82,24 +82,54 @@ def compute_missing(seasons: dict, present) -> list:
             if (sn, ep) not in present_set]
 
 
+def tv_season_counts(tmdb_id) -> dict:
+    """{Staffel: Episodenzahl} laut TMDb (nur Staffel >= 1). {} bei Fehler/deaktiviert."""
+    if not config.tmdb_enabled() or not tmdb_id:
+        return {}
+    try:
+        data = _get(f"/tv/{tmdb_id}")
+    except requests.RequestException:
+        return {}
+    return {
+        s["season_number"]: (s.get("episode_count") or 0)
+        for s in data.get("seasons", [])
+        if s.get("season_number") and s["season_number"] >= 1
+    }
+
+
 def missing_episodes(tmdb_id, present) -> list:
     """Fehlende Episoden ermitteln: TMDb-Staffeln vs. vorhandene (season, episode).
 
     ``present`` = Iterable aus (season, episode). Best-effort - leere Liste bei
     fehlendem Key/Fehler oder bei abweichender Nummerierung (siehe compute_missing).
     """
-    if not config.tmdb_enabled() or not tmdb_id:
-        return []
-    try:
-        data = _get(f"/tv/{tmdb_id}")
-    except requests.RequestException:
-        return []
-    seasons = {
-        s["season_number"]: (s.get("episode_count") or 0)
-        for s in data.get("seasons", [])
-        if s.get("season_number") and s["season_number"] >= 1
-    }
-    return compute_missing(seasons, list(present))
+    return compute_missing(tv_season_counts(tmdb_id), list(present))
+
+
+def season_summary(seasons: dict, present) -> dict:
+    """Pro-Staffel-Uebersicht 'vorhanden/gesamt laut TMDb'.
+
+    Robust gegen Nummerierungs-Chaos: ``reliable`` wird False, sobald Emby
+    Staffeln kennt, die TMDb nicht hat, oder eine Staffel mehr Folgen zeigt,
+    als TMDb kennt - dann ist die Staffel-Zuordnung nicht vertrauenswuerdig
+    und es sollte stattdessen der allgemeine Hinweis erscheinen.
+    """
+    if not seasons:
+        return {"seasons": [], "reliable": False, "total_tmdb": 0, "total_have": 0}
+    present_set = {p for p in present if p[0] is not None and p[1] is not None}
+    have_by_season: dict = {}
+    for (s, _e) in present_set:
+        have_by_season[s] = have_by_season.get(s, 0) + 1
+    reliable = not any(s not in seasons for s in have_by_season)
+    rows = []
+    for sn in sorted(seasons):
+        total = seasons[sn]
+        have = have_by_season.get(sn, 0)
+        if have > total:
+            reliable = False
+        rows.append({"season": sn, "tmdb_total": total, "have": have})
+    return {"seasons": rows, "reliable": reliable,
+            "total_tmdb": sum(seasons.values()), "total_have": len(present_set)}
 
 
 def enrich(item: dict, cache: dict) -> dict:

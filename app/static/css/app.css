@@ -533,6 +533,24 @@ table.list tbody tr { cursor: pointer; }
 .modal-note { color: var(--self-yellow); font-size: 13px; margin: 10px 0; }
 .modal-loading { text-align: center; color: var(--self-text-2); padding: 40px; }
 
+/* Pro-Staffel-Uebersicht (wenn Einzelfolgen nicht sicher zuzuordnen sind) */
+.ssum { margin: 14px 0 6px; border: 1px solid var(--self-line);
+  border-radius: var(--self-radius-sm); overflow: hidden; }
+.ssum-h { font-family: var(--self-font-mono); font-size: 12px; letter-spacing: 0.04em;
+  padding: 9px 13px; background: var(--self-bg-2); color: var(--self-ice-bright);
+  border-bottom: 1px solid var(--self-line); }
+.ssum-row { display: flex; align-items: center; gap: 12px; padding: 8px 13px;
+  border-bottom: 1px solid var(--self-line); font-size: 13px; }
+.ssum-row:last-of-type { border-bottom: none; }
+.ssum-s { flex: none; width: 92px; color: var(--self-text-2);
+  font-family: var(--self-font-mono); }
+.ssum-c { flex: none; width: 70px; font-family: var(--self-font-mono); }
+.ssum-b { flex: 1; text-align: right; font-family: var(--self-font-mono); font-size: 12px; }
+.ssum-row.miss .ssum-c, .ssum-row.miss .ssum-b { color: var(--self-yellow); }
+.ssum-row.full .ssum-b { color: var(--self-green); }
+.ssum-foot { padding: 8px 13px; font-size: 11px; color: var(--self-text-3);
+  background: var(--self-bg-0); }
+
 .pathline {
   margin: 4px 0 18px; padding: 12px 14px;
   background: var(--self-bg-0); border: 1px solid var(--self-line);
