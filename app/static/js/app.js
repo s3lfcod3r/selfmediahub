@@ -45,6 +45,14 @@
     chi: "🇨🇳", zho: "🇨🇳", zh: "🇨🇳", ara: "🇸🇦", ar: "🇸🇦" };
   function flag(c) { return FLAG[String(c || "").toLowerCase()] || null; }
 
+  function prefLang() {
+    try { return localStorage.getItem("smh-lang") || "ger"; } catch (e) { return "ger"; }
+  }
+  function hasLang(list, pref) {
+    var p = shortLang(pref);
+    return (list || []).some(function (l) { return shortLang(l) === p; });
+  }
+
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -140,10 +148,22 @@
           'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'">' +
           '<div class="noimg" style="display:none">' + esc(i.name) + "</div>"
         : '<div class="noimg">' + esc(i.name) + "</div>";
+      var pref = prefLang();
+      var pflag = (window.smhFlag && window.smhFlag(pref)) ||
+        ('<span class="fl-code">' + esc(shortLang(pref)) + "</span>");
+      var pname = esc(langName(pref));
+      var audioOk = hasLang(i.audio_langs, pref);
+      var subOk = hasLang(i.subtitle_langs, pref);
+      var langrow = '<div class="langrow">' +
+        '<span class="cbadge cb-lang' + (audioOk ? "" : " off") + '" title="' + pname +
+          "-Tonspur " + (audioOk ? "vorhanden" : "fehlt") + '">' + pflag + "</span>" +
+        '<span class="cbadge cb-ut' + (subOk ? "" : " off") + '" title="' + pname +
+          "-Untertitel " + (subOk ? "vorhanden" : "fehlt") + '">' + pflag + " UT</span>" +
+        "</div>";
       var chips = (i.tags || []).slice(0, 3).map(tagChip).join("");
       return '<article class="card" data-id="' + i.id + '">' +
         '<div class="poster">' + rating + '<span class="type">' + esc(i.item_type) + "</span>" +
-        '<div class="qrow">' + res + comp + "</div>" + img + "</div>" +
+        '<div class="qrow">' + res + comp + "</div>" + langrow + img + "</div>" +
         '<div class="meta"><div class="t">' + esc(i.name) + "</div>" +
         '<div class="y">' + (i.year || "") + "</div>" +
         (chips ? '<div class="chips">' + chips + "</div>" : "") + "</div></article>";
@@ -199,7 +219,7 @@
   function initDisp() {
     var saved = {};
     try { saved = JSON.parse(localStorage.getItem("smh-disp") || "{}"); } catch (e) { saved = {}; }
-    ["fsk", "res"].forEach(function (key) {
+    ["fsk", "res", "lang"].forEach(function (key) {
       var on = saved[key] !== false;
       $("grid").classList.toggle("hide-" + key, !on);
       var cb = $("dispPanel").querySelector('[data-disp="' + key + '"]');
@@ -220,6 +240,7 @@
       pl.value = cur;
       pl.onchange = function () {
         try { localStorage.setItem("smh-lang", pl.value); } catch (e) { /* ignore */ }
+        if (state.view === "cover") { render(); }
       };
     }
   }
