@@ -35,7 +35,9 @@
     if (e.resolution) { parts.push('<span class="qbadge">' + esc(e.resolution) + "</span>"); }
     if (e.video_codec) { parts.push('<span class="pill">' + esc(e.video_codec) + "</span>"); }
     if (fmtSize(e.size_bytes)) { parts.push('<span class="pill">' + fmtSize(e.size_bytes) + "</span>"); }
-    if ((e.subtitle_langs || []).length) { parts.push('<span class="pill">UT</span>'); }
+    var subs = (e.subtitle_langs || []).length > 0;
+    parts.push('<span class="pill ut' + (subs ? "" : " none") + '" title="' +
+      (subs ? esc(langList(e.subtitle_langs)) : "keine Untertitel") + '">UT</span>');
     return parts.join("");
   }
   function epDetailRow(k, v) {

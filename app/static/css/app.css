@@ -375,6 +375,8 @@ table.list td.name { font-weight: 600; }
 /* --- Pills (Tabellen/Qualitaet) ----------------------------- */
 .pill.ok { color: var(--self-green); border-color: var(--self-green); }
 .pill.bad { color: var(--self-red); border-color: var(--self-red); }
+.pill.ut { color: var(--self-teal-bright); }
+.pill.ut.none { color: var(--self-text-3); text-decoration: line-through; border-color: var(--self-line); }
 
 /* FSK-Seite: geaenderte Zeile hervorheben */
 table.list tr.changed td { background: rgba(51, 167, 140, 0.12); }
