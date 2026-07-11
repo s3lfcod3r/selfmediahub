@@ -4,6 +4,7 @@
   "use strict";
 
   var ALL = window.__DATA__ || [];
+  var FSK_ON = window.__FSK_ENABLED__ !== false;   // FSK-Feature (nur UI); Standard an
   var state = { view: "cover", q: "", library: "", type: "", rating: "", tag: "", complete: "",
                 res: "", sortKey: "sort_name", sortDir: 1 };
 
@@ -100,6 +101,8 @@
     Object.keys(tagNames).sort().forEach(function (n) {
       var o = document.createElement("option"); o.value = n; o.textContent = n; $("fTag").appendChild(o);
     });
+    // FSK deaktiviert -> Freigabe-Filter ausblenden
+    if (!FSK_ON) { var fr = $("fRating"); if (fr) { fr.style.display = "none"; } }
   }
 
   function filtered() {
@@ -137,9 +140,11 @@
       var editable = window.__ALLOW_WRITE__ && i.source_kind === "emby";
       var cls = "rating" + (i.official_rating ? "" : " none") + (editable ? " editable" : "");
       var did = editable ? ' data-id="' + i.id + '"' : "";
-      var rating = '<span class="' + cls + '"' + did +
-        (editable ? ' title="FSK ändern"' : "") + ">" +
-        (i.official_rating ? esc(i.official_rating) : "o. FSK") + "</span>";
+      var rating = FSK_ON
+        ? '<span class="' + cls + '"' + did +
+          (editable ? ' title="FSK ändern"' : "") + ">" +
+          (i.official_rating ? esc(i.official_rating) : "o. FSK") + "</span>"
+        : "";
       var res = i.resolution ? '<span class="qbadge res">' + esc(i.resolution) + "</span>" : "";
       var comp = i.completeness === "incomplete"
         ? '<span class="qbadge bad">unvollst.</span>' : "";

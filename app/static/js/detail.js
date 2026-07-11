@@ -116,12 +116,15 @@
 
   function renderDetail(d) {
     var i = d.item;
+    var fskOn = window.__FSK_ENABLED__ !== false;   // FSK-Feature (nur UI); Standard an
     var poster = i.image_url
       ? '<img class="modal-poster" src="' + esc(i.image_url) + '" alt="" onerror="this.style.visibility=\'hidden\'">'
       : '<div class="modal-poster"></div>';
     var badges = [];
-    if (i.official_rating) { badges.push('<span class="pill">' + esc(i.official_rating) + "</span>"); }
-    else { badges.push('<span class="pill bad">ohne FSK</span>'); }
+    if (fskOn) {
+      if (i.official_rating) { badges.push('<span class="pill">' + esc(i.official_rating) + "</span>"); }
+      else { badges.push('<span class="pill bad">ohne FSK</span>'); }
+    }
     if (i.resolution) { badges.push('<span class="qbadge">' + esc(i.resolution) + "</span>"); }
     if (i.hdr && i.hdr !== "SDR") { badges.push('<span class="qbadge">' + esc(i.hdr) + "</span>"); }
     if (i.completeness === "incomplete") { badges.push('<span class="pill bad">fehlen ' + (i.missing_episodes || "?") + "</span>"); }
@@ -144,7 +147,7 @@
       meta += metaItem("Episoden", (i.have_episodes != null ? i.have_episodes : "?") + (i.tmdb_episodes ? " / " + i.tmdb_episodes : ""));
       meta += metaItem("Status", i.status ? esc(i.status) : null);
     }
-    meta += metaItem("FSK-Vorschlag", i.fsk_suggested ? esc(i.fsk_suggested) : null);
+    if (fskOn) { meta += metaItem("FSK-Vorschlag", i.fsk_suggested ? esc(i.fsk_suggested) : null); }
 
     var eps = "";
     if (d.episodes && d.episodes.length) {
@@ -171,7 +174,7 @@
     var note = d.note ? '<div class="modal-note">' + esc(d.note) + "</div>" : "";
 
     var fskEditor = "";
-    if (i.source_kind === "emby") {
+    if (fskOn && i.source_kind === "emby") {
       var opts = ["DE-0", "DE-6", "DE-12", "DE-16", "DE-18"].map(function (v) {
         return '<option value="' + v + '"' + (i.official_rating === v ? " selected" : "") + ">" + v + "</option>";
       }).join("");
@@ -190,7 +193,7 @@
     }
 
     var ackBox = "";
-    if (i.fsk_suspicious && !i.fsk_acked) {
+    if (fskOn && i.fsk_suspicious && !i.fsk_acked) {
       ackBox = '<div class="fsk-ack-box"><span>Freigabe wirkt unplausibel' +
         (i.fsk_reason ? ": " + esc(i.fsk_reason) : "") + "</span>" +
         '<button class="btn btn-small" id="ackBtn" data-id="' + i.id + '">Passt so</button></div>';

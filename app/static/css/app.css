@@ -609,6 +609,9 @@ table.list tbody tr { cursor: pointer; }
   margin-bottom: 7px; }
 .set-field .field { width: 100%; max-width: 420px; }
 .set-hint { color: var(--self-text-3); font-size: 11px; }
+.set-toggle { display: inline-flex; align-items: center; gap: 10px; cursor: pointer;
+  font-size: 15px; color: var(--self-text); margin-bottom: 0; }
+.set-toggle input { width: 18px; height: 18px; accent-color: var(--self-teal); cursor: pointer; }
 .set-desc { margin-top: 8px; font-size: 12px; color: var(--self-text-3);
   max-width: 560px; line-height: 1.5; }
 .set-desc.mono { font-family: var(--self-font-mono); color: var(--self-ice-bright); font-size: 13px; }

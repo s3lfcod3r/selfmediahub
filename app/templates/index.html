@@ -16,7 +16,9 @@
     <div class="stat"><div class="num">{{ stats.series }}</div><div class="cap label">Serien</div></div>
     <div class="stat"><div class="num">{{ stats.uhd }}</div><div class="cap label">4K / UHD</div></div>
     <div class="stat warn"><div class="num">{{ stats.incomplete }}</div><div class="cap label">Unvollständig</div></div>
+    {% if settings['fsk.enabled'] %}
     <div class="stat warn"><div class="num">{{ stats.no_rating }}</div><div class="cap label">FSK Ohne Freigabe</div></div>
+    {% endif %}
   </section>
 
   <div class="toolbar">
@@ -66,6 +68,7 @@
   window.__DATA__ = {{ items_json | safe }};
   window.__ALLOW_WRITE__ = {{ 'true' if allow_write else 'false' }};
   window.__LASTSYNC__ = {{ (last_sync or "")|tojson }};
+  window.__FSK_ENABLED__ = {{ 'true' if settings['fsk.enabled'] else 'false' }};
 </script>
 <script src="/static/js/app.js"></script>
 {% endblock %}

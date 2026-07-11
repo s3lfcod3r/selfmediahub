@@ -36,28 +36,38 @@
     if (hash) { showCat(hash); }
   }
 
-  // -- Speichern: Bereich "Allgemein" --
-  function saveGeneral() {
-    var btn = $("saveAllgemein");
-    if (!btn) { return; }
-    btn.disabled = true;
-    var payload = { "general.instance_name": $("instanceName").value.trim() };
-    fetch("/api/settings", {
+  // -- Speichern: an /api/settings schicken (Teil-Objekt aus key/value) --
+  function saveSettings(payload, okMsg, btn) {
+    if (btn) { btn.disabled = true; }
+    return fetch("/api/settings", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
       .then(function (res) {
         if (!res.ok) { throw new Error(res.j.detail || "Fehler"); }
-        window.smhToast("Gespeichert", "ok");
+        window.smhToast(okMsg || "Gespeichert", "ok");
       })
       .catch(function (e) { window.smhToast("Fehlgeschlagen: " + e.message, "err"); })
-      .then(function () { btn.disabled = false; });
+      .then(function () { if (btn) { btn.disabled = false; } });
   }
 
   document.addEventListener("DOMContentLoaded", function () {
     initNav();
-    var b = $("saveAllgemein");
-    if (b) { b.onclick = saveGeneral; }
+
+    var allgBtn = $("saveAllgemein");
+    if (allgBtn) {
+      allgBtn.onclick = function () {
+        saveSettings({ "general.instance_name": $("instanceName").value.trim() }, "Gespeichert", allgBtn);
+      };
+    }
+
+    var fsk = $("fskEnabled");
+    if (fsk) {
+      fsk.onchange = function () {
+        saveSettings({ "fsk.enabled": fsk.checked },
+          fsk.checked ? "FSK-Prüfung aktiviert" : "FSK-Prüfung deaktiviert");
+      };
+    }
   });
 })();

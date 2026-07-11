@@ -74,10 +74,20 @@
 
       <!-- FSK & Altersfreigaben -->
       <section class="set-panel" data-cat="fsk">
-        <h2 class="card-h">FSK &amp; Altersfreigaben <span class="phase-badge">Phase 5</span></h2>
-        <p class="set-placeholder">Hier entstehen: das FSK-Feature komplett aktivieren/deaktivieren,
-           internationale Freigaben (FSK / PEGI / USK / Altersangabe) vereinheitlichen, eine
-           Anzeigepräferenz festlegen und der FSK-Check zum Abgleich der Quellen.</p>
+        <h2 class="card-h">FSK &amp; Altersfreigaben</h2>
+        <div class="set-field">
+          <label class="set-toggle">
+            <input type="checkbox" id="fskEnabled" {{ 'checked' if settings['fsk.enabled'] }}>
+            <span>FSK-Prüfung aktivieren</span>
+          </label>
+          <p class="set-desc">Ist das Feature aus, verschwinden alle FSK-Elemente aus der
+             Oberfläche: FSK-Ecke am Cover, Freigabe-Filter, die Kennzahl „Ohne Freigabe",
+             sowie FSK-Angaben, -Editor und Warnhinweise im Detailfenster. Die Daten bleiben
+             gespeichert - beim Wieder-Einschalten ist alles sofort da, kein neuer Scan nötig.</p>
+        </div>
+        <div class="set-placeholder">Internationale Freigaben (FSK / PEGI / USK / Altersangabe)
+           vereinheitlichen, eine Anzeigepräferenz festlegen und der FSK-Check zum Abgleich der
+           Quellen kommen in <strong>Phase 5</strong>.</div>
       </section>
 
       <!-- Über & Updates -->

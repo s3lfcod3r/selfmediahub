@@ -20,6 +20,8 @@ from .. import db
 DEFAULTS = {
     # -- Allgemein (Phase 0, funktionsfaehig) --
     "general.instance_name": "",       # optionaler Anzeigename der Instanz (Topbar/Titel)
+    # -- FSK & Altersfreigaben (Phase 1) --
+    "fsk.enabled": True,               # FSK-Feature an/aus (nur UI - Daten bleiben gespeichert)
 }
 
 
