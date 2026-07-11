@@ -69,5 +69,27 @@
           fsk.checked ? "FSK-Prüfung aktiviert" : "FSK-Prüfung deaktiviert");
       };
     }
+
+    var upd = $("updateCheck");
+    if (upd) {
+      upd.onclick = function () {
+        upd.disabled = true;
+        window.smhToast("Prüfe auf Updates ...");
+        fetch("/api/update/check", { method: "POST" })
+          .then(function (r) { return r.json(); })
+          .then(function (s) {
+            var el = $("updateStatus");
+            if (el) {
+              el.textContent = s.available
+                ? ("Neue Version " + s.latest + " verfügbar.")
+                : (s.latest ? ("Aktuell - v" + s.current + " ist die neueste Version.")
+                            : "Konnte nicht geprüft werden (keine Verbindung/kein Release).");
+            }
+            window.smhToast(s.available ? ("Update verfügbar: " + s.latest) : "Alles aktuell", "ok");
+          })
+          .catch(function () { window.smhToast("Prüfung fehlgeschlagen", "err"); })
+          .then(function () { upd.disabled = false; });
+      };
+    }
   });
 })();

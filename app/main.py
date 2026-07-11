@@ -7,13 +7,14 @@ from fastapi.staticfiles import StaticFiles
 
 from . import config, db
 from .routes import api, health, pages
-from .services import scheduler
+from .services import scheduler, updatecheck
 
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     db.init_db()
     scheduler.start()
+    updatecheck.start()
     yield
 
 

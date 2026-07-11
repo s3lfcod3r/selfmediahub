@@ -55,14 +55,20 @@ a:hover { text-decoration: underline; }
 }
 .wordmark .self { color: var(--self-ice-bright); }
 .wordmark .rest { color: var(--self-teal); }
-.wordmark .badge {
+.badge {
   margin-left: 10px;
   font-family: var(--self-font-mono);
   font-size: 10px; letter-spacing: 0.12em;
   color: var(--self-teal-bright);
   border: 1px solid var(--self-line-strong);
   border-radius: 999px; padding: 3px 8px;
+  white-space: nowrap; text-decoration: none;
 }
+/* aktuell = dezent gruen, Update verfuegbar = dezent rot (anklickbar) */
+.badge-current { color: var(--self-green); border-color: color-mix(in oklab, var(--self-green) 45%, transparent); }
+.badge-update { color: var(--self-red); border-color: color-mix(in oklab, var(--self-red) 55%, transparent);
+  cursor: pointer; }
+.badge-update:hover { background: color-mix(in oklab, var(--self-red) 12%, transparent); }
 
 .spacer { flex: 1; }
 

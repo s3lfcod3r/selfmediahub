@@ -2,8 +2,13 @@
   <div class="wrap topbar-inner">
     <a href="/" class="wordmark" style="text-decoration:none">
       <span class="self">Self</span><span class="rest">MediaHub</span>
-      <span class="badge">v{{ app.VERSION }}</span>
     </a>
+    {% if update and update.available %}
+    <a class="badge badge-update" href="{{ update.url }}" target="_blank" rel="noopener"
+       title="Neue Version {{ update.latest }} verfügbar (installiert v{{ update.current }}) - zu den Release-Infos">v{{ app.VERSION }} &uarr;</a>
+    {% else %}
+    <span class="badge badge-current" title="Version v{{ app.VERSION }} ist aktuell">v{{ app.VERSION }}</span>
+    {% endif %}
     {% if settings and settings['general.instance_name'] %}
     <span class="instance-name" title="Instanzname">{{ settings['general.instance_name'] }}</span>
     {% endif %}

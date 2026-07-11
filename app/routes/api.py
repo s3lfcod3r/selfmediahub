@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Request
 from .. import config, db
 from ..services import (
     fsk, queries, rules, settings as settings_service, sync as sync_service, tags, tmdb,
+    updatecheck,
 )
 
 router = APIRouter(prefix="/api")
@@ -74,6 +75,17 @@ def api_item_detail(item_id: int):
 @router.get("/meta/fields")
 def api_fields():
     return {"fields": rules.FIELDS, "ops": rules.OPS, "tags": tags.list_tags()}
+
+
+# -- Update-Pruefung --------------------------------------------------------
+@router.get("/update")
+def api_update():
+    return updatecheck.get_status()
+
+
+@router.post("/update/check")
+def api_update_check():
+    return updatecheck.check_now()
 
 
 # -- Einstellungen ----------------------------------------------------------

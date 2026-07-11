@@ -4,6 +4,9 @@ import os
 APP_NAME = "SelfMediaHub"
 VERSION = "0.2.0"
 
+# GitHub-Repo fuer die Update-Pruefung (vergleicht mit dem neuesten Release).
+GITHUB_REPO = os.environ.get("GITHUB_REPO", "s3lfcod3r/selfmediahub").strip()
+
 # Eigene Daten - komplett getrennt von jedem Medienserver.
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 DB_PATH = os.environ.get("DB_PATH", os.path.join(DATA_DIR, "selfmediahub.db"))

@@ -37,3 +37,28 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  # Legt bei jeder neuen Version (config.py) automatisch einen GitHub-Release an.
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Version aus config.py lesen
+        id: ver
+        run: echo "version=$(grep -oP 'VERSION\s*=\s*\"\K[^\"]+' app/config.py)" >> "$GITHUB_OUTPUT"
+
+      - name: Release anlegen, falls neu
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${{ steps.ver.outputs.version }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG existiert bereits - uebersprungen."
+          else
+            echo "Erstelle Release $TAG ..."
+            gh release create "$TAG" --title "$TAG" --generate-notes --target "$GITHUB_SHA"
+          fi

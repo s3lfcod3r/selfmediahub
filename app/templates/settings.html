@@ -92,12 +92,25 @@
 
       <!-- Über & Updates -->
       <section class="set-panel" data-cat="ueber">
-        <h2 class="card-h">Über &amp; Updates <span class="phase-badge">Phase 1</span></h2>
+        <h2 class="card-h">Über &amp; Updates</h2>
         <div class="set-field">
           <label>Installierte Version</label>
           <p class="set-desc mono">{{ app.APP_NAME }} v{{ app.VERSION }}</p>
-          <p class="set-placeholder">Die automatische Update-Prüfung (Vergleich mit der neuesten
-             GitHub-Version, grün/rot-Markierung, Link zu den Release-Infos) kommt in Phase 1.</p>
+        </div>
+        <div class="set-field">
+          <label>Update-Status</label>
+          <p class="set-desc" id="updateStatus">
+            {% if update and update.available %}Neue Version {{ update.latest }} verfügbar.
+            {% elif update and update.latest %}Aktuell - v{{ update.current }} ist die neueste Version.
+            {% else %}Noch nicht geprüft.{% endif %}
+          </p>
+          <div class="set-actions">
+            <button class="btn" id="updateCheck">Jetzt prüfen</button>
+            <a class="btn" href="{{ update.url if update else '' }}" target="_blank" rel="noopener"
+               style="text-decoration:none">Release-Infos öffnen</a>
+          </div>
+          <p class="set-desc">Die Prüfung läuft sonst automatisch im Hintergrund (beim Start und
+             einmal täglich); die Kopfzeile zeigt grün „aktuell" bzw. rot „Update verfügbar".</p>
         </div>
       </section>
     </div>
