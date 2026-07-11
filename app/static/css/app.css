@@ -280,6 +280,18 @@ table.list td.name { font-weight: 600; }
   font-size: 13px; cursor: pointer; color: var(--self-text-2);
 }
 .colmenu-panel input { accent-color: var(--self-teal); }
+
+/* Erweiterte-Filter-Panel + Aktiv-Zähler am "Filter"-Button */
+.filter-panel { min-width: 210px; display: flex; flex-direction: column; gap: 8px; }
+.filter-panel .field { width: 100%; }
+.filter-panel #filterReset { margin-top: 2px; }
+.filter-count { display: inline-flex; align-items: center; justify-content: center;
+  min-width: 16px; height: 16px; margin-left: 7px; padding: 0 4px;
+  font-family: var(--self-font-mono); font-size: 10px; font-weight: 600;
+  background: var(--self-teal); color: #05110d; border-radius: 999px; }
+.filter-count.hidden { display: none; }
+#filterBtn.has-active { border-color: var(--self-teal); color: var(--self-teal-bright); }
+
 .disp-lang {
   flex-direction: column; align-items: stretch; gap: 6px;
   margin-top: 6px; padding-top: 10px; border-top: 1px solid var(--self-line);

@@ -6,7 +6,13 @@
   var ALL = window.__DATA__ || [];
   var FSK_ON = window.__FSK_ENABLED__ !== false;   // FSK-Feature (nur UI); Standard an
   var state = { view: "cover", q: "", library: "", type: "", rating: "", tag: "", complete: "",
-                res: "", sortKey: "sort_name", sortDir: 1 };
+                res: "", codec: "", audioLang: "", subLang: "", sortKey: "sort_name", sortDir: 1 };
+
+  // Erweiterte Filter im Aufklapp-Panel (Reihenfolge = Panel-Reihenfolge)
+  var ADV_FILTERS = [
+    { id: "fRating", key: "rating" }, { id: "fRes", key: "res" }, { id: "fCodec", key: "codec" },
+    { id: "fAudioLang", key: "audioLang" }, { id: "fSubLang", key: "subLang" }, { id: "fTag", key: "tag" },
+  ];
 
   var COLUMNS = [
     { key: "name",             label: "Titel",         on: true,  cls: "name" },
@@ -84,25 +90,46 @@
     return '<span style="color:var(--self-text-3)">-</span>';
   }
 
+  function addOpts(selId, pairs) {
+    var sel = $(selId);
+    if (!sel) { return; }
+    pairs.forEach(function (p) {
+      var o = document.createElement("option"); o.value = p[0]; o.textContent = p[1];
+      sel.appendChild(o);
+    });
+  }
+
   function fillFilters() {
-    var ratings = {}, tagNames = {}, resHeight = {};
+    var ratings = {}, tagNames = {}, resHeight = {}, codecs = {}, audioLangs = {}, subLangs = {};
     ALL.forEach(function (i) {
       if (i.official_rating) { ratings[i.official_rating] = 1; }
       (i.tags || []).forEach(function (t) { tagNames[t.name] = 1; });
       if (i.resolution) { resHeight[i.resolution] = i.resolution === "4K" ? 100000 : (parseInt(i.resolution, 10) || 0); }
+      if (i.video_codec) { codecs[i.video_codec] = 1; }
+      (i.audio_langs || []).forEach(function (l) { audioLangs[shortLang(l)] = langName(l); });
+      (i.subtitle_langs || []).forEach(function (l) { subLangs[shortLang(l)] = langName(l); });
     });
-    Object.keys(ratings).sort().forEach(function (r) {
-      var o = document.createElement("option"); o.value = r; o.textContent = r; $("fRating").appendChild(o);
-    });
+    addOpts("fRating", Object.keys(ratings).sort().map(function (r) { return [r, r]; }));
     // Auflösungen nach Bildhöhe absteigend (hoechste zuerst)
-    Object.keys(resHeight).sort(function (a, b) { return resHeight[b] - resHeight[a]; }).forEach(function (r) {
-      var o = document.createElement("option"); o.value = r; o.textContent = r; $("fRes").appendChild(o);
-    });
-    Object.keys(tagNames).sort().forEach(function (n) {
-      var o = document.createElement("option"); o.value = n; o.textContent = n; $("fTag").appendChild(o);
-    });
+    addOpts("fRes", Object.keys(resHeight).sort(function (a, b) { return resHeight[b] - resHeight[a]; })
+      .map(function (r) { return [r, r]; }));
+    addOpts("fCodec", Object.keys(codecs).sort().map(function (c) { return [c, c]; }));
+    // Sprachen nach Anzeigename sortiert (Wert = Kürzel wie 'DE', damit ger/deu/de zusammenfallen)
+    var langSort = function (a, b) { return audioLangs[a].localeCompare(audioLangs[b], "de"); };
+    addOpts("fAudioLang", Object.keys(audioLangs).sort(langSort).map(function (k) { return [k, audioLangs[k]]; }));
+    addOpts("fSubLang", Object.keys(subLangs).sort(function (a, b) {
+      return subLangs[a].localeCompare(subLangs[b], "de"); }).map(function (k) { return [k, subLangs[k]]; }));
+    addOpts("fTag", Object.keys(tagNames).sort().map(function (n) { return [n, n]; }));
     // FSK deaktiviert -> Freigabe-Filter ausblenden
     if (!FSK_ON) { var fr = $("fRating"); if (fr) { fr.style.display = "none"; } }
+  }
+
+  // Zahl aktiver erweiterter Filter am "Filter"-Button anzeigen
+  function updateFilterCount() {
+    var n = ADV_FILTERS.filter(function (f) { return state[f.key]; }).length;
+    var badge = $("filterCount");
+    if (badge) { badge.textContent = n; badge.classList.toggle("hidden", n === 0); }
+    var btn = $("filterBtn"); if (btn) { btn.classList.toggle("has-active", n > 0); }
   }
 
   function filtered() {
@@ -115,6 +142,9 @@
       if (state.rating && state.rating !== "__none__" && state.rating !== "__suspicious__" && i.official_rating !== state.rating) { return false; }
       if (state.res === "__lt720__" && !(i.height && i.height < 720)) { return false; }
       if (state.res && state.res !== "__lt720__" && i.resolution !== state.res) { return false; }
+      if (state.codec && i.video_codec !== state.codec) { return false; }
+      if (state.audioLang && !(i.audio_langs || []).some(function (l) { return shortLang(l) === state.audioLang; })) { return false; }
+      if (state.subLang && !(i.subtitle_langs || []).some(function (l) { return shortLang(l) === state.subLang; })) { return false; }
       if (state.tag && !(i.tags || []).some(function (t) { return t.name === state.tag; })) { return false; }
       if (state.complete && i.completeness !== state.complete) { return false; }
       if (q && i.name.toLowerCase().indexOf(q) === -1) { return false; }
@@ -364,17 +394,26 @@
     $("q").oninput = function () { state.q = this.value; render(); };
     $("fLibrary").onchange = function () { state.library = this.value; render(); };
     $("fType").onchange = function () { state.type = this.value; render(); };
-    $("fRating").onchange = function () { state.rating = this.value; render(); };
-    $("fRes").onchange = function () { state.res = this.value; render(); };
-    $("fTag").onchange = function () { state.tag = this.value; render(); };
     $("fComplete").onchange = function () { state.complete = this.value; render(); };
+    // Erweiterte Filter (im Panel) - jeweils state setzen + Aktiv-Zähler aktualisieren
+    ADV_FILTERS.forEach(function (f) {
+      var el = $(f.id);
+      if (el) { el.onchange = function () { state[f.key] = this.value; updateFilterCount(); render(); }; }
+    });
+    $("filterReset").onclick = function () {
+      ADV_FILTERS.forEach(function (f) { state[f.key] = ""; var el = $(f.id); if (el) { el.value = ""; } });
+      updateFilterCount(); render();
+    };
     $("viewToggle").querySelectorAll("button").forEach(function (b) {
       b.onclick = function () { setView(b.getAttribute("data-view")); };
     });
+    $("filterBtn").onclick = function (e) { e.stopPropagation(); $("filterPanel").classList.toggle("open"); };
+    $("filterPanel").onclick = function (e) { e.stopPropagation(); };
     $("colBtn").onclick = function (e) { e.stopPropagation(); $("colPanel").classList.toggle("open"); };
     $("dispBtn").onclick = function (e) { e.stopPropagation(); $("dispPanel").classList.toggle("open"); };
     document.addEventListener("click", function () {
       $("colPanel").classList.remove("open"); $("dispPanel").classList.remove("open");
+      $("filterPanel").classList.remove("open");
     });
     $("colPanel").onclick = function (e) { e.stopPropagation(); };
     $("dispPanel").onclick = function (e) { e.stopPropagation(); };
@@ -383,6 +422,7 @@
   }
 
   fillFilters();
+  updateFilterCount();
   buildColMenu();
   initDisp();
   wire();
