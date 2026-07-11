@@ -2,7 +2,9 @@
 from fastapi import APIRouter, HTTPException, Request
 
 from .. import config, db
-from ..services import fsk, queries, rules, sync as sync_service, tags, tmdb
+from ..services import (
+    fsk, queries, rules, settings as settings_service, sync as sync_service, tags, tmdb,
+)
 
 router = APIRouter(prefix="/api")
 
@@ -72,6 +74,22 @@ def api_item_detail(item_id: int):
 @router.get("/meta/fields")
 def api_fields():
     return {"fields": rules.FIELDS, "ops": rules.OPS, "tags": tags.list_tags()}
+
+
+# -- Einstellungen ----------------------------------------------------------
+@router.get("/settings")
+def api_settings():
+    return {"settings": settings_service.all_settings()}
+
+
+@router.post("/settings")
+async def api_settings_save(request: Request):
+    data = await request.json()
+    if not isinstance(data, dict):
+        raise HTTPException(status_code=400, detail="Objekt (key/value) erwartet")
+    clean = {k: v for k, v in data.items() if k in settings_service.allowed_keys()}
+    settings_service.save_many(clean)
+    return {"ok": True, "saved": sorted(clean), "settings": settings_service.all_settings()}
 
 
 # -- Tags -------------------------------------------------------------------

@@ -579,7 +579,60 @@ table.list tbody tr { cursor: pointer; }
 .fsk-ack-box span { color: var(--self-yellow); font-size: 13px; }
 .fsk-ack-box .btn { flex: none; }
 
+/* Instanzname in der Topbar (neben dem Logo) */
+.instance-name {
+  font-family: var(--self-font-mono); font-size: 12px; color: var(--self-text-3);
+  padding: 3px 9px; border: 1px solid var(--self-line); border-radius: 999px;
+  white-space: nowrap;
+}
+
+/* -- Einstellungsseite: Sidebar + Inhalt -- */
+.settings-layout { display: grid; grid-template-columns: 220px 1fr; gap: 22px;
+  align-items: start; margin-bottom: 40px; }
+.settings-nav { display: flex; flex-direction: column; gap: 4px;
+  position: sticky; top: 20px; }
+.set-tab {
+  text-align: left; padding: 10px 13px; border-radius: var(--self-radius-sm);
+  background: transparent; border: 1px solid transparent; color: var(--self-text-2);
+  font-size: 14px; cursor: pointer;
+  transition: background var(--self-dur) var(--self-ease), color var(--self-dur) var(--self-ease);
+}
+.set-tab:hover { background: var(--self-bg-2); color: var(--self-text); }
+.set-tab.active { background: var(--self-bg-2); color: var(--self-teal-bright);
+  border-color: var(--self-line-strong); }
+.settings-content { min-width: 0; }
+.set-panel { display: none; }
+.set-panel.active { display: block; }
+.set-panel .card-h { display: flex; align-items: center; gap: 10px; }
+.set-field { margin: 4px 0 18px; }
+.set-field label { display: block; font-size: 13px; color: var(--self-text-2);
+  margin-bottom: 7px; }
+.set-field .field { width: 100%; max-width: 420px; }
+.set-hint { color: var(--self-text-3); font-size: 11px; }
+.set-desc { margin-top: 8px; font-size: 12px; color: var(--self-text-3);
+  max-width: 560px; line-height: 1.5; }
+.set-desc.mono { font-family: var(--self-font-mono); color: var(--self-ice-bright); font-size: 13px; }
+.set-actions { margin-top: 10px; }
+.set-placeholder {
+  margin: 6px 0; padding: 14px 16px; max-width: 620px; line-height: 1.6;
+  font-size: 13px; color: var(--self-text-3);
+  background: var(--self-bg-0); border: 1px dashed var(--self-line-strong);
+  border-radius: var(--self-radius-sm);
+}
+.phase-badge {
+  font-family: var(--self-font-mono); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 999px;
+  color: var(--self-ice-deep); border: 1px solid var(--self-line-strong);
+  background: var(--self-bg-0);
+}
+
 @media (max-width: 940px) { .modal-close { right: 20px; } }
+@media (max-width: 820px) {
+  .settings-layout { grid-template-columns: 1fr; }
+  .settings-nav { position: static; flex-direction: row; flex-wrap: wrap; }
+  .set-tab { flex: 1 1 auto; text-align: center; }
+}
 @media (max-width: 720px) {
   .stats { grid-template-columns: repeat(2, 1fr); }
   .hero { padding: 22px 0 8px; }

@@ -4,10 +4,14 @@
       <span class="self">Self</span><span class="rest">MediaHub</span>
       <span class="badge">v{{ app.VERSION }}</span>
     </a>
+    {% if settings and settings['general.instance_name'] %}
+    <span class="instance-name" title="Instanzname">{{ settings['general.instance_name'] }}</span>
+    {% endif %}
     <nav class="nav" aria-label="Hauptnavigation">
-      <a href="/"          class="{{ 'active' if active == 'home' }}">Übersicht</a>
-      <a href="/tags"      class="{{ 'active' if active == 'tags' }}">Tags</a>
-      <a href="/regeln"    class="{{ 'active' if active == 'rules' }}">Regeln</a>
+      <a href="/"            class="{{ 'active' if active == 'home' }}">Übersicht</a>
+      <a href="/tags"        class="{{ 'active' if active == 'tags' }}">Tags</a>
+      <a href="/regeln"      class="{{ 'active' if active == 'rules' }}">Regeln</a>
+      <a href="/einstellungen" class="{{ 'active' if active == 'settings' }}">Einstellungen</a>
     </nav>
     <div class="spacer"></div>
     {% if active == 'home' %}

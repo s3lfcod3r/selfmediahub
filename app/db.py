@@ -62,6 +62,10 @@ CREATE INDEX IF NOT EXISTS idx_items_lib  ON media_items(library_name);
 
 CREATE TABLE IF NOT EXISTS app_meta (key TEXT PRIMARY KEY, value TEXT);
 
+-- Benutzer-Einstellungen (Key-Value, Wert als JSON). Getrennt von app_meta
+-- (interner Systemzustand). Erweiterbar ohne Migration: neuer Schluessel genuegt.
+CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);
+
 CREATE TABLE IF NOT EXISTS tags (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL UNIQUE,

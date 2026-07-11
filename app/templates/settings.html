@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% set active = 'settings' %}
+{% block title %}{{ app.APP_NAME }} - Einstellungen{% endblock %}
+{% block body %}
+{% include '_topbar.html' %}
+<main class="wrap">
+  <section class="hero">
+    <p class="label">Einstellungen</p>
+    <h1>Konfiguration</h1>
+    <p>Zentrale Verwaltung von {{ app.APP_NAME }}. Die Bereiche werden schrittweise
+       mit Leben gefüllt - was schon funktioniert, ist markiert.</p>
+  </section>
+
+  <div class="settings-layout">
+    <nav class="settings-nav" id="setNav" aria-label="Einstellungs-Bereiche">
+      <button class="set-tab active" data-cat="allgemein">Allgemein</button>
+      <button class="set-tab" data-cat="account">Account</button>
+      <button class="set-tab" data-cat="quellen">Datenquellen &amp; Bibliotheken</button>
+      <button class="set-tab" data-cat="metadaten">Metadatendienste</button>
+      <button class="set-tab" data-cat="anzeige">Anzeige</button>
+      <button class="set-tab" data-cat="fsk">FSK &amp; Altersfreigaben</button>
+      <button class="set-tab" data-cat="ueber">Über &amp; Updates</button>
+    </nav>
+
+    <div class="settings-content">
+      <!-- Allgemein (funktionsfaehig) -->
+      <section class="set-panel active" data-cat="allgemein">
+        <h2 class="card-h">Allgemeine Einstellungen</h2>
+        <div class="set-field">
+          <label for="instanceName">Instanzname <span class="set-hint">optional</span></label>
+          <input class="field" id="instanceName" maxlength="60"
+                 value="{{ settings['general.instance_name'] }}"
+                 placeholder="z.B. Wohnzimmer, Heimkino, Server 1">
+          <p class="set-desc">Wird oben in der Kopfzeile neben dem Logo angezeigt - praktisch,
+             wenn du mehrere Instanzen betreibst. Leer lassen zum Ausblenden.</p>
+        </div>
+        <div class="set-actions">
+          <button class="btn btn-primary" id="saveAllgemein">Speichern</button>
+        </div>
+      </section>
+
+      <!-- Account -->
+      <section class="set-panel" data-cat="account">
+        <h2 class="card-h">Account <span class="phase-badge">Phase 3</span></h2>
+        <p class="set-placeholder">Hier entstehen: Benutzername &amp; Passwort ändern, optionale
+           E-Mail-Adresse, sowie Passwort-Authentifizierung aktivieren/deaktivieren
+           (mit Warnhinweis). Sensible Daten werden dann geschützt gespeichert.</p>
+      </section>
+
+      <!-- Datenquellen & Bibliotheken -->
+      <section class="set-panel" data-cat="quellen">
+        <h2 class="card-h">Datenquellen &amp; Bibliotheken <span class="phase-badge">Phase 4</span></h2>
+        <p class="set-placeholder">Hier entstehen: Emby-, Plex-, Jellyfin- und lokale Quellen
+           verwalten, mehrere Quellen parallel betreiben und je Quelle auswählen, welche
+           Bibliotheken überwacht werden (z.B. „Test-Anime" ausschließen).</p>
+      </section>
+
+      <!-- Metadatendienste -->
+      <section class="set-panel" data-cat="metadaten">
+        <h2 class="card-h">Metadatendienste <span class="phase-badge">Phase 5</span></h2>
+        <p class="set-placeholder">Hier entstehen: mehrere Informationsquellen (TMDb, TheTVDB,
+           OMDb, AniDB …) mit eigenen API-Zugangsdaten und einer frei wählbaren Reihenfolge
+           (Priorisierung) je Medienart - z.B. AniDB zuerst für Anime.</p>
+      </section>
+
+      <!-- Anzeige -->
+      <section class="set-panel" data-cat="anzeige">
+        <h2 class="card-h">Anzeige <span class="phase-badge">Phase 6</span></h2>
+        <p class="set-placeholder">Hier entstehen: Cover-Layout-Editor (welche Infos an welcher
+           Stelle des Covers), Overlay-Konfiguration und Statusanzeigen. Die schnellen
+           Cover-Schalter (FSK-Ecke, Auflösung, Sprache/UT) findest du vorerst weiter über
+           das Zahnrad auf der Übersicht.</p>
+      </section>
+
+      <!-- FSK & Altersfreigaben -->
+      <section class="set-panel" data-cat="fsk">
+        <h2 class="card-h">FSK &amp; Altersfreigaben <span class="phase-badge">Phase 5</span></h2>
+        <p class="set-placeholder">Hier entstehen: das FSK-Feature komplett aktivieren/deaktivieren,
+           internationale Freigaben (FSK / PEGI / USK / Altersangabe) vereinheitlichen, eine
+           Anzeigepräferenz festlegen und der FSK-Check zum Abgleich der Quellen.</p>
+      </section>
+
+      <!-- Über & Updates -->
+      <section class="set-panel" data-cat="ueber">
+        <h2 class="card-h">Über &amp; Updates <span class="phase-badge">Phase 1</span></h2>
+        <div class="set-field">
+          <label>Installierte Version</label>
+          <p class="set-desc mono">{{ app.APP_NAME }} v{{ app.VERSION }}</p>
+          <p class="set-placeholder">Die automatische Update-Prüfung (Vergleich mit der neuesten
+             GitHub-Version, grün/rot-Markierung, Link zu den Release-Infos) kommt in Phase 1.</p>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<script src="/static/js/settings.js"></script>
+{% endblock %}

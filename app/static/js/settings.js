@@ -1,0 +1,63 @@
+/* Einstellungsseite: Kategorie-Umschaltung (Sidebar <-> Panels) + Speichern.
+   Theme/Toast liegen in common.js. */
+(function () {
+  "use strict";
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  // -- Kategorie-Umschaltung (per Klick + URL-Hash, damit Links teilbar sind) --
+  function showCat(cat) {
+    var tabs = document.querySelectorAll(".set-tab");
+    var panels = document.querySelectorAll(".set-panel");
+    var found = false;
+    Array.prototype.forEach.call(tabs, function (t) {
+      var on = t.getAttribute("data-cat") === cat;
+      t.classList.toggle("active", on);
+      if (on) { found = true; }
+    });
+    Array.prototype.forEach.call(panels, function (p) {
+      p.classList.toggle("active", p.getAttribute("data-cat") === cat);
+    });
+    return found;
+  }
+
+  function initNav() {
+    var nav = $("setNav");
+    if (!nav) { return; }
+    nav.addEventListener("click", function (e) {
+      var btn = e.target.closest(".set-tab");
+      if (!btn) { return; }
+      var cat = btn.getAttribute("data-cat");
+      if (showCat(cat)) {
+        try { history.replaceState(null, "", "#" + cat); } catch (err) { /* ignore */ }
+      }
+    });
+    var hash = (location.hash || "").replace("#", "");
+    if (hash) { showCat(hash); }
+  }
+
+  // -- Speichern: Bereich "Allgemein" --
+  function saveGeneral() {
+    var btn = $("saveAllgemein");
+    if (!btn) { return; }
+    btn.disabled = true;
+    var payload = { "general.instance_name": $("instanceName").value.trim() };
+    fetch("/api/settings", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        if (!res.ok) { throw new Error(res.j.detail || "Fehler"); }
+        window.smhToast("Gespeichert", "ok");
+      })
+      .catch(function (e) { window.smhToast("Fehlgeschlagen: " + e.message, "err"); })
+      .then(function () { btn.disabled = false; });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    initNav();
+    var b = $("saveAllgemein");
+    if (b) { b.onclick = saveGeneral; }
+  });
+})();

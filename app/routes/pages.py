@@ -7,7 +7,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from .. import config, db
-from ..services import queries, rules, tags
+from ..services import queries, rules, settings as settings_service, tags
 
 router = APIRouter()
 
@@ -16,7 +16,7 @@ templates = Jinja2Templates(directory=_TEMPLATE_DIR)
 
 
 def _ctx(request: Request, **extra) -> dict:
-    base = {"request": request, "app": config}
+    base = {"request": request, "app": config, "settings": settings_service.all_settings()}
     base.update(extra)
     return base
 
@@ -49,3 +49,8 @@ def rules_page(request: Request):
         request, rules=rules.list_rules(), tags=tags.list_tags(),
         fields=rules.FIELDS, ops=rules.OPS,
     ))
+
+
+@router.get("/einstellungen", response_class=HTMLResponse)
+def settings_page(request: Request):
+    return templates.TemplateResponse(request, "settings.html", _ctx(request))
