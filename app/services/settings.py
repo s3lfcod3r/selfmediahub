@@ -20,6 +20,7 @@ from .. import db
 DEFAULTS = {
     # -- Allgemein (Phase 0, funktionsfaehig) --
     "general.instance_name": "",       # optionaler Anzeigename der Instanz (Topbar/Titel)
+    "general.ui_language": "de",       # Sprache der Oberflaeche (i18n): de | en
     # -- Anzeige (Phase 2) --
     "display.primary_language": "ger",  # primaere Sprache der Instanz (fuer Sprach-Abdeckung/Flaggen)
     # -- FSK & Altersfreigaben (Phase 1) --

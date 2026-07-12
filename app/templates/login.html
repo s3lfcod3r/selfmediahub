@@ -4,16 +4,16 @@
 <main class="auth-wrap">
   <div class="auth-card">
     <div class="auth-brand"><span class="self">Self</span><span class="rest">MediaHub</span></div>
-    <h1>Anmelden</h1>
+    <h1>{{ t('login.title') }}</h1>
     {% if error %}<div class="auth-error">{{ error }}</div>{% endif %}
     <form method="post" action="/login" class="auth-form">
-      <label>Benutzername
+      <label>{{ t('login.username') }}
         <input class="field" name="username" autocomplete="username" autofocus required>
       </label>
-      <label>Passwort
+      <label>{{ t('login.password') }}
         <input class="field" type="password" name="password" autocomplete="current-password" required>
       </label>
-      <button class="btn btn-primary" type="submit">Anmelden</button>
+      <button class="btn btn-primary" type="submit">{{ t('login.submit') }}</button>
     </form>
   </div>
 </main>

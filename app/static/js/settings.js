@@ -295,6 +295,15 @@
       };
     }
 
+    // UI-Sprache: nach dem Speichern neu laden, damit die Oberflaeche umschaltet.
+    var uiLang = $("uiLang");
+    if (uiLang) {
+      uiLang.onchange = function () {
+        saveSettings({ "general.ui_language": uiLang.value }, "…")
+          .then(function () { location.reload(); });
+      };
+    }
+
     // -- Account --
     function postJson(url, body, okMsg, btn) {
       if (btn) { btn.disabled = true; }

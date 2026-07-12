@@ -7,19 +7,13 @@
     <span class="badge">SETUP</span>
   </div>
   <div class="panel">
-    <h1>Fast fertig - noch eine Quelle verbinden</h1>
-    <p style="color:var(--self-text-2)">
-      SelfMediaHub liest deine Mediathek <strong>nur lesend</strong> und speichert alles
-      in seiner eigenen Datenbank. An deinem Medienserver wird nichts veraendert.
-      Lege jetzt in den Einstellungen deine erste Datenquelle an (Emby, Jellyfin,
-      Plex oder lokale Ordner) - Server-Adresse und API-Schluessel werden
-      verschluesselt gespeichert.
-    </p>
+    <h1>{{ t('setup_src.title') }}</h1>
+    <p style="color:var(--self-text-2)">{{ t('setup_src.desc') }}</p>
     <p style="margin-top:18px">
-      <a class="btn btn-primary" href="/einstellungen#quellen">Datenquelle einrichten</a>
+      <a class="btn btn-primary" href="/einstellungen#quellen">{{ t('setup_src.button') }}</a>
     </p>
     <p style="margin-top:14px; color:var(--self-text-3); font-size:13px">
-      Danach oben rechts <strong>„Neu einlesen"</strong> klicken.
+      {{ t('setup_src.hint') }}
     </p>
   </div>
 </div>

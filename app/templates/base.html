@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="de" data-theme="dark">
+<html lang="{{ ui_lang or 'de' }}" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -11,6 +11,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=Orbitron:wght@700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/tokens.css">
   <link rel="stylesheet" href="/static/css/app.css">
+  <script>
+    window.__LANG__ = "{{ ui_lang or 'de' }}";
+    window.__T__ = {{ (i18n_catalog or {}) | tojson }};
+    window.t = function (k) {
+      return (window.__T__ && window.__T__[k] !== undefined) ? window.__T__[k] : k;
+    };
+  </script>
 </head>
 <body>
   {% block body %}{% endblock %}

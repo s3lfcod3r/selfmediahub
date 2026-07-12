@@ -5,27 +5,27 @@
     </a>
     {% if update and update.available %}
     <a class="badge badge-update" href="{{ update.url }}" target="_blank" rel="noopener"
-       title="Neue Version {{ update.latest }} verfügbar (installiert v{{ update.current }}) - zu den Release-Infos">v{{ app.VERSION }} &uarr;</a>
+       title="{{ t('topbar.version_update').format(latest=update.latest, current=update.current) }}">v{{ app.VERSION }} &uarr;</a>
     {% else %}
-    <span class="badge badge-current" title="Version v{{ app.VERSION }} ist aktuell">v{{ app.VERSION }}</span>
+    <span class="badge badge-current" title="{{ t('topbar.version_current').format(v=app.VERSION) }}">v{{ app.VERSION }}</span>
     {% endif %}
     {% if settings and settings['general.instance_name'] %}
-    <span class="instance-name" title="Instanzname">{{ settings['general.instance_name'] }}</span>
+    <span class="instance-name" title="{{ t('topbar.instance_name') }}">{{ settings['general.instance_name'] }}</span>
     {% endif %}
-    <nav class="nav" aria-label="Hauptnavigation">
-      <a href="/"       class="{{ 'active' if active == 'home' }}">Übersicht</a>
-      <a href="/tags"   class="{{ 'active' if active == 'tags' }}">Tags</a>
-      <a href="/regeln" class="{{ 'active' if active == 'rules' }}">Regeln</a>
+    <nav class="nav" aria-label="{{ t('nav.aria') }}">
+      <a href="/"       class="{{ 'active' if active == 'home' }}">{{ t('nav.overview') }}</a>
+      <a href="/tags"   class="{{ 'active' if active == 'tags' }}">{{ t('nav.tags') }}</a>
+      <a href="/regeln" class="{{ 'active' if active == 'rules' }}">{{ t('nav.rules') }}</a>
     </nav>
     <div class="spacer"></div>
     {% if auth_active and account %}
-    <span class="acct-chip" title="Angemeldet">{{ account.username }}</span>
-    <a class="btn btn-small" href="/logout" title="Abmelden">Abmelden</a>
+    <span class="acct-chip" title="{{ t('topbar.logged_in') }}">{{ account.username }}</span>
+    <a class="btn btn-small" href="/logout" title="{{ t('topbar.logout') }}">{{ t('topbar.logout') }}</a>
     {% endif %}
     <a class="btn btn-icon {{ 'active' if active == 'settings' }}" href="/einstellungen"
-       title="Einstellungen" aria-label="Einstellungen">&#9881;</a>
-    <button class="btn btn-icon" id="themeBtn" title="Hell/Dunkel" aria-label="Theme umschalten">◐</button>
-    <button class="btn btn-primary" id="syncBtn"><span id="syncLabel">Neu einlesen</span></button>
+       title="{{ t('topbar.settings') }}" aria-label="{{ t('topbar.settings') }}">&#9881;</a>
+    <button class="btn btn-icon" id="themeBtn" title="{{ t('topbar.theme') }}" aria-label="{{ t('topbar.theme_aria') }}">◐</button>
+    <button class="btn btn-primary" id="syncBtn"><span id="syncLabel">{{ t('topbar.sync') }}</span></button>
   </div>
 </header>
 <div class="toast" id="toast"></div>

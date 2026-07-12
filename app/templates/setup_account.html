@@ -4,23 +4,30 @@
 <main class="auth-wrap">
   <div class="auth-card">
     <div class="auth-brand"><span class="self">Self</span><span class="rest">MediaHub</span></div>
-    <h1>Konto einrichten</h1>
-    <p class="auth-sub">Lege beim ersten Start dein Konto an. Danach ist die Anmeldung aktiv.</p>
+    <h1>{{ t('setup.account_title') }}</h1>
+    <p class="auth-sub">{{ t('setup.account_sub') }}</p>
     {% if error %}<div class="auth-error">{{ error }}</div>{% endif %}
     <form method="post" action="/setup" class="auth-form">
-      <label>Benutzername
+      <label>{{ t('setup.language') }}
+        <select class="field" name="language">
+          {% for code, label in ui_languages %}
+          <option value="{{ code }}"{{ ' selected' if code == ui_lang }}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <label>{{ t('setup.username') }}
         <input class="field" name="username" value="{{ username or '' }}" autocomplete="username" autofocus required>
       </label>
-      <label>Passwort <span class="auth-hint">min. 8 Zeichen</span>
+      <label>{{ t('setup.password') }} <span class="auth-hint">{{ t('setup.password_min') }}</span>
         <input class="field" type="password" name="password" autocomplete="new-password" required>
       </label>
-      <label>Passwort wiederholen
+      <label>{{ t('setup.password_repeat') }}
         <input class="field" type="password" name="password2" autocomplete="new-password" required>
       </label>
-      <label>E-Mail <span class="auth-hint">optional</span>
+      <label>{{ t('setup.email') }} <span class="auth-hint">{{ t('common.optional') }}</span>
         <input class="field" type="email" name="email" value="{{ email or '' }}" autocomplete="email">
       </label>
-      <button class="btn btn-primary" type="submit">Konto anlegen &amp; anmelden</button>
+      <button class="btn btn-primary" type="submit">{{ t('setup.submit') }}</button>
     </form>
   </div>
 </main>

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
-from .. import config, db
+from .. import config, db, i18n
 from ..services import (
     auth, queries, rules, settings as settings_service, sources, tags, updatecheck,
 )
@@ -18,13 +18,15 @@ templates = Jinja2Templates(directory=_TEMPLATE_DIR)
 
 
 def _ctx(request: Request, **extra) -> dict:
+    all_settings = settings_service.all_settings()
     base = {
         "request": request, "app": config,
-        "settings": settings_service.all_settings(),
+        "settings": all_settings,
         "update": updatecheck.get_status(),
         "account": auth.get_account(),
         "auth_active": auth.auth_active(),
     }
+    base.update(i18n.context(all_settings.get("general.ui_language")))
     base.update(extra)
     return base
 

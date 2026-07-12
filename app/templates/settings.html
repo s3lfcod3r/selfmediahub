@@ -38,6 +38,16 @@
         </div>
 
         <div class="set-field">
+          <label for="uiLang">{{ t('settings.ui_language') }}</label>
+          <select class="field" id="uiLang">
+            {% for code, label in ui_languages %}
+            <option value="{{ code }}"{{ ' selected' if code == settings['general.ui_language'] }}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <p class="set-desc">{{ t('settings.ui_language_desc') }}</p>
+        </div>
+
+        <div class="set-field">
           <label for="primaryLang">Primäre Sprache</label>
           {% set pl = settings['display.primary_language'] %}
           <select class="field" id="primaryLang">
