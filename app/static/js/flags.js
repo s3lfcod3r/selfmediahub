@@ -31,12 +31,24 @@
     return c ? SVG[c] : null;
   };
 
-  // Teilweise-Variante: obere Haelfte farbig, untere diagonal ausgegraut
-  // (zwei Kopien uebereinander; CSS in app.css clippt/graut die zweite).
+  // Teilweise-Variante: obere Haelfte farbig, untere diagonal ausgegraut.
+  // Alles in EINEM SVG: die Flagge zweimal - die zweite Kopie in ein unteres
+  // Dreieck geclippt (gerade Diagonale) und per Filter entsaettigt/abgedunkelt.
+  // Keine CSS-Overlays -> keine Extralinie, keine krumme Kante.
+  var _pid = 0;
   window.smhFlagPartial = function (code) {
     var c = MAP[String(code || "").toLowerCase()];
     if (!c) { return null; }
-    return '<span class="fl-wrap partial">' + SVG[c] +
-      '<span class="fl-grey">' + SVG[c] + "</span></span>";
+    var inner = SVG[c].replace(/^<svg[^>]*>/, "").replace(/<\/svg>\s*$/, "");
+    var id = "smhp" + (++_pid);
+    return '<svg class="fl" viewBox="0 0 20 15">' +
+      "<defs>" +
+        '<clipPath id="' + id + 'c"><polygon points="20,0 20,15 0,15"/></clipPath>' +
+        '<filter id="' + id + 'g"><feColorMatrix type="saturate" values="0"/></filter>' +
+      "</defs>" +
+      inner +
+      '<g clip-path="url(#' + id + 'c)" filter="url(#' + id + 'g)" opacity="0.6">' +
+        inner + "</g>" +
+      "</svg>";
   };
 })();
