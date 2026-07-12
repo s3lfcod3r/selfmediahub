@@ -1,40 +1,38 @@
 {% extends "base.html" %}
 {% set active = 'settings' %}
-{% block title %}{{ app.APP_NAME }} - Einstellungen{% endblock %}
+{% block title %}{{ app.APP_NAME }} - {{ t('settings.label') }}{% endblock %}
 {% block body %}
 {% include '_topbar.html' %}
 <main class="wrap">
   <section class="hero">
-    <p class="label">Einstellungen</p>
-    <h1>Konfiguration</h1>
-    <p>Zentrale Verwaltung von {{ app.APP_NAME }}. Die Bereiche werden schrittweise
-       mit Leben gefüllt - was schon funktioniert, ist markiert.</p>
+    <p class="label">{{ t('settings.label') }}</p>
+    <h1>{{ t('settings.title') }}</h1>
+    <p>{{ t('settings.intro').format(app=app.APP_NAME) }}</p>
   </section>
 
   <div class="settings-layout">
-    <nav class="settings-nav" id="setNav" aria-label="Einstellungs-Bereiche">
-      <button class="set-tab active" data-cat="allgemein">Allgemein</button>
-      <button class="set-tab" data-cat="account">Account</button>
-      <button class="set-tab" data-cat="quellen">Datenquellen &amp; Bibliotheken</button>
-      <button class="set-tab" data-cat="metadaten">Metadatendienste</button>
-      <button class="set-tab" data-cat="fsk">FSK &amp; Altersfreigaben</button>
-      <button class="set-tab" data-cat="ueber">Über &amp; Updates</button>
+    <nav class="settings-nav" id="setNav" aria-label="{{ t('settings.nav_aria') }}">
+      <button class="set-tab active" data-cat="allgemein">{{ t('settings.tab.general') }}</button>
+      <button class="set-tab" data-cat="account">{{ t('settings.tab.account') }}</button>
+      <button class="set-tab" data-cat="quellen">{{ t('settings.tab.sources') }}</button>
+      <button class="set-tab" data-cat="metadaten">{{ t('settings.tab.metadata') }}</button>
+      <button class="set-tab" data-cat="fsk">{{ t('settings.tab.fsk') }}</button>
+      <button class="set-tab" data-cat="ueber">{{ t('settings.tab.about') }}</button>
     </nav>
 
     <div class="settings-content">
       <!-- Allgemein (funktionsfaehig) -->
       <section class="set-panel active" data-cat="allgemein">
-        <h2 class="card-h">Allgemeine Einstellungen</h2>
+        <h2 class="card-h">{{ t('settings.general.title') }}</h2>
         <div class="set-field">
-          <label for="instanceName">Instanzname <span class="set-hint">optional</span></label>
+          <label for="instanceName">{{ t('settings.general.instance_name') }} <span class="set-hint">{{ t('common.optional') }}</span></label>
           <input class="field" id="instanceName" maxlength="60"
                  value="{{ settings['general.instance_name'] }}"
-                 placeholder="z.B. Wohnzimmer, Heimkino, Server 1">
-          <p class="set-desc">Wird oben in der Kopfzeile neben dem Logo angezeigt - praktisch,
-             wenn du mehrere Instanzen betreibst. Leer lassen zum Ausblenden.</p>
+                 placeholder="{{ t('settings.general.instance_placeholder') }}">
+          <p class="set-desc">{{ t('settings.general.instance_desc') }}</p>
         </div>
         <div class="set-actions">
-          <button class="btn btn-primary" id="saveAllgemein">Speichern</button>
+          <button class="btn btn-primary" id="saveAllgemein">{{ t('common.save') }}</button>
         </div>
 
         <div class="set-field">
@@ -48,126 +46,108 @@
         </div>
 
         <div class="set-field">
-          <label for="primaryLang">Primäre Sprache</label>
+          <label for="primaryLang">{{ t('settings.general.primary_language') }}</label>
           {% set pl = settings['display.primary_language'] %}
           <select class="field" id="primaryLang">
-            <option value="ger"{{ ' selected' if pl == 'ger' }}>Deutsch</option>
-            <option value="eng"{{ ' selected' if pl == 'eng' }}>Englisch</option>
-            <option value="jpn"{{ ' selected' if pl == 'jpn' }}>Japanisch</option>
-            <option value="fre"{{ ' selected' if pl == 'fre' }}>Französisch</option>
-            <option value="spa"{{ ' selected' if pl == 'spa' }}>Spanisch</option>
-            <option value="ita"{{ ' selected' if pl == 'ita' }}>Italienisch</option>
-            <option value="kor"{{ ' selected' if pl == 'kor' }}>Koreanisch</option>
-            <option value="rus"{{ ' selected' if pl == 'rus' }}>Russisch</option>
-            <option value="tur"{{ ' selected' if pl == 'tur' }}>Türkisch</option>
-            <option value="pol"{{ ' selected' if pl == 'pol' }}>Polnisch</option>
-            <option value="nld"{{ ' selected' if pl == 'nld' }}>Niederländisch</option>
-            <option value="por"{{ ' selected' if pl == 'por' }}>Portugiesisch</option>
-            <option value="chi"{{ ' selected' if pl == 'chi' }}>Chinesisch</option>
-            <option value="ara"{{ ' selected' if pl == 'ara' }}>Arabisch</option>
+            <option value="ger"{{ ' selected' if pl == 'ger' }}>{{ t('langname.ger') }}</option>
+            <option value="eng"{{ ' selected' if pl == 'eng' }}>{{ t('langname.eng') }}</option>
+            <option value="jpn"{{ ' selected' if pl == 'jpn' }}>{{ t('langname.jpn') }}</option>
+            <option value="fre"{{ ' selected' if pl == 'fre' }}>{{ t('langname.fre') }}</option>
+            <option value="spa"{{ ' selected' if pl == 'spa' }}>{{ t('langname.spa') }}</option>
+            <option value="ita"{{ ' selected' if pl == 'ita' }}>{{ t('langname.ita') }}</option>
+            <option value="kor"{{ ' selected' if pl == 'kor' }}>{{ t('langname.kor') }}</option>
+            <option value="rus"{{ ' selected' if pl == 'rus' }}>{{ t('langname.rus') }}</option>
+            <option value="tur"{{ ' selected' if pl == 'tur' }}>{{ t('langname.tur') }}</option>
+            <option value="pol"{{ ' selected' if pl == 'pol' }}>{{ t('langname.pol') }}</option>
+            <option value="nld"{{ ' selected' if pl == 'nld' }}>{{ t('langname.nld') }}</option>
+            <option value="por"{{ ' selected' if pl == 'por' }}>{{ t('langname.por') }}</option>
+            <option value="chi"{{ ' selected' if pl == 'chi' }}>{{ t('langname.chi') }}</option>
+            <option value="ara"{{ ' selected' if pl == 'ara' }}>{{ t('langname.ara') }}</option>
           </select>
-          <p class="set-desc">Die Hauptsprache dieser Instanz. Sie bestimmt, welche Sprach-Flagge
-             auf Covern und im Detail gezeigt wird (Ton &amp; Untertitel) - <strong>voll</strong>
-             (alle Folgen), <strong>teilweise</strong> (einige) oder <strong>gar nicht</strong>.
-             Beim Umstellen wird sofort neu berechnet, kein neuer Scan nötig.</p>
+          <p class="set-desc">{{ t('settings.general.primary_language_desc')|safe }}</p>
         </div>
       </section>
 
       <!-- Account -->
       <section class="set-panel" data-cat="account">
-        <h2 class="card-h">Account</h2>
+        <h2 class="card-h">{{ t('settings.account.title') }}</h2>
         <div class="set-field">
-          <label for="accUsername">Benutzername</label>
+          <label for="accUsername">{{ t('settings.account.username') }}</label>
           <input class="field" id="accUsername" value="{{ account.username if account else '' }}"
                  autocomplete="username">
-          <div class="set-actions"><button class="btn" id="saveUsername">Speichern</button></div>
+          <div class="set-actions"><button class="btn" id="saveUsername">{{ t('common.save') }}</button></div>
         </div>
         <div class="set-field">
-          <label for="accEmail">E-Mail <span class="set-hint">optional</span></label>
+          <label for="accEmail">{{ t('settings.account.email') }} <span class="set-hint">{{ t('common.optional') }}</span></label>
           <input class="field" id="accEmail" type="email" value="{{ account.email if account else '' }}"
                  autocomplete="email">
-          <div class="set-actions"><button class="btn" id="saveEmail">Speichern</button></div>
+          <div class="set-actions"><button class="btn" id="saveEmail">{{ t('common.save') }}</button></div>
         </div>
         <div class="set-field">
-          <label>Passwort ändern</label>
-          <input class="field" id="accPwCurrent" type="password" placeholder="Aktuelles Passwort"
+          <label>{{ t('settings.account.password_change') }}</label>
+          <input class="field" id="accPwCurrent" type="password" placeholder="{{ t('settings.account.password_current') }}"
                  autocomplete="current-password">
-          <input class="field" id="accPwNew" type="password" placeholder="Neues Passwort (min. 8 Zeichen)"
+          <input class="field" id="accPwNew" type="password" placeholder="{{ t('settings.account.password_new') }}"
                  autocomplete="new-password" style="margin-top:8px">
-          <div class="set-actions"><button class="btn" id="savePassword">Passwort ändern</button></div>
+          <div class="set-actions"><button class="btn" id="savePassword">{{ t('settings.account.password_change') }}</button></div>
         </div>
         <div class="set-field">
           <label class="set-toggle">
             <input type="checkbox" id="authEnabled" {{ 'checked' if account and account.auth_enabled }}>
-            <span>Anmeldung erforderlich</span>
+            <span>{{ t('settings.account.auth_required') }}</span>
           </label>
-          <p class="set-desc">Standard: an. Zum Abschalten (nur für rein lokale Installationen)
-             musst du bestätigen - <strong>ohne Anmeldung ist deine Medienverwaltung ungeschützt
-             zugänglich.</strong> Passwort vergessen? Am Container <code>SMH_DISABLE_AUTH=1</code>
-             setzen, dann greift die Login-Wand nicht.</p>
+          <p class="set-desc">{{ t('settings.account.auth_desc')|safe }}</p>
         </div>
       </section>
 
       <!-- Datenquellen & Bibliotheken -->
       <section class="set-panel" data-cat="quellen">
-        <h2 class="card-h">Datenquellen &amp; Bibliotheken</h2>
-        <p class="set-desc">Verbinde deine Medienserver oder lokale Ordner. Zugangsdaten werden
-           <strong>verschlüsselt</strong> gespeichert. {{ app.APP_NAME }} liest nur - es schreibt
-           nie zurück (Ausnahme: FSK, separat aktivierbar). Pro Typ ist aktuell eine Quelle
-           möglich; je Server kannst du auswählen, welche Bibliotheken überwacht werden
-           (leer = alle).</p>
+        <h2 class="card-h">{{ t('settings.sources.title') }}</h2>
+        <p class="set-desc">{{ t('settings.sources.intro').format(app=app.APP_NAME)|safe }}</p>
         <div id="sourcesRoot" class="sources-root">
-          <p class="set-desc" id="sourcesLoading">Lade Quellen …</p>
+          <p class="set-desc" id="sourcesLoading">{{ t('settings.sources.loading') }}</p>
         </div>
       </section>
 
       <!-- Metadatendienste -->
       <section class="set-panel" data-cat="metadaten">
-        <h2 class="card-h">Metadatendienste <span class="phase-badge">Phase 5</span></h2>
-        <p class="set-placeholder">Hier entstehen: mehrere Informationsquellen (TMDb, TheTVDB,
-           OMDb, AniDB …) mit eigenen API-Zugangsdaten und einer frei wählbaren Reihenfolge
-           (Priorisierung) je Medienart - z.B. AniDB zuerst für Anime.</p>
+        <h2 class="card-h">{{ t('settings.metadata.title') }} <span class="phase-badge">Phase 5</span></h2>
+        <p class="set-placeholder">{{ t('settings.metadata.placeholder') }}</p>
       </section>
 
       <!-- FSK & Altersfreigaben -->
       <section class="set-panel" data-cat="fsk">
-        <h2 class="card-h">FSK &amp; Altersfreigaben</h2>
+        <h2 class="card-h">{{ t('settings.fsk.title') }}</h2>
         <div class="set-field">
           <label class="set-toggle">
             <input type="checkbox" id="fskEnabled" {{ 'checked' if settings['fsk.enabled'] }}>
-            <span>FSK-Prüfung aktivieren</span>
+            <span>{{ t('settings.fsk.enable') }}</span>
           </label>
-          <p class="set-desc">Ist das Feature aus, verschwinden alle FSK-Elemente aus der
-             Oberfläche: FSK-Ecke am Cover, Freigabe-Filter, die Kennzahl „Ohne Freigabe",
-             sowie FSK-Angaben, -Editor und Warnhinweise im Detailfenster. Die Daten bleiben
-             gespeichert - beim Wieder-Einschalten ist alles sofort da, kein neuer Scan nötig.</p>
+          <p class="set-desc">{{ t('settings.fsk.enable_desc') }}</p>
         </div>
-        <div class="set-placeholder">Internationale Freigaben (FSK / PEGI / USK / Altersangabe)
-           vereinheitlichen, eine Anzeigepräferenz festlegen und der FSK-Check zum Abgleich der
-           Quellen kommen in <strong>Phase 5</strong>.</div>
+        <div class="set-placeholder">{{ t('settings.fsk.placeholder')|safe }}</div>
       </section>
 
       <!-- Über & Updates -->
       <section class="set-panel" data-cat="ueber">
-        <h2 class="card-h">Über &amp; Updates</h2>
+        <h2 class="card-h">{{ t('settings.about.title') }}</h2>
         <div class="set-field">
-          <label>Installierte Version</label>
+          <label>{{ t('settings.about.installed_version') }}</label>
           <p class="set-desc mono">{{ app.APP_NAME }} v{{ app.VERSION }}</p>
         </div>
         <div class="set-field">
-          <label>Update-Status</label>
+          <label>{{ t('settings.about.update_status') }}</label>
           <p class="set-desc" id="updateStatus">
-            {% if update and update.available %}Neue Version {{ update.latest }} verfügbar.
-            {% elif update and update.latest %}Aktuell - v{{ update.current }} ist die neueste Version.
-            {% else %}Noch nicht geprüft.{% endif %}
+            {% if update and update.available %}{{ t('settings.about.status_available').format(latest=update.latest) }}
+            {% elif update and update.latest %}{{ t('settings.about.status_current').format(current=update.current) }}
+            {% else %}{{ t('settings.about.status_unchecked') }}{% endif %}
           </p>
           <div class="set-actions">
-            <button class="btn" id="updateCheck">Jetzt prüfen</button>
+            <button class="btn" id="updateCheck">{{ t('settings.about.check_now') }}</button>
             <a class="btn" href="{{ update.url if update else '' }}" target="_blank" rel="noopener"
-               style="text-decoration:none">Release-Infos öffnen</a>
+               style="text-decoration:none">{{ t('settings.about.open_release') }}</a>
           </div>
-          <p class="set-desc">Die Prüfung läuft sonst automatisch im Hintergrund (beim Start und
-             einmal täglich); die Kopfzeile zeigt grün „aktuell" bzw. rot „Update verfügbar".</p>
+          <p class="set-desc">{{ t('settings.about.auto_desc') }}</p>
         </div>
       </section>
     </div>
