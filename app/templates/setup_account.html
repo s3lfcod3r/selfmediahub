@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}{{ app.APP_NAME }} - Konto einrichten{% endblock %}
+{% block body %}
+<main class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-brand"><span class="self">Self</span><span class="rest">MediaHub</span></div>
+    <h1>Konto einrichten</h1>
+    <p class="auth-sub">Lege beim ersten Start dein Konto an. Danach ist die Anmeldung aktiv.</p>
+    {% if error %}<div class="auth-error">{{ error }}</div>{% endif %}
+    <form method="post" action="/setup" class="auth-form">
+      <label>Benutzername
+        <input class="field" name="username" value="{{ username or '' }}" autocomplete="username" autofocus required>
+      </label>
+      <label>Passwort <span class="auth-hint">min. 8 Zeichen</span>
+        <input class="field" type="password" name="password" autocomplete="new-password" required>
+      </label>
+      <label>Passwort wiederholen
+        <input class="field" type="password" name="password2" autocomplete="new-password" required>
+      </label>
+      <label>E-Mail <span class="auth-hint">optional</span>
+        <input class="field" type="email" name="email" value="{{ email or '' }}" autocomplete="email">
+      </label>
+      <button class="btn btn-primary" type="submit">Konto anlegen &amp; anmelden</button>
+    </form>
+  </div>
+</main>
+{% endblock %}

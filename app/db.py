@@ -88,6 +88,16 @@ CREATE TABLE IF NOT EXISTS app_meta (key TEXT PRIMARY KEY, value TEXT);
 -- (interner Systemzustand). Erweiterbar ohne Migration: neuer Schluessel genuegt.
 CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT);
 
+-- Einzelnes Konto (Single-User). Passwort nur als PBKDF2-Hash. id ist immer 1.
+CREATE TABLE IF NOT EXISTS account (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  username TEXT NOT NULL,
+  pw_hash TEXT NOT NULL,
+  email TEXT DEFAULT '',
+  auth_enabled INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT
+);
+
 CREATE TABLE IF NOT EXISTS tags (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL UNIQUE,

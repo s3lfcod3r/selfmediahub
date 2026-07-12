@@ -77,6 +77,59 @@
       };
     }
 
+    // -- Account --
+    function postJson(url, body, okMsg, btn) {
+      if (btn) { btn.disabled = true; }
+      return fetch(url, { method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body) })
+        .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+        .then(function (res) {
+          if (!res.ok) { throw new Error(res.j.detail || "Fehler"); }
+          window.smhToast(okMsg, "ok");
+          return res.j;
+        })
+        .catch(function (e) { window.smhToast("Fehlgeschlagen: " + e.message, "err"); throw e; })
+        .then(function (v) { if (btn) { btn.disabled = false; } return v; },
+              function () { if (btn) { btn.disabled = false; } });
+    }
+
+    var uBtn = $("saveUsername");
+    if (uBtn) {
+      uBtn.onclick = function () {
+        postJson("/api/account/username", { username: $("accUsername").value.trim() },
+          "Benutzername gespeichert", uBtn);
+      };
+    }
+    var eBtn = $("saveEmail");
+    if (eBtn) {
+      eBtn.onclick = function () {
+        postJson("/api/account/email", { email: $("accEmail").value.trim() }, "E-Mail gespeichert", eBtn);
+      };
+    }
+    var pBtn = $("savePassword");
+    if (pBtn) {
+      pBtn.onclick = function () {
+        postJson("/api/account/password",
+          { current: $("accPwCurrent").value, new: $("accPwNew").value },
+          "Passwort geändert", pBtn)
+          .then(function () { $("accPwCurrent").value = ""; $("accPwNew").value = ""; })
+          .catch(function () { /* Toast schon gezeigt */ });
+      };
+    }
+    var authCb = $("authEnabled");
+    if (authCb) {
+      authCb.onchange = function () {
+        if (!authCb.checked) {
+          var ok = window.confirm(
+            "Anmeldung wirklich abschalten?\n\nOhne Anmeldung ist deine Medienverwaltung " +
+            "ungeschützt für jeden erreichbar, der die Seite aufrufen kann.");
+          if (!ok) { authCb.checked = true; return; }
+        }
+        postJson("/api/account/auth", { enabled: authCb.checked },
+          authCb.checked ? "Anmeldung aktiviert" : "Anmeldung deaktiviert");
+      };
+    }
+
     var upd = $("updateCheck");
     if (upd) {
       upd.onclick = function () {

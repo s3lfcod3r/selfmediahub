@@ -605,6 +605,32 @@ table.list tbody tr { cursor: pointer; }
 .fsk-ack-box span { color: var(--self-yellow); font-size: 13px; }
 .fsk-ack-box .btn { flex: none; }
 
+/* -- Login / Ersteinrichtung -- */
+.auth-wrap { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.auth-card {
+  width: 100%; max-width: 380px; padding: 32px 30px;
+  background: var(--self-bg-1); border: 1px solid var(--self-line-strong);
+  border-radius: var(--self-radius); box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.9);
+}
+.auth-brand { font-family: var(--self-font-display, var(--self-font-mono)); font-weight: 800;
+  font-size: 20px; letter-spacing: 0.02em; margin-bottom: 18px; }
+.auth-brand .self { color: var(--self-teal-bright); }
+.auth-card h1 { font-size: 22px; margin: 0 0 6px; }
+.auth-sub { color: var(--self-text-3); font-size: 13px; margin: 0 0 18px; line-height: 1.5; }
+.auth-form { display: flex; flex-direction: column; gap: 14px; margin-top: 16px; }
+.auth-form label { display: flex; flex-direction: column; gap: 6px; font-size: 13px;
+  color: var(--self-text-2); }
+.auth-form .field { width: 100%; }
+.auth-form .btn { margin-top: 4px; }
+.auth-hint { color: var(--self-text-3); font-size: 11px; }
+.auth-error { background: rgba(248, 81, 73, 0.12); border: 1px solid var(--self-red);
+  color: var(--self-red); font-size: 13px; padding: 9px 12px; border-radius: var(--self-radius-sm);
+  margin-bottom: 4px; }
+
+/* Angemeldeter Benutzer in der Topbar */
+.acct-chip { font-family: var(--self-font-mono); font-size: 12px; color: var(--self-text-2);
+  padding: 3px 9px; border: 1px solid var(--self-line); border-radius: 999px; white-space: nowrap; }
+
 /* Instanzname in der Topbar (neben dem Logo) */
 .instance-name {
   font-family: var(--self-font-mono); font-size: 12px; color: var(--self-text-3);

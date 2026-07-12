@@ -7,6 +7,10 @@ VERSION = "0.2.0"
 # GitHub-Repo fuer die Update-Pruefung (vergleicht mit dem neuesten Release).
 GITHUB_REPO = os.environ.get("GITHUB_REPO", "s3lfcod3r/selfmediahub").strip()
 
+# Notausgang: Authentifizierung komplett ueberbruecken (z.B. Passwort vergessen).
+# Am Container setzen (SMH_DISABLE_AUTH=1), dann greift keine Login-Wand.
+DISABLE_AUTH = os.environ.get("SMH_DISABLE_AUTH", "0").strip() in ("1", "true", "yes")
+
 # Eigene Daten - komplett getrennt von jedem Medienserver.
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 DB_PATH = os.environ.get("DB_PATH", os.path.join(DATA_DIR, "selfmediahub.db"))

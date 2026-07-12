@@ -41,10 +41,37 @@
 
       <!-- Account -->
       <section class="set-panel" data-cat="account">
-        <h2 class="card-h">Account <span class="phase-badge">Phase 3</span></h2>
-        <p class="set-placeholder">Hier entstehen: Benutzername &amp; Passwort ändern, optionale
-           E-Mail-Adresse, sowie Passwort-Authentifizierung aktivieren/deaktivieren
-           (mit Warnhinweis). Sensible Daten werden dann geschützt gespeichert.</p>
+        <h2 class="card-h">Account</h2>
+        <div class="set-field">
+          <label for="accUsername">Benutzername</label>
+          <input class="field" id="accUsername" value="{{ account.username if account else '' }}"
+                 autocomplete="username">
+          <div class="set-actions"><button class="btn" id="saveUsername">Speichern</button></div>
+        </div>
+        <div class="set-field">
+          <label for="accEmail">E-Mail <span class="set-hint">optional</span></label>
+          <input class="field" id="accEmail" type="email" value="{{ account.email if account else '' }}"
+                 autocomplete="email">
+          <div class="set-actions"><button class="btn" id="saveEmail">Speichern</button></div>
+        </div>
+        <div class="set-field">
+          <label>Passwort ändern</label>
+          <input class="field" id="accPwCurrent" type="password" placeholder="Aktuelles Passwort"
+                 autocomplete="current-password">
+          <input class="field" id="accPwNew" type="password" placeholder="Neues Passwort (min. 8 Zeichen)"
+                 autocomplete="new-password" style="margin-top:8px">
+          <div class="set-actions"><button class="btn" id="savePassword">Passwort ändern</button></div>
+        </div>
+        <div class="set-field">
+          <label class="set-toggle">
+            <input type="checkbox" id="authEnabled" {{ 'checked' if account and account.auth_enabled }}>
+            <span>Anmeldung erforderlich</span>
+          </label>
+          <p class="set-desc">Standard: an. Zum Abschalten (nur für rein lokale Installationen)
+             musst du bestätigen - <strong>ohne Anmeldung ist deine Medienverwaltung ungeschützt
+             zugänglich.</strong> Passwort vergessen? Am Container <code>SMH_DISABLE_AUTH=1</code>
+             setzen, dann greift die Login-Wand nicht.</p>
+        </div>
       </section>
 
       <!-- Datenquellen & Bibliotheken -->

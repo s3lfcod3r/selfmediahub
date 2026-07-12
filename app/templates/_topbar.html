@@ -19,6 +19,10 @@
       <a href="/einstellungen" class="{{ 'active' if active == 'settings' }}">Einstellungen</a>
     </nav>
     <div class="spacer"></div>
+    {% if auth_active and account %}
+    <span class="acct-chip" title="Angemeldet">{{ account.username }}</span>
+    <a class="btn btn-small" href="/logout" title="Abmelden">Abmelden</a>
+    {% endif %}
     {% if active == 'home' %}
     <div class="colmenu" id="dispmenu">
       <button class="btn btn-icon" id="dispBtn" title="Cover-Anzeige">&#9881;</button>

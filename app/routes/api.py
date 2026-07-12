@@ -5,7 +5,7 @@ from fastapi.responses import Response
 
 from .. import config, db
 from ..services import (
-    coverage, fsk, queries, rules, settings as settings_service, sync as sync_service,
+    auth, coverage, fsk, queries, rules, settings as settings_service, sync as sync_service,
     tags, tmdb, updatecheck,
 )
 
@@ -102,6 +102,49 @@ def api_item_detail(item_id: int):
 @router.get("/meta/fields")
 def api_fields():
     return {"fields": rules.FIELDS, "ops": rules.OPS, "tags": tags.list_tags()}
+
+
+# -- Account ----------------------------------------------------------------
+@router.get("/account")
+def api_account():
+    return auth.get_account() or {}
+
+
+@router.post("/account/username")
+async def api_account_username(request: Request):
+    d = await request.json()
+    username = (d.get("username") or "").strip()
+    if len(username) < 3:
+        raise HTTPException(status_code=400, detail="Benutzername zu kurz (min. 3 Zeichen)")
+    auth.set_username(username)
+    return {"ok": True}
+
+
+@router.post("/account/email")
+async def api_account_email(request: Request):
+    d = await request.json()
+    auth.set_email((d.get("email") or "").strip())
+    return {"ok": True}
+
+
+@router.post("/account/password")
+async def api_account_password(request: Request):
+    d = await request.json()
+    acc = auth.get_account()
+    if not acc or not auth.verify_login(acc["username"], d.get("current") or ""):
+        raise HTTPException(status_code=400, detail="Aktuelles Passwort ist falsch")
+    new = d.get("new") or ""
+    if len(new) < 8:
+        raise HTTPException(status_code=400, detail="Neues Passwort zu kurz (min. 8 Zeichen)")
+    auth.set_password(new)
+    return {"ok": True}
+
+
+@router.post("/account/auth")
+async def api_account_auth(request: Request):
+    d = await request.json()
+    auth.set_auth_enabled(bool(d.get("enabled")))
+    return {"ok": True, "enabled": auth.auth_enabled()}
 
 
 # -- Update-Pruefung --------------------------------------------------------
