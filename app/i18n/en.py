@@ -310,6 +310,12 @@ STRINGS = {
     "sync.sync_failed": "Sync failed: {error}",
     "sync.done": "{n} entries - reloading ...",
     "sync.start_failed": "Start failed: {error}",
+    "sync.phase.reading": "Reading {kind} ...",
+    "sync.phase.analyzing": "Analyzing & matching with TMDb ...",
+    "sync.phase.saving": "Saving {kind} ...",
+    "sync.phase.episodes": "Reading episodes ({kind}) {idx}/{total} ...",
+    "sync.phase.coverage": "Computing language coverage ...",
+    "sync.phase.rules": "Applying rules ...",
 
     # -- Tags page --
     "tags.label": "Tag system",

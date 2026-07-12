@@ -315,6 +315,12 @@ STRINGS = {
     "sync.sync_failed": "Sync fehlgeschlagen: {error}",
     "sync.done": "{n} Einträge - Seite wird aktualisiert ...",
     "sync.start_failed": "Start fehlgeschlagen: {error}",
+    "sync.phase.reading": "Lese {kind} ...",
+    "sync.phase.analyzing": "Analysiere & gleiche mit TMDb ab ...",
+    "sync.phase.saving": "Speichere {kind} ...",
+    "sync.phase.episodes": "Lese Episoden ({kind}) {idx}/{total} ...",
+    "sync.phase.coverage": "Berechne Sprach-Abdeckung ...",
+    "sync.phase.rules": "Wende Regeln an ...",
 
     # -- Tags-Seite --
     "tags.label": "Tag-System",

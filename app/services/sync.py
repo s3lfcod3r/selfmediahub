@@ -7,8 +7,11 @@ import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 
-from .. import db
-from . import analysis, completeness, coverage, fsk, notify, rules, sources, tmdb
+from .. import db, i18n
+from . import (
+    analysis, completeness, coverage, fsk, notify, rules,
+    settings as settings_service, sources, tmdb,
+)
 
 # Wieviele TMDb-Abfragen gleichzeitig (TMDb erlaubt reichlich).
 TMDB_WORKERS = 8
@@ -58,7 +61,7 @@ def _enrich_one(item: dict, existing: dict, cache: dict) -> None:
     fsk.analyze(item)
 
 
-def _sync_episodes(connectors: list) -> None:
+def _sync_episodes(connectors: list, lang: str) -> None:
     """Fuer jede Serie die Episoden holen und in der DB ablegen (ersetzt bestehende)."""
     for conn in connectors:
         if not hasattr(conn, "fetch_episodes"):
@@ -69,7 +72,7 @@ def _sync_episodes(connectors: list) -> None:
         )
         total = len(series)
         for idx, s in enumerate(series, 1):
-            _set(phase=f"Lese Episoden ({conn.kind}) {idx}/{total} ...")
+            _set(phase=i18n.t("sync.phase.episodes", lang).format(kind=conn.kind, idx=idx, total=total))
             try:
                 db.replace_episodes(s["id"], conn.fetch_episodes(s["source_id"]))
             except Exception:  # noqa: BLE001 - eine kaputte Serie stoppt den Rest nicht
@@ -83,12 +86,13 @@ def run_sync() -> dict:
         raise RuntimeError("Keine Medienquelle konfiguriert.")
 
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    lang = settings_service.get("general.ui_language")
     cache: dict = {}
     groups, sources = [], []
 
     # 1) Alle Quellen einlesen (schnell) -----------------------------------
     for conn in connectors:
-        _set(phase=f"Lese {conn.kind} ...")
+        _set(phase=i18n.t("sync.phase.reading", lang).format(kind=conn.kind))
         try:
             items = conn.fetch_items()
             existing = {
@@ -100,7 +104,7 @@ def run_sync() -> dict:
             sources.append({"kind": conn.kind, "ok": False, "error": str(exc)})
 
     total = sum(len(items) for _c, items, _e in groups)
-    _set(total=total, processed=0, phase="Analysiere & gleiche mit TMDb ab ...")
+    _set(total=total, processed=0, phase=i18n.t("sync.phase.analyzing", lang))
 
     # 2) Anreichern (parallel) ---------------------------------------------
     processed = 0
@@ -121,7 +125,7 @@ def run_sync() -> dict:
     # 3) Speichern ----------------------------------------------------------
     total_seen, total_new = 0, 0
     for conn, items, _existing in groups:
-        _set(phase=f"Speichere {conn.kind} ...")
+        _set(phase=i18n.t("sync.phase.saving", lang).format(kind=conn.kind))
         res = db.upsert_items(conn.kind, items, now)
         total_seen += res["seen"]
         total_new += len(res["new"])
@@ -129,13 +133,13 @@ def run_sync() -> dict:
                         "new": len(res["new"]), "removed": res["removed"], "ok": True})
 
     # 4) Episoden je Serie speichern (fuer Sprach-Abdeckung, Staffel-Status) ----
-    _sync_episodes([conn for conn, _i, _e in groups])
+    _sync_episodes([conn for conn, _i, _e in groups], lang)
 
     # 5) Abdeckung der primaeren Sprache berechnen -------------------------------
-    _set(phase="Berechne Sprach-Abdeckung ...")
+    _set(phase=i18n.t("sync.phase.coverage", lang))
     coverage.recompute()
 
-    _set(phase="Wende Regeln an ...")
+    _set(phase=i18n.t("sync.phase.rules", lang))
     rule_res = rules.apply_all()
     db.set_meta("last_sync", now)
     db.set_meta("last_sync_count", str(total_seen))
