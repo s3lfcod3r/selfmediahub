@@ -41,9 +41,7 @@
     if (v == null || v === "") { return ""; }
     return '<div><div class="k">' + esc(k) + '</div><div class="v">' + v + "</div></div>";
   }
-  function prefLang() {
-    try { return localStorage.getItem("smh-lang") || "ger"; } catch (e) { return "ger"; }
-  }
+  function prefLang() { return window.__PRIMARY_LANG__ || "ger"; }
   function hasLang(list, pref) {
     var p = shortLang(pref);
     return (list || []).some(function (l) { return shortLang(l) === p; });

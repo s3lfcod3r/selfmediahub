@@ -30,4 +30,13 @@
     var c = MAP[String(code || "").toLowerCase()];
     return c ? SVG[c] : null;
   };
+
+  // Teilweise-Variante: obere Haelfte farbig, untere diagonal ausgegraut
+  // (zwei Kopien uebereinander; CSS in app.css clippt/graut die zweite).
+  window.smhFlagPartial = function (code) {
+    var c = MAP[String(code || "").toLowerCase()];
+    if (!c) { return null; }
+    return '<span class="fl-wrap partial">' + SVG[c] +
+      '<span class="fl-grey">' + SVG[c] + "</span></span>";
+  };
 })();

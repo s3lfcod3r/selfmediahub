@@ -70,6 +70,13 @@
       };
     }
 
+    var lang = $("primaryLang");
+    if (lang) {
+      lang.onchange = function () {
+        saveSettings({ "display.primary_language": lang.value }, "Primäre Sprache gespeichert");
+      };
+    }
+
     var upd = $("updateCheck");
     if (upd) {
       upd.onclick = function () {

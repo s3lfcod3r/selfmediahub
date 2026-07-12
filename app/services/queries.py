@@ -11,6 +11,9 @@ def _parse(row: dict) -> dict:
     item = dict(row)
     for col in _JSON_COLS:
         item[col] = json.loads(item.get(col) or "[]")
+    # Cover ueber den eigenen Bild-Proxy ausliefern (Roh-URL der Quelle bleibt in der DB).
+    if item.get("image_url"):
+        item["image_url"] = f"/api/image/{item['id']}"
     return item
 
 

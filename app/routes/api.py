@@ -1,13 +1,20 @@
-"""JSON-API: Sync, Tags, Regeln, FSK-Schreiben."""
+"""JSON-API: Sync, Tags, Regeln, FSK-Schreiben, Bild-Proxy."""
+import requests
 from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import Response
 
 from .. import config, db
 from ..services import (
-    fsk, queries, rules, settings as settings_service, sync as sync_service, tags, tmdb,
-    updatecheck,
+    coverage, fsk, queries, rules, settings as settings_service, sync as sync_service,
+    tags, tmdb, updatecheck,
 )
 
 router = APIRouter(prefix="/api")
+
+# Cover werden ueber den Container ausgeliefert (Browser erreicht die Quelle - z.B.
+# Emby im Docker-Netz - oft nicht direkt). 1 Tag Browser-Cache.
+_IMAGE_CACHE = "public, max-age=86400"
+_IMAGE_TIMEOUT = 20
 
 
 def _fail(exc: Exception):
@@ -26,7 +33,32 @@ def api_sync_status():
     return sync_service.get_state()
 
 
-# -- Detailansicht (Item + Episoden live) -----------------------------------
+# -- Bild-Proxy -------------------------------------------------------------
+@router.get("/image/{item_id}")
+def api_image(item_id: int):
+    """Cover serverseitig von der Quelle holen und an den Browser durchreichen.
+
+    Loest das Problem, dass die Bild-URL (z.B. Emby im Docker-Netz) fuer den
+    Browser nicht erreichbar ist. Es wird nur die zum Item gespeicherte URL
+    geladen - keine beliebigen Adressen (kein SSRF-Einfallstor).
+    """
+    rows = db.query("SELECT image_url FROM media_items WHERE id=?", (item_id,))
+    url = rows[0]["image_url"] if rows else None
+    if not url:
+        raise HTTPException(status_code=404, detail="Kein Bild")
+    try:
+        resp = requests.get(url, timeout=_IMAGE_TIMEOUT)
+        resp.raise_for_status()
+    except requests.RequestException:
+        raise HTTPException(status_code=502, detail="Bild konnte nicht geladen werden")
+    return Response(
+        content=resp.content,
+        media_type=resp.headers.get("Content-Type", "image/jpeg"),
+        headers={"Cache-Control": _IMAGE_CACHE},
+    )
+
+
+# -- Detailansicht (Item + Episoden aus der DB) -----------------------------
 @router.get("/items/{item_id}/detail")
 def api_item_detail(item_id: int):
     item = queries.get_item(item_id)
@@ -36,14 +68,9 @@ def api_item_detail(item_id: int):
 
     episodes, note, missing, season_summary = [], None, [], None
     if item["item_type"] == "Serie":
-        conn = sync_service.connector_for(item["source_kind"])
-        if conn is not None and hasattr(conn, "fetch_episodes"):
-            try:
-                episodes = conn.fetch_episodes(item["source_id"])
-            except Exception as exc:  # noqa: BLE001
-                note = f"Episoden konnten nicht geladen werden: {exc}"
-        else:
-            note = "Episodendetails sind für diese Quelle nicht verfügbar."
+        episodes = db.get_episodes(item_id)
+        if not episodes:
+            note = "Noch keine Episoden gespeichert - bitte einmal neu einlesen."
 
         # Konkret fehlende Episoden über TMDb bestimmen
         if episodes and item.get("tmdb_id"):
@@ -100,7 +127,15 @@ async def api_settings_save(request: Request):
     if not isinstance(data, dict):
         raise HTTPException(status_code=400, detail="Objekt (key/value) erwartet")
     clean = {k: v for k, v in data.items() if k in settings_service.allowed_keys()}
+    lang_changed = ("display.primary_language" in clean
+                    and clean["display.primary_language"] != settings_service.get("display.primary_language"))
     settings_service.save_many(clean)
+    # Primaere Sprache geaendert -> Abdeckung sofort aus der DB neu berechnen (kein Sync noetig)
+    if lang_changed:
+        try:
+            coverage.recompute()
+        except Exception:  # noqa: BLE001
+            pass
     return {"ok": True, "saved": sorted(clean), "settings": settings_service.all_settings()}
 
 

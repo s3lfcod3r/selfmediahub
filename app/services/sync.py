@@ -12,7 +12,7 @@ from ..connectors.emby import EmbyConnector
 from ..connectors.jellyfin import JellyfinConnector
 from ..connectors.local import LocalConnector
 from ..connectors.plex import PlexConnector
-from . import analysis, completeness, fsk, notify, rules, tmdb
+from . import analysis, completeness, coverage, fsk, notify, rules, tmdb
 
 # Wieviele TMDb-Abfragen gleichzeitig (TMDb erlaubt reichlich).
 TMDB_WORKERS = 8
@@ -76,6 +76,24 @@ def _enrich_one(item: dict, existing: dict, cache: dict) -> None:
     fsk.analyze(item)
 
 
+def _sync_episodes(connectors: list) -> None:
+    """Fuer jede Serie die Episoden holen und in der DB ablegen (ersetzt bestehende)."""
+    for conn in connectors:
+        if not hasattr(conn, "fetch_episodes"):
+            continue
+        series = db.query(
+            "SELECT id, source_id FROM media_items WHERE source_kind=? AND item_type='Serie'",
+            (conn.kind,),
+        )
+        total = len(series)
+        for idx, s in enumerate(series, 1):
+            _set(phase=f"Lese Episoden ({conn.kind}) {idx}/{total} ...")
+            try:
+                db.replace_episodes(s["id"], conn.fetch_episodes(s["source_id"]))
+            except Exception:  # noqa: BLE001 - eine kaputte Serie stoppt den Rest nicht
+                pass
+
+
 def run_sync() -> dict:
     """Vollen Re-Sync aller Quellen ausführen (aktualisiert den Fortschritt)."""
     connectors = build_connectors()
@@ -127,6 +145,13 @@ def run_sync() -> dict:
         total_new += len(res["new"])
         sources.append({"kind": conn.kind, "seen": res["seen"],
                         "new": len(res["new"]), "removed": res["removed"], "ok": True})
+
+    # 4) Episoden je Serie speichern (fuer Sprach-Abdeckung, Staffel-Status) ----
+    _sync_episodes([conn for conn, _i, _e in groups])
+
+    # 5) Abdeckung der primaeren Sprache berechnen -------------------------------
+    _set(phase="Berechne Sprach-Abdeckung ...")
+    coverage.recompute()
 
     _set(phase="Wende Regeln an ...")
     rule_res = rules.apply_all()

@@ -18,6 +18,14 @@ ITEM_COLUMNS = [
 ]
 JSON_COLUMNS = {"genres", "audio_codecs", "audio_langs", "subtitle_langs"}
 
+# Episoden-Spalten (eigene Tabelle, pro Folge eine Zeile).
+EPISODE_COLUMNS = [
+    "item_id", "season", "episode", "name", "resolution", "width", "height",
+    "video_codec", "hdr", "audio_langs", "subtitle_langs", "size_bytes",
+    "runtime_min", "path",
+]
+EPISODE_JSON = {"audio_langs", "subtitle_langs"}
+
 # Typ je Spalte - für Migration bestehender (v0.1) Datenbanken.
 _ITEM_COLDEF = {
     "source_kind": "TEXT", "source_id": "TEXT", "item_type": "TEXT",
@@ -35,6 +43,8 @@ _ITEM_COLDEF = {
     "size_bytes": "INTEGER",
     "fsk_suggested": "TEXT", "fsk_suspicious": "INTEGER", "fsk_reason": "TEXT",
     "synced_at": "TEXT",
+    # Abdeckung der primaeren Sprache (Prozent 0-100); per coverage-Service befuellt.
+    "primary_audio_pct": "INTEGER", "primary_sub_pct": "INTEGER",
 }
 
 SCHEMA = """
@@ -55,10 +65,22 @@ CREATE TABLE IF NOT EXISTS media_items (
   size_bytes INTEGER,
   fsk_suggested TEXT, fsk_suspicious INTEGER, fsk_reason TEXT,
   synced_at TEXT,
+  primary_audio_pct INTEGER, primary_sub_pct INTEGER,
   UNIQUE(source_kind, source_id)
 );
 CREATE INDEX IF NOT EXISTS idx_items_type ON media_items(item_type);
 CREATE INDEX IF NOT EXISTS idx_items_lib  ON media_items(library_name);
+
+-- Episoden je Serie (item_id -> media_items.id). Wird beim Sync neu befuellt.
+CREATE TABLE IF NOT EXISTS episodes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  item_id INTEGER NOT NULL,
+  season INTEGER, episode INTEGER, name TEXT,
+  resolution TEXT, width INTEGER, height INTEGER, video_codec TEXT, hdr TEXT,
+  audio_langs TEXT, subtitle_langs TEXT, size_bytes INTEGER, runtime_min INTEGER, path TEXT,
+  FOREIGN KEY (item_id) REFERENCES media_items(id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_episodes_item ON episodes(item_id);
 
 CREATE TABLE IF NOT EXISTS app_meta (key TEXT PRIMARY KEY, value TEXT);
 
@@ -192,6 +214,44 @@ def upsert_items(source_kind: str, items: list, synced_at: str) -> dict:
             )
         conn.commit()
     return {"seen": len(seen), "new": new_ids, "removed": len(removed)}
+
+
+# -- Episoden ---------------------------------------------------------------
+def replace_episodes(item_id: int, episodes: list) -> None:
+    """Alle Episoden einer Serie ersetzen (DELETE + INSERT in einer Transaktion)."""
+    with get_conn() as conn:
+        conn.execute("DELETE FROM episodes WHERE item_id=?", (item_id,))
+        if episodes:
+            cols = ",".join(EPISODE_COLUMNS)
+            placeholders = ",".join(["?"] * len(EPISODE_COLUMNS))
+            rows = []
+            for ep in episodes:
+                out = []
+                for col in EPISODE_COLUMNS:
+                    if col == "item_id":
+                        out.append(item_id)
+                    elif col in EPISODE_JSON:
+                        out.append(json.dumps(ep.get(col) or []))
+                    else:
+                        out.append(ep.get(col))
+                rows.append(tuple(out))
+            conn.executemany(f"INSERT INTO episodes ({cols}) VALUES ({placeholders})", rows)
+        conn.commit()
+
+
+def get_episodes(item_id: int) -> list:
+    rows = query(
+        "SELECT * FROM episodes WHERE item_id=? "
+        "ORDER BY (season IS NULL), season, (episode IS NULL), episode",
+        (item_id,),
+    )
+    out = []
+    for row in rows:
+        ep = dict(row)
+        for col in EPISODE_JSON:
+            ep[col] = json.loads(ep.get(col) or "[]")
+        out.append(ep)
+    return out
 
 
 # -- Meta -------------------------------------------------------------------

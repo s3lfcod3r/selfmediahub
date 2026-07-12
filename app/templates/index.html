@@ -80,6 +80,7 @@
   window.__ALLOW_WRITE__ = {{ 'true' if allow_write else 'false' }};
   window.__LASTSYNC__ = {{ (last_sync or "")|tojson }};
   window.__FSK_ENABLED__ = {{ 'true' if settings['fsk.enabled'] else 'false' }};
+  window.__PRIMARY_LANG__ = {{ settings['display.primary_language']|tojson }};
 </script>
 <script src="/static/js/app.js"></script>
 {% endblock %}

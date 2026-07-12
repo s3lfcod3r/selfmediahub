@@ -52,12 +52,24 @@
     chi: "🇨🇳", zho: "🇨🇳", zh: "🇨🇳", ara: "🇸🇦", ar: "🇸🇦" };
   function flag(c) { return FLAG[String(c || "").toLowerCase()] || null; }
 
-  function prefLang() {
-    try { return localStorage.getItem("smh-lang") || "ger"; } catch (e) { return "ger"; }
+  function prefLang() { return window.__PRIMARY_LANG__ || "ger"; }
+
+  // Abdeckung (Prozent) -> 3 Zustaende fuer die Flagge
+  function covState(pct) {
+    if (pct == null) { return "none"; }
+    if (pct >= 100) { return "full"; }
+    return pct > 0 ? "partial" : "none";
   }
-  function hasLang(list, pref) {
-    var p = shortLang(pref);
-    return (list || []).some(function (l) { return shortLang(l) === p; });
+  function covLabel(state) {
+    return state === "full" ? "vollständig" : (state === "partial" ? "teilweise" : "fehlt");
+  }
+  function coverFlag(pref, state) {
+    if (state === "partial" && window.smhFlagPartial) {
+      var pf = window.smhFlagPartial(pref);
+      if (pf) { return pf; }
+    }
+    return (window.smhFlag && window.smhFlag(pref)) ||
+      ('<span class="fl-code">' + esc(shortLang(pref)) + "</span>");
   }
 
   var $ = function (id) { return document.getElementById(id); };
@@ -184,16 +196,14 @@
           '<div class="noimg" style="display:none">' + esc(i.name) + "</div>"
         : '<div class="noimg">' + esc(i.name) + "</div>";
       var pref = prefLang();
-      var pflag = (window.smhFlag && window.smhFlag(pref)) ||
-        ('<span class="fl-code">' + esc(shortLang(pref)) + "</span>");
       var pname = esc(langName(pref));
-      var audioOk = hasLang(i.audio_langs, pref);
-      var subOk = hasLang(i.subtitle_langs, pref);
+      var aState = covState(i.primary_audio_pct);
+      var sState = covState(i.primary_sub_pct);
       var langrow = '<div class="langrow">' +
-        '<span class="cbadge cb-lang' + (audioOk ? "" : " off") + '" title="' + pname +
-          "-Tonspur " + (audioOk ? "vorhanden" : "fehlt") + '">' + pflag + "</span>" +
-        '<span class="cbadge cb-ut' + (subOk ? "" : " off") + '" title="' + pname +
-          "-Untertitel " + (subOk ? "vorhanden" : "fehlt") + '">' + pflag + " UT</span>" +
+        '<span class="cbadge cb-lang' + (aState === "none" ? " off" : "") + '" title="' + pname +
+          "-Ton: " + covLabel(aState) + '">' + coverFlag(pref, aState) + "</span>" +
+        '<span class="cbadge cb-ut' + (sState === "none" ? " off" : "") + '" title="' + pname +
+          "-Untertitel: " + covLabel(sState) + '">' + coverFlag(pref, sState) + " UT</span>" +
         "</div>";
       var chips = (i.tags || []).slice(0, 3).map(tagChip).join("");
       return '<article class="card" data-id="' + i.id + '">' +
@@ -250,7 +260,7 @@
     });
   }
 
-  // Cover-Anzeige-Optionen (FSK-Ecke / Auflösung) + Wunschsprache merken (localStorage)
+  // Cover-Anzeige-Optionen (FSK-Ecke / Auflösung / Sprache-UT) merken (localStorage)
   function initDisp() {
     var saved = {};
     try { saved = JSON.parse(localStorage.getItem("smh-disp") || "{}"); } catch (e) { saved = {}; }
@@ -268,16 +278,6 @@
         try { localStorage.setItem("smh-disp", JSON.stringify(saved)); } catch (e) { /* ignore */ }
       };
     });
-    var pl = $("prefLang");
-    if (pl) {
-      var cur = "ger";
-      try { cur = localStorage.getItem("smh-lang") || "ger"; } catch (e) { /* ignore */ }
-      pl.value = cur;
-      pl.onchange = function () {
-        try { localStorage.setItem("smh-lang", pl.value); } catch (e) { /* ignore */ }
-        if (state.view === "cover") { render(); }
-      };
-    }
   }
 
   function fmtDate(iso) {
