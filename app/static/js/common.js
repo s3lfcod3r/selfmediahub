@@ -2,6 +2,7 @@
 (function () {
   "use strict";
 
+  var T = window.t || function (k) { return k; };
   var toastTimer;
   function toast(msg, kind) {
     var t = document.getElementById("toast");
@@ -35,22 +36,22 @@
     clearInterval(pollTimer);
     var btn = document.getElementById("syncBtn");
     if (btn) { btn.disabled = false; }
-    setLabel(resetText || "Neu einlesen");
+    setLabel(resetText || T("topbar.sync"));
   }
   function phaseText(s) {
     var spin = '<span class="spin" style="display:inline-block">&#8635;</span> ';
     if (s.total && String(s.phase).indexOf("TMDb") !== -1) {
-      return spin + "Abgleich " + s.processed + "/" + s.total;
+      return spin + T("sync.matching").replace("{n}", s.processed).replace("{total}", s.total);
     }
-    return spin + (s.phase || "Lese ein");
+    return spin + (s.phase || T("sync.reading"));
   }
   function poll() {
     fetch("/api/sync/status").then(function (r) { return r.json(); }).then(function (s) {
-      if (s.error) { stopSync(); toast("Sync fehlgeschlagen: " + s.error, "err"); return; }
+      if (s.error) { stopSync(); toast(T("sync.sync_failed").replace("{error}", s.error), "err"); return; }
       if (!s.running) {
         clearInterval(pollTimer);
         var n = s.result ? s.result.count : 0;
-        toast(n + " Einträge - Seite wird aktualisiert ...", "ok");
+        toast(T("sync.done").replace("{n}", n), "ok");
         setTimeout(function () { location.reload(); }, 900);
         return;
       }
@@ -60,7 +61,7 @@
   function doSync() {
     var btn = document.getElementById("syncBtn");
     btn.disabled = true;
-    setLabel('<span class="spin" style="display:inline-block">&#8635;</span> Starte ...');
+    setLabel('<span class="spin" style="display:inline-block">&#8635;</span> ' + T("sync.starting"));
     fetch("/api/sync", { method: "POST" })
       .then(function (r) { return r.json(); })
       .then(function () {
@@ -68,7 +69,7 @@
         pollTimer = setInterval(poll, 1500);
         poll();
       })
-      .catch(function (e) { stopSync(); toast("Start fehlgeschlagen: " + e.message, "err"); });
+      .catch(function (e) { stopSync(); toast(T("sync.start_failed").replace("{error}", e.message), "err"); });
   }
 
   document.addEventListener("DOMContentLoaded", function () {

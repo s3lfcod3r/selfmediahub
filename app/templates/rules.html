@@ -1,70 +1,65 @@
 {% extends "base.html" %}
 {% set active = 'rules' %}
-{% block title %}{{ app.APP_NAME }} - Regeln{% endblock %}
+{% block title %}{{ app.APP_NAME }} - {{ t('nav.rules') }}{% endblock %}
 {% block body %}
 {% include '_topbar.html' %}
 <main class="wrap">
   <section class="hero">
-    <p class="label">Regel-Engine</p>
-    <h1>Automatisch taggen &amp; klassifizieren</h1>
-    <p>Bedingungen mit UND/ODER (NICHT über "ist nicht"/"enthält nicht"), mehrere Aktionen,
-       Prioritäten. Regeln laufen bei jedem Sync und auf Knopfdruck.</p>
-    <button class="btn btn-primary" id="applyBtn" style="margin-top:14px">Alle Regeln jetzt anwenden</button>
+    <p class="label">{{ t('rules.label') }}</p>
+    <h1>{{ t('rules.title') }}</h1>
+    <p>{{ t('rules.intro') }}</p>
+    <button class="btn btn-primary" id="applyBtn" style="margin-top:14px">{{ t('rules.apply_all') }}</button>
   </section>
 
   <section class="panel-card">
-    <h2 class="card-h" id="editorTitle">Neue Regel</h2>
+    <h2 class="card-h" id="editorTitle">{{ t('rules.new') }}</h2>
     <div class="form-row">
-      <input class="field" id="rName" placeholder="Regelname (z.B. '4K markieren')" style="flex:2">
-      <select class="field" id="rMatch"><option value="all">Alle Bedingungen (UND)</option><option value="any">Eine Bedingung (ODER)</option></select>
-      <input class="field" id="rPrio" type="number" value="100" title="Priorität" style="width:90px">
-      <label class="chk"><input type="checkbox" id="rEnabled" checked> aktiv</label>
+      <input class="field" id="rName" placeholder="{{ t('rules.name_placeholder') }}" style="flex:2">
+      <select class="field" id="rMatch"><option value="all">{{ t('rules.match_all') }}</option><option value="any">{{ t('rules.match_any') }}</option></select>
+      <input class="field" id="rPrio" type="number" value="100" title="{{ t('tags.priority') }}" style="width:90px">
+      <label class="chk"><input type="checkbox" id="rEnabled" checked> {{ t('sources.active') }}</label>
     </div>
 
-    <p class="label" style="margin-top:16px">Bedingungen</p>
+    <p class="label" style="margin-top:16px">{{ t('rules.conditions') }}</p>
     <div id="conds"></div>
-    <button class="btn btn-small" id="addCond">+ Bedingung</button>
+    <button class="btn btn-small" id="addCond">{{ t('rules.add_condition') }}</button>
 
-    <p class="label" style="margin-top:16px">Aktionen - Tag setzen</p>
+    <p class="label" style="margin-top:16px">{{ t('rules.actions') }}</p>
     <div id="acts"></div>
-    <button class="btn btn-small" id="addAct">+ Aktion</button>
+    <button class="btn btn-small" id="addAct">{{ t('rules.add_action') }}</button>
 
     <div class="form-row" style="margin-top:18px">
-      <button class="btn btn-primary" id="saveBtn">Regel speichern</button>
-      <button class="btn" id="resetBtn">Zurücksetzen</button>
+      <button class="btn btn-primary" id="saveBtn">{{ t('rules.save_rule') }}</button>
+      <button class="btn" id="resetBtn">{{ t('rules.reset') }}</button>
     </div>
   </section>
 
   <section class="panel-card">
-    <h2 class="card-h">Vorhandene Regeln</h2>
+    <h2 class="card-h">{{ t('rules.existing') }}</h2>
     <div id="ruleList" class="rulelist"></div>
   </section>
 </main>
 
 <script>
+var T=window.t||function(k){return k;};
 var FIELDS = {{ fields | tojson }};
 var OPS = {{ ops | tojson }};
 var TAGS = {{ tags | tojson }};
 var editId = null;
 
-var FIELD_LABELS = {item_type:"Typ",library_name:"Bibliothek",official_rating:"Freigabe",
-  community_rating:"Bewertung",year:"Jahr",genres:"Genre",audio_langs:"Audiosprache",
-  subtitle_langs:"Untertitel",audio_codecs:"Audio-Codec",video_codec:"Video-Codec",
-  resolution:"Auflösung",height:"Bildhöhe (px)",width:"Bildbreite (px)",hdr:"HDR",completeness:"Vollständigkeit",
-  missing_episodes:"Fehlende Episoden",fsk_suspicious:"FSK auffällig",status:"Status",runtime_min:"Laufzeit (min)"};
-var OP_LABELS = {equals:"ist",not_equals:"ist nicht",contains:"enthält",not_contains:"enthält nicht",
-  gt:"größer",lt:"kleiner",gte:"größer/gleich",lte:"kleiner/gleich",is_empty:"ist leer",is_not_empty:"ist nicht leer"};
+function fieldLabel(x){var l=T("rules.field."+x);return l==="rules.field."+x?x:l;}
+function opLabel(x){var l=T("rules.op."+x);return l==="rules.op."+x?x:l;}
 
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function opt(v,l,sel){return '<option value="'+esc(v)+'"'+(sel===v?" selected":"")+'>'+esc(l)+'</option>';}
 
 function condRow(c){
   c=c||{field:FIELDS[0],op:"equals",value:""};
-  var f=FIELDS.map(function(x){return opt(x,FIELD_LABELS[x]||x,c.field);}).join("");
-  var o=OPS.map(function(x){return opt(x,OP_LABELS[x]||x,c.op);}).join("");
+  var f=FIELDS.map(function(x){return opt(x,fieldLabel(x),c.field);}).join("");
+  var o=OPS.map(function(x){return opt(x,opLabel(x),c.op);}).join("");
   var d=document.createElement("div");d.className="cond form-row";
   d.innerHTML='<select class="field cf">'+f+'</select><select class="field co">'+o+'</select>'+
-    '<input class="field cv" placeholder="Wert" value="'+esc(c.value)+'" style="flex:1">'+
+    '<input class="field cv" placeholder="'+esc(T("rules.value"))+'" value="'+esc(c.value)+'" style="flex:1">'+
     '<button class="btn btn-small crm">x</button>';
   d.querySelector(".crm").onclick=function(){d.remove();};
   return d;
@@ -73,14 +68,14 @@ function actRow(a){
   a=a||{type:"add_tag",tag_id:(TAGS[0]||{}).id};
   var t=TAGS.map(function(x){return opt(x.id,(x.icon?x.icon+" ":"")+x.name,String(a.tag_id));}).join("");
   var d=document.createElement("div");d.className="act form-row";
-  d.innerHTML='<span class="mono" style="color:var(--self-text-2);align-self:center">Tag hinzufuegen:</span>'+
+  d.innerHTML='<span class="mono" style="color:var(--self-text-2);align-self:center">'+esc(T("rules.add_tag_label"))+'</span>'+
     '<select class="field av" style="flex:1">'+t+'</select><button class="btn btn-small arm">x</button>';
   d.querySelector(".arm").onclick=function(){d.remove();};
   return d;
 }
 document.getElementById("addCond").onclick=function(){document.getElementById("conds").appendChild(condRow());};
 document.getElementById("addAct").onclick=function(){
-  if(!TAGS.length){window.smhToast("Erst einen Tag anlegen","err");return;}
+  if(!TAGS.length){window.smhToast(T("rules.need_tag_first"),"err");return;}
   document.getElementById("acts").appendChild(actRow());
 };
 
@@ -91,14 +86,14 @@ function collect(){
   var acts=[].map.call(document.querySelectorAll("#acts .act"),function(d){
     return {type:"add_tag",tag_id:+d.querySelector(".av").value};
   });
-  return {name:document.getElementById("rName").value.trim()||"Regel",
+  return {name:document.getElementById("rName").value.trim()||T("rules.default_name"),
     match_type:document.getElementById("rMatch").value,
     priority:+document.getElementById("rPrio").value,
     enabled:document.getElementById("rEnabled").checked,
     conditions:conds,actions:acts};
 }
 function reset(){
-  editId=null;document.getElementById("editorTitle").textContent="Neue Regel";
+  editId=null;document.getElementById("editorTitle").textContent=T("rules.new");
   document.getElementById("rName").value="";document.getElementById("rMatch").value="all";
   document.getElementById("rPrio").value=100;document.getElementById("rEnabled").checked=true;
   document.getElementById("conds").innerHTML="";document.getElementById("acts").innerHTML="";
@@ -108,42 +103,42 @@ document.getElementById("resetBtn").onclick=reset;
 
 document.getElementById("saveBtn").onclick=function(){
   var body=collect();
-  if(!body.conditions.length){window.smhToast("Mindestens eine Bedingung","err");return;}
-  if(!body.actions.length){window.smhToast("Mindestens eine Aktion (Tag)","err");return;}
+  if(!body.conditions.length){window.smhToast(T("rules.need_condition"),"err");return;}
+  if(!body.actions.length){window.smhToast(T("rules.need_action"),"err");return;}
   var url=editId?("/api/rules/"+editId):"/api/rules";
   fetch(url,{method:editId?"PUT":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
-    .then(function(r){return r.json();}).then(function(){window.smhToast("Regel gespeichert","ok");reset();loadRules();});
+    .then(function(r){return r.json();}).then(function(){window.smhToast(T("rules.saved"),"ok");reset();loadRules();});
 };
 
 function summary(r){
   var conds=JSON.parse(r.conditions||"[]").map(function(c){
-    return (FIELD_LABELS[c.field]||c.field)+" "+(OP_LABELS[c.op]||c.op)+(c.value?" "+c.value:"");
-  }).join(r.match_type==="all"?" UND ":" ODER ");
+    return fieldLabel(c.field)+" "+opLabel(c.op)+(c.value?" "+c.value:"");
+  }).join(r.match_type==="all"?T("rules.and"):T("rules.or"));
   var acts=JSON.parse(r.actions||"[]").map(function(a){
     var t=TAGS.filter(function(x){return x.id===a.tag_id;})[0];
-    return t?("+"+(t.icon?t.icon+" ":"")+t.name):"+Tag";
+    return t?("+"+(t.icon?t.icon+" ":"")+t.name):T("rules.tag_fallback");
   }).join(" ");
-  return esc(conds||"(keine Bedingung)")+' &rarr; <span style="color:var(--self-teal-bright)">'+esc(acts)+"</span>";
+  return esc(conds||T("rules.no_condition"))+' &rarr; <span style="color:var(--self-teal-bright)">'+esc(acts)+"</span>";
 }
 function loadRules(){
   fetch("/api/rules").then(function(r){return r.json();}).then(function(d){
     var el=document.getElementById("ruleList");
-    if(!d.rules.length){el.innerHTML='<p style="color:var(--self-text-2)">Noch keine Regeln.</p>';return;}
+    if(!d.rules.length){el.innerHTML='<p style="color:var(--self-text-2)">'+esc(T("rules.none"))+'</p>';return;}
     el.innerHTML=d.rules.map(function(r){
       return '<div class="rulerow">'+
-        '<div><strong>'+esc(r.name)+'</strong> '+(r.enabled?'':'<span class="pill">inaktiv</span>')+
-        '<span class="mono" style="color:var(--self-text-3);margin-left:8px">Prio '+r.priority+'</span>'+
+        '<div><strong>'+esc(r.name)+'</strong> '+(r.enabled?'':'<span class="pill">'+esc(T("rules.inactive"))+'</span>')+
+        '<span class="mono" style="color:var(--self-text-3);margin-left:8px">'+esc(T("tags.prio_short"))+' '+r.priority+'</span>'+
         '<div style="color:var(--self-text-2);margin-top:4px;font-size:13px">'+summary(r)+'</div></div>'+
         '<span class="spacer"></span>'+
-        '<button class="btn btn-small redit" data-id="'+r.id+'">Bearbeiten</button>'+
-        '<button class="btn btn-small rdel" data-id="'+r.id+'">Löschen</button></div>';
+        '<button class="btn btn-small redit" data-id="'+r.id+'">'+esc(T("rules.edit"))+'</button>'+
+        '<button class="btn btn-small rdel" data-id="'+r.id+'">'+esc(T("common.delete"))+'</button></div>';
     }).join("");
     document.querySelectorAll(".rdel").forEach(function(b){b.onclick=function(){
-      fetch("/api/rules/"+b.getAttribute("data-id"),{method:"DELETE"}).then(function(){loadRules();window.smhToast("Regel gelöscht");});
+      fetch("/api/rules/"+b.getAttribute("data-id"),{method:"DELETE"}).then(function(){loadRules();window.smhToast(T("rules.deleted"));});
     };});
     document.querySelectorAll(".redit").forEach(function(b){b.onclick=function(){
       var r=d.rules.filter(function(x){return String(x.id)===b.getAttribute("data-id");})[0];
-      editId=r.id;document.getElementById("editorTitle").textContent="Regel bearbeiten: "+r.name;
+      editId=r.id;document.getElementById("editorTitle").textContent=T("rules.edit_title").replace("{name}",r.name);
       document.getElementById("rName").value=r.name;document.getElementById("rMatch").value=r.match_type;
       document.getElementById("rPrio").value=r.priority;document.getElementById("rEnabled").checked=!!r.enabled;
       var cc=document.getElementById("conds");cc.innerHTML="";
@@ -157,7 +152,7 @@ function loadRules(){
 document.getElementById("applyBtn").onclick=function(){
   var b=document.getElementById("applyBtn");b.disabled=true;
   fetch("/api/rules/apply",{method:"POST"}).then(function(r){return r.json();}).then(function(j){
-    window.smhToast(j.assignments+" Tag-Zuordnungen aus "+j.rules+" Regeln","ok");b.disabled=false;
+    window.smhToast(T("rules.apply_result").replace("{assignments}",j.assignments).replace("{rules}",j.rules),"ok");b.disabled=false;
   }).catch(function(){b.disabled=false;});
 };
 reset();loadRules();

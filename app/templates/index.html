@@ -1,23 +1,23 @@
 {% extends "base.html" %}
 {% set active = 'home' %}
-{% block title %}{{ app.APP_NAME }} - Übersicht{% endblock %}
+{% block title %}{{ app.APP_NAME }} - {{ t('nav.overview') }}{% endblock %}
 {% block body %}
 {% include '_topbar.html' %}
 
 <main class="wrap">
   <section class="hero">
-    <p class="label">Read-only Analyse &amp; Übersicht</p>
-    <h1>Deine Mediathek auf einen Blick</h1>
+    <p class="label">{{ t('index.hero_label') }}</p>
+    <h1>{{ t('index.hero_title') }}</h1>
   </section>
 
   <section class="stats">
-    <div class="stat"><div class="num">{{ stats.total }}</div><div class="cap label">Gesamt</div></div>
-    <div class="stat"><div class="num">{{ stats.films }}</div><div class="cap label">Filme</div></div>
-    <div class="stat"><div class="num">{{ stats.series }}</div><div class="cap label">Serien</div></div>
-    <div class="stat"><div class="num">{{ stats.uhd }}</div><div class="cap label">4K / UHD</div></div>
-    <div class="stat warn"><div class="num">{{ stats.incomplete }}</div><div class="cap label">Unvollständig</div></div>
+    <div class="stat"><div class="num">{{ stats.total }}</div><div class="cap label">{{ t('stats.total') }}</div></div>
+    <div class="stat"><div class="num">{{ stats.films }}</div><div class="cap label">{{ t('stats.films') }}</div></div>
+    <div class="stat"><div class="num">{{ stats.series }}</div><div class="cap label">{{ t('stats.series') }}</div></div>
+    <div class="stat"><div class="num">{{ stats.uhd }}</div><div class="cap label">{{ t('stats.uhd') }}</div></div>
+    <div class="stat warn"><div class="num">{{ stats.incomplete }}</div><div class="cap label">{{ t('stats.incomplete') }}</div></div>
     {% if settings['fsk.enabled'] %}
-    <div class="stat warn"><div class="num">{{ stats.no_rating }}</div><div class="cap label">FSK Ohne Freigabe</div></div>
+    <div class="stat warn"><div class="num">{{ stats.no_rating }}</div><div class="cap label">{{ t('stats.no_rating') }}</div></div>
     {% endif %}
   </section>
 
@@ -25,52 +25,52 @@
     <label class="search">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-      <input type="search" id="q" placeholder="Titel suchen ..." autocomplete="off">
+      <input type="search" id="q" placeholder="{{ t('index.search_placeholder') }}" autocomplete="off">
     </label>
-    <select class="field" id="fLibrary"><option value="">Alle Bibliotheken</option>
+    <select class="field" id="fLibrary"><option value="">{{ t('filter.all_libraries') }}</option>
       {% for lib in libraries %}<option value="{{ lib }}">{{ lib }}</option>{% endfor %}
     </select>
-    <select class="field" id="fType"><option value="">Filme &amp; Serien</option>
-      <option value="Film">Nur Filme</option><option value="Serie">Nur Serien</option></select>
-    <select class="field" id="fComplete"><option value="">Alle Serien-Status</option>
-      <option value="complete">Vollständig</option>
-      <option value="incomplete">Unvollständig</option>
-      <option value="unknown">Unbekannt</option></select>
+    <select class="field" id="fType"><option value="">{{ t('filter.all_types') }}</option>
+      <option value="Film">{{ t('filter.movies_only') }}</option><option value="Serie">{{ t('filter.series_only') }}</option></select>
+    <select class="field" id="fComplete"><option value="">{{ t('filter.all_status') }}</option>
+      <option value="complete">{{ t('filter.complete') }}</option>
+      <option value="incomplete">{{ t('filter.incomplete') }}</option>
+      <option value="unknown">{{ t('filter.unknown') }}</option></select>
 
     <div class="colmenu" id="filtermenu">
-      <button class="btn" id="filterBtn" title="Weitere Filter">Filter<span
+      <button class="btn" id="filterBtn" title="{{ t('filter.button_title') }}">{{ t('filter.button') }}<span
         class="filter-count hidden" id="filterCount">0</span></button>
       <div class="colmenu-panel filter-panel" id="filterPanel">
-        <select class="field" id="fRating"><option value="">Alle Freigaben</option>
-          <option value="__none__">Ohne Freigabe</option>
-          <option value="__suspicious__">FSK auffällig</option></select>
-        <select class="field" id="fRes"><option value="">Alle Auflösungen</option>
-          <option value="__lt720__">unter 720p</option></select>
-        <select class="field" id="fCodec"><option value="">Alle Codecs</option></select>
-        <select class="field" id="fAudioLang"><option value="">Alle Audiosprachen</option></select>
-        <select class="field" id="fSubLang"><option value="">Alle Untertitel</option></select>
-        <select class="field" id="fTag"><option value="">Alle Tags</option></select>
-        <button class="btn btn-small" id="filterReset">Filter zurücksetzen</button>
+        <select class="field" id="fRating"><option value="">{{ t('filter.all_ratings') }}</option>
+          <option value="__none__">{{ t('filter.no_rating') }}</option>
+          <option value="__suspicious__">{{ t('filter.rating_suspicious') }}</option></select>
+        <select class="field" id="fRes"><option value="">{{ t('filter.all_res') }}</option>
+          <option value="__lt720__">{{ t('filter.under_720') }}</option></select>
+        <select class="field" id="fCodec"><option value="">{{ t('filter.all_codecs') }}</option></select>
+        <select class="field" id="fAudioLang"><option value="">{{ t('filter.all_audio') }}</option></select>
+        <select class="field" id="fSubLang"><option value="">{{ t('filter.all_subs') }}</option></select>
+        <select class="field" id="fTag"><option value="">{{ t('filter.all_tags') }}</option></select>
+        <button class="btn btn-small" id="filterReset">{{ t('filter.reset') }}</button>
       </div>
     </div>
 
     <div class="viewtoggle" id="viewToggle">
-      <button data-view="cover" class="active">Cover</button>
-      <button data-view="list">Liste</button>
+      <button data-view="cover" class="active">{{ t('view.cover') }}</button>
+      <button data-view="list">{{ t('view.list') }}</button>
     </div>
     <div class="colmenu" id="colmenu" hidden>
-      <button class="btn btn-icon" id="colBtn" title="Spalten">&#9646;</button>
+      <button class="btn btn-icon" id="colBtn" title="{{ t('view.columns') }}">&#9646;</button>
       <div class="colmenu-panel" id="colPanel"></div>
     </div>
   </div>
 
-  <div class="count-line"><span id="count">0</span> Einträge</div>
+  <div class="count-line"><span id="count">0</span> {{ t('index.entries') }}</div>
 
   <section id="coverView"><div class="grid" id="grid"></div></section>
   <section id="listView" class="hidden">
     <div class="tablewrap"><table class="list"><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
   </section>
-  <div class="empty hidden" id="empty">Keine Einträge - passe die Filter an oder lies neu ein.</div>
+  <div class="empty hidden" id="empty">{{ t('index.empty') }}</div>
 </main>
 
 {% include '_modal.html' %}

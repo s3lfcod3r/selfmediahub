@@ -3,6 +3,8 @@
 (function () {
   "use strict";
 
+  var T = window.t || function (k) { return k; };
+  var LOCALE = window.__LANG__ === "en" ? "en-GB" : "de-DE";
   var ALL = window.__DATA__ || [];
   var FSK_ON = window.__FSK_ENABLED__ !== false;   // FSK-Feature (nur UI); Standard an
   var state = { view: "cover", q: "", library: "", type: "", rating: "", tag: "", complete: "",
@@ -15,26 +17,27 @@
   ];
 
   var COLUMNS = [
-    { key: "name",             label: "Titel",         on: true,  cls: "name" },
-    { key: "item_type",        label: "Typ",           on: true },
-    { key: "year",             label: "Jahr",          on: true,  num: true },
-    { key: "library_name",     label: "Bibliothek",    on: false },
-    { key: "official_rating",  label: "Freigabe",      on: true,  rating: true },
-    { key: "resolution",       label: "Auflösung",    on: true },
-    { key: "hdr",              label: "HDR",           on: false },
-    { key: "video_codec",      label: "Codec",         on: false },
-    { key: "audio_langs",      label: "Sprachen",      on: false, list: true },
-    { key: "completeness",     label: "Vollständig",  on: true,  comp: true },
-    { key: "community_rating", label: "Bewertung",     on: false, num: true },
-    { key: "size_bytes",       label: "Größe",       on: false, size: true },
-    { key: "tags",             label: "Tags",          on: true,  tags: true }
+    { key: "name",             label: T("col.name"),             on: true,  cls: "name" },
+    { key: "item_type",        label: T("col.type"),             on: true,  type: true },
+    { key: "year",             label: T("col.year"),             on: true,  num: true },
+    { key: "library_name",     label: T("col.library"),          on: false },
+    { key: "official_rating",  label: T("col.rating"),           on: true,  rating: true },
+    { key: "resolution",       label: T("col.resolution"),       on: true },
+    { key: "hdr",              label: T("col.hdr"),              on: false },
+    { key: "video_codec",      label: T("col.codec"),            on: false },
+    { key: "audio_langs",      label: T("col.languages"),        on: false, list: true },
+    { key: "completeness",     label: T("col.complete"),         on: true,  comp: true },
+    { key: "community_rating", label: T("col.community_rating"), on: false, num: true },
+    { key: "size_bytes",       label: T("col.size"),             on: false, size: true },
+    { key: "tags",             label: T("col.tags"),             on: true,  tags: true }
   ];
 
-  var LANG = { ger: "Deutsch", deu: "Deutsch", de: "Deutsch", eng: "Englisch", en: "Englisch",
-    fre: "Französisch", fra: "Französisch", spa: "Spanisch", ita: "Italienisch",
-    jpn: "Japanisch", rus: "Russisch", tur: "Türkisch", pol: "Polnisch",
-    nld: "Niederländisch", dut: "Niederländisch", por: "Portugiesisch",
-    kor: "Koreanisch", chi: "Chinesisch", zho: "Chinesisch", ara: "Arabisch", und: "unbekannt" };
+  // Sprach-Codes (inkl. Aliase) auf einen kanonischen Katalog-Key abbilden.
+  var LANG_CANON = { ger: "ger", deu: "ger", de: "ger", eng: "eng", en: "eng",
+    fre: "fre", fra: "fre", fr: "fre", spa: "spa", es: "spa", ita: "ita", it: "ita",
+    jpn: "jpn", ja: "jpn", rus: "rus", ru: "rus", tur: "tur", tr: "tur", pol: "pol", pl: "pol",
+    nld: "nld", dut: "nld", nl: "nld", por: "por", pt: "por", kor: "kor", ko: "kor",
+    chi: "chi", zho: "chi", zh: "chi", ara: "ara", ar: "ara", und: "und" };
 
   var SHORTLANG = { ger: "DE", deu: "DE", de: "DE", eng: "EN", en: "EN", fre: "FR", fra: "FR", fr: "FR",
     spa: "ES", es: "ES", ita: "IT", it: "IT", jpn: "JP", ja: "JP", rus: "RU", tur: "TR", pol: "PL",
@@ -60,9 +63,7 @@
     if (pct >= 100) { return "full"; }
     return pct > 0 ? "partial" : "none";
   }
-  function covLabel(state) {
-    return state === "full" ? "vollständig" : (state === "partial" ? "teilweise" : "fehlt");
-  }
+  function covLabel(state) { return T("cov." + state); }
   function coverFlag(pref, state) {
     if (state === "partial" && window.smhFlagPartial) {
       var pf = window.smhFlagPartial(pref);
@@ -83,7 +84,11 @@
     var gb = b / 1073741824;
     return gb >= 1 ? gb.toFixed(1) + " GB" : Math.round(b / 1048576) + " MB";
   }
-  function langName(c) { return c ? (LANG[String(c).toLowerCase()] || c) : c; }
+  function langName(c) {
+    if (!c) { return c; }
+    var canon = LANG_CANON[String(c).toLowerCase()];
+    return canon ? T("langname." + canon) : c;
+  }
   function langList(arr) { return (arr || []).map(langName).join(", "); }
 
   function tagChip(t) {
@@ -93,12 +98,12 @@
   }
   function compCell(i) {
     var c = i.completeness;
-    if (c === "complete") { return '<span class="pill ok">komplett</span>'; }
+    if (c === "complete") { return '<span class="pill ok">' + esc(T("comp.complete")) + "</span>"; }
     if (c === "incomplete") {
       var m = i.missing_episodes;
-      return '<span class="pill bad">fehlt' + (m ? " " + m : "") + "</span>";
+      return '<span class="pill bad">' + esc(T("comp.missing")) + (m ? " " + m : "") + "</span>";
     }
-    if (c === "unknown") { return '<span class="pill">unbekannt</span>'; }
+    if (c === "unknown") { return '<span class="pill">' + esc(T("comp.unknown")) + "</span>"; }
     return '<span style="color:var(--self-text-3)">-</span>';
   }
 
@@ -184,12 +189,12 @@
       var did = editable ? ' data-id="' + i.id + '"' : "";
       var rating = FSK_ON
         ? '<span class="' + cls + '"' + did +
-          (editable ? ' title="FSK ändern"' : "") + ">" +
-          (i.official_rating ? esc(i.official_rating) : "o. FSK") + "</span>"
+          (editable ? ' title="' + esc(T("grid.fsk_change_title")) + '"' : "") + ">" +
+          (i.official_rating ? esc(i.official_rating) : esc(T("grid.no_fsk"))) + "</span>"
         : "";
       var res = i.resolution ? '<span class="qbadge res">' + esc(i.resolution) + "</span>" : "";
       var comp = i.completeness === "incomplete"
-        ? '<span class="qbadge bad">unvollst.</span>' : "";
+        ? '<span class="qbadge bad">' + esc(T("grid.incomplete_badge")) + "</span>" : "";
       var img = i.image_url
         ? '<img loading="lazy" src="' + esc(i.image_url) + '" alt="" ' +
           'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'">' +
@@ -199,15 +204,17 @@
       var pname = esc(langName(pref));
       var aState = covState(i.primary_audio_pct);
       var sState = covState(i.primary_sub_pct);
+      var aTitle = T("cover.audio_title").replace("{lang}", pname).replace("{state}", covLabel(aState));
+      var sTitle = T("cover.subtitle_title").replace("{lang}", pname).replace("{state}", covLabel(sState));
       var langrow = '<div class="langrow">' +
-        '<span class="cbadge cb-lang' + (aState === "none" ? " off" : "") + '" title="' + pname +
-          "-Ton: " + covLabel(aState) + '">' + coverFlag(pref, aState) + "</span>" +
-        '<span class="cbadge cb-ut' + (sState === "none" ? " off" : "") + '" title="' + pname +
-          "-Untertitel: " + covLabel(sState) + '">' + coverFlag(pref, sState) + " UT</span>" +
+        '<span class="cbadge cb-lang' + (aState === "none" ? " off" : "") + '" title="' + aTitle + '">' +
+          coverFlag(pref, aState) + "</span>" +
+        '<span class="cbadge cb-ut' + (sState === "none" ? " off" : "") + '" title="' + sTitle + '">' +
+          coverFlag(pref, sState) + " " + esc(T("cover.sub_abbr")) + "</span>" +
         "</div>";
       var chips = (i.tags || []).slice(0, 3).map(tagChip).join("");
       return '<article class="card" data-id="' + i.id + '">' +
-        '<div class="poster">' + rating + '<span class="type">' + esc(i.item_type) + "</span>" +
+        '<div class="poster">' + rating + '<span class="type">' + esc(T("type." + i.item_type)) + "</span>" +
         '<div class="qrow">' + res + comp + "</div>" + langrow + img + "</div>" +
         '<div class="meta"><div class="t">' + esc(i.name) + "</div>" +
         '<div class="y">' + (i.year || "") + "</div>" +
@@ -220,9 +227,10 @@
     if (col.comp) { return compCell(i); }
     if (col.size) { return fmtSize(i.size_bytes) || '<span style="color:var(--self-text-3)">-</span>'; }
     if (col.list) { return esc(langList(i[col.key])) || '<span style="color:var(--self-text-3)">-</span>'; }
+    if (col.type) { return esc(T("type." + i.item_type)); }
     if (col.rating) {
       return i.official_rating ? '<span class="pill">' + esc(i.official_rating) + "</span>"
-                               : '<span class="pill bad">ohne</span>';
+                               : '<span class="pill bad">' + esc(T("grid.rating_none_short")) + "</span>";
     }
     if (col.key === "community_rating" && i.community_rating != null) { return Number(i.community_rating).toFixed(1); }
     var v = i[col.key];
@@ -264,7 +272,7 @@
     try {
       var d = new Date(iso);
       if (isNaN(d.getTime())) { return iso; }
-      return d.toLocaleString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric",
+      return d.toLocaleString(LOCALE, { day: "2-digit", month: "2-digit", year: "numeric",
         hour: "2-digit", minute: "2-digit" });
     } catch (e) { return iso; }
   }
@@ -272,7 +280,7 @@
     var btn = $("syncBtn");
     if (!btn) { return; }
     var ls = window.__LASTSYNC__;
-    var text = ls ? ("Zuletzt eingelesen: " + fmtDate(ls)) : "Noch nie eingelesen";
+    var text = ls ? T("sync.last").replace("{date}", fmtDate(ls)) : T("sync.never");
     btn.title = text;
     var tip = document.createElement("div");
     tip.className = "smh-tip hidden";
@@ -311,7 +319,7 @@
     fskMenu = document.createElement("div");
     fskMenu.className = "fsk-menu hidden";
     fskMenu.innerHTML = FSK_STD.concat([""]).map(function (v) {
-      return '<button class="fsk-menu-item" data-val="' + v + '">' + (v || "— keine —") + "</button>";
+      return '<button class="fsk-menu-item" data-val="' + v + '">' + (v || T("fsk.none_option")) + "</button>";
     }).join("");
     document.body.appendChild(fskMenu);
     fskMenu.addEventListener("click", function (e) {
@@ -342,16 +350,16 @@
       body: JSON.stringify({ item_id: +id, rating: rating }) })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
       .then(function (res) {
-        if (!res.ok) { throw new Error(res.j.detail || "Fehler"); }
+        if (!res.ok) { throw new Error(res.j.detail || "?"); }
         var item = ALL.filter(function (x) { return String(x.id) === String(id); })[0];
         if (item) { item.official_rating = rating; }
         if (badge) {
           badge.className = (rating ? "rating" : "rating none") + " editable";
-          badge.textContent = rating || "o. FSK";
+          badge.textContent = rating || T("grid.no_fsk");
         }
-        window.smhToast("FSK " + (rating || "(entfernt)") + " gesetzt", "ok");
+        window.smhToast(T("msg.fsk_set").replace("{rating}", rating || T("common.removed")), "ok");
       })
-      .catch(function (e) { window.smhToast("Fehlgeschlagen: " + e.message, "err"); });
+      .catch(function (e) { window.smhToast(T("msg.failed_prefix") + e.message, "err"); });
   }
 
   function wire() {
