@@ -17,7 +17,6 @@
       <button class="set-tab" data-cat="account">Account</button>
       <button class="set-tab" data-cat="quellen">Datenquellen &amp; Bibliotheken</button>
       <button class="set-tab" data-cat="metadaten">Metadatendienste</button>
-      <button class="set-tab" data-cat="anzeige">Anzeige</button>
       <button class="set-tab" data-cat="fsk">FSK &amp; Altersfreigaben</button>
       <button class="set-tab" data-cat="ueber">Über &amp; Updates</button>
     </nav>
@@ -36,6 +35,31 @@
         </div>
         <div class="set-actions">
           <button class="btn btn-primary" id="saveAllgemein">Speichern</button>
+        </div>
+
+        <div class="set-field">
+          <label for="primaryLang">Primäre Sprache</label>
+          {% set pl = settings['display.primary_language'] %}
+          <select class="field" id="primaryLang">
+            <option value="ger"{{ ' selected' if pl == 'ger' }}>Deutsch</option>
+            <option value="eng"{{ ' selected' if pl == 'eng' }}>Englisch</option>
+            <option value="jpn"{{ ' selected' if pl == 'jpn' }}>Japanisch</option>
+            <option value="fre"{{ ' selected' if pl == 'fre' }}>Französisch</option>
+            <option value="spa"{{ ' selected' if pl == 'spa' }}>Spanisch</option>
+            <option value="ita"{{ ' selected' if pl == 'ita' }}>Italienisch</option>
+            <option value="kor"{{ ' selected' if pl == 'kor' }}>Koreanisch</option>
+            <option value="rus"{{ ' selected' if pl == 'rus' }}>Russisch</option>
+            <option value="tur"{{ ' selected' if pl == 'tur' }}>Türkisch</option>
+            <option value="pol"{{ ' selected' if pl == 'pol' }}>Polnisch</option>
+            <option value="nld"{{ ' selected' if pl == 'nld' }}>Niederländisch</option>
+            <option value="por"{{ ' selected' if pl == 'por' }}>Portugiesisch</option>
+            <option value="chi"{{ ' selected' if pl == 'chi' }}>Chinesisch</option>
+            <option value="ara"{{ ' selected' if pl == 'ara' }}>Arabisch</option>
+          </select>
+          <p class="set-desc">Die Hauptsprache dieser Instanz. Sie bestimmt, welche Sprach-Flagge
+             auf Covern und im Detail gezeigt wird (Ton &amp; Untertitel) - <strong>voll</strong>
+             (alle Folgen), <strong>teilweise</strong> (einige) oder <strong>gar nicht</strong>.
+             Beim Umstellen wird sofort neu berechnet, kein neuer Scan nötig.</p>
         </div>
       </section>
 
@@ -93,37 +117,6 @@
         <p class="set-placeholder">Hier entstehen: mehrere Informationsquellen (TMDb, TheTVDB,
            OMDb, AniDB …) mit eigenen API-Zugangsdaten und einer frei wählbaren Reihenfolge
            (Priorisierung) je Medienart - z.B. AniDB zuerst für Anime.</p>
-      </section>
-
-      <!-- Anzeige -->
-      <section class="set-panel" data-cat="anzeige">
-        <h2 class="card-h">Anzeige</h2>
-        <div class="set-field">
-          <label for="primaryLang">Primäre Sprache</label>
-          {% set pl = settings['display.primary_language'] %}
-          <select class="field" id="primaryLang">
-            <option value="ger"{{ ' selected' if pl == 'ger' }}>Deutsch</option>
-            <option value="eng"{{ ' selected' if pl == 'eng' }}>Englisch</option>
-            <option value="jpn"{{ ' selected' if pl == 'jpn' }}>Japanisch</option>
-            <option value="fre"{{ ' selected' if pl == 'fre' }}>Französisch</option>
-            <option value="spa"{{ ' selected' if pl == 'spa' }}>Spanisch</option>
-            <option value="ita"{{ ' selected' if pl == 'ita' }}>Italienisch</option>
-            <option value="kor"{{ ' selected' if pl == 'kor' }}>Koreanisch</option>
-            <option value="rus"{{ ' selected' if pl == 'rus' }}>Russisch</option>
-            <option value="tur"{{ ' selected' if pl == 'tur' }}>Türkisch</option>
-            <option value="pol"{{ ' selected' if pl == 'pol' }}>Polnisch</option>
-            <option value="nld"{{ ' selected' if pl == 'nld' }}>Niederländisch</option>
-            <option value="por"{{ ' selected' if pl == 'por' }}>Portugiesisch</option>
-            <option value="chi"{{ ' selected' if pl == 'chi' }}>Chinesisch</option>
-            <option value="ara"{{ ' selected' if pl == 'ara' }}>Arabisch</option>
-          </select>
-          <p class="set-desc">Die Hauptsprache dieser Instanz. Sie bestimmt, welche Sprach-Flagge
-             auf Covern und im Detail gezeigt wird (Ton &amp; Untertitel) - <strong>voll</strong>
-             (alle Folgen), <strong>teilweise</strong> (einige) oder <strong>gar nicht</strong>.
-             Beim Umstellen wird sofort neu berechnet, kein neuer Scan nötig.</p>
-        </div>
-        <div class="set-placeholder">Cover-Layout-Editor, Overlay-Konfiguration und
-           Statusanzeigen kommen in <strong>Phase 6</strong>.</div>
       </section>
 
       <!-- FSK & Altersfreigaben -->

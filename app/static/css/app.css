@@ -93,6 +93,7 @@ a:hover { text-decoration: underline; }
 }
 .btn-primary:hover { filter: brightness(1.08); border-color: transparent; }
 .btn-icon { padding: 9px 11px; }
+.btn-icon.active { border-color: var(--self-teal); color: var(--self-teal-bright); }
 .btn[disabled] { opacity: 0.55; cursor: progress; }
 
 /* --- Hero / Stats ------------------------------------------ */
@@ -152,12 +153,24 @@ a:hover { text-decoration: underline; }
 }
 .search svg { color: var(--self-text-3); flex: none; }
 
-select.field {
+/* Einheitliches Eingabefeld (Text/Passwort/Textarea) im Look des Suchfelds.
+   Bewusst OHNE width -> die Breite steuert der jeweilige Kontext
+   (.set-field, .auth-form, .filter-panel ...), damit Inline-Filter nicht brechen. */
+.field {
   background: var(--self-bg-2);
   border: 1px solid var(--self-line-strong);
   border-radius: var(--self-radius-sm);
   color: var(--self-text);
   font-family: var(--self-font-sans); font-size: 14px;
+  padding: 10px 12px;
+  transition: border-color var(--self-dur-fast) var(--self-ease);
+}
+.field::placeholder { color: var(--self-text-3); }
+.field:focus { outline: 0; border-color: var(--self-teal);
+  box-shadow: 0 0 0 3px rgba(51, 167, 140, 0.18); }
+textarea.field { resize: vertical; min-height: 64px; line-height: 1.5; }
+
+select.field {
   padding: 9px 12px; cursor: pointer;
 }
 
@@ -401,11 +414,6 @@ table.list td.name { font-weight: 600; }
   box-shadow: 0 12px 30px -14px rgba(0, 0, 0, 0.9);
 }
 .smh-tip.hidden { display: none; }
-
-/* Cover-Badges ein-/ausblendbar (Einstellungs-Menü) */
-.grid.hide-fsk .rating { display: none; }
-.grid.hide-res .qbadge.res { display: none; }
-.grid.hide-lang .langrow { display: none; }
 
 .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
 .chip {

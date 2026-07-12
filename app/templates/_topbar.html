@@ -13,28 +13,17 @@
     <span class="instance-name" title="Instanzname">{{ settings['general.instance_name'] }}</span>
     {% endif %}
     <nav class="nav" aria-label="Hauptnavigation">
-      <a href="/"            class="{{ 'active' if active == 'home' }}">Übersicht</a>
-      <a href="/tags"        class="{{ 'active' if active == 'tags' }}">Tags</a>
-      <a href="/regeln"      class="{{ 'active' if active == 'rules' }}">Regeln</a>
-      <a href="/einstellungen" class="{{ 'active' if active == 'settings' }}">Einstellungen</a>
+      <a href="/"       class="{{ 'active' if active == 'home' }}">Übersicht</a>
+      <a href="/tags"   class="{{ 'active' if active == 'tags' }}">Tags</a>
+      <a href="/regeln" class="{{ 'active' if active == 'rules' }}">Regeln</a>
     </nav>
     <div class="spacer"></div>
     {% if auth_active and account %}
     <span class="acct-chip" title="Angemeldet">{{ account.username }}</span>
     <a class="btn btn-small" href="/logout" title="Abmelden">Abmelden</a>
     {% endif %}
-    {% if active == 'home' %}
-    <div class="colmenu" id="dispmenu">
-      <button class="btn btn-icon" id="dispBtn" title="Cover-Anzeige">&#9881;</button>
-      <div class="colmenu-panel" id="dispPanel">
-        <label><input type="checkbox" data-disp="fsk" checked> FSK-Ecke</label>
-        <label><input type="checkbox" data-disp="res" checked> Auflösung</label>
-        <label><input type="checkbox" data-disp="lang" checked> Sprache/UT (unten rechts)</label>
-        <p class="disp-hint">Primäre Sprache jetzt unter
-          <a href="/einstellungen#anzeige">Einstellungen &rarr; Anzeige</a>.</p>
-      </div>
-    </div>
-    {% endif %}
+    <a class="btn btn-icon {{ 'active' if active == 'settings' }}" href="/einstellungen"
+       title="Einstellungen" aria-label="Einstellungen">&#9881;</a>
     <button class="btn btn-icon" id="themeBtn" title="Hell/Dunkel" aria-label="Theme umschalten">◐</button>
     <button class="btn btn-primary" id="syncBtn"><span id="syncLabel">Neu einlesen</span></button>
   </div>

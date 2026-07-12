@@ -260,26 +260,6 @@
     });
   }
 
-  // Cover-Anzeige-Optionen (FSK-Ecke / Auflösung / Sprache-UT) merken (localStorage)
-  function initDisp() {
-    var saved = {};
-    try { saved = JSON.parse(localStorage.getItem("smh-disp") || "{}"); } catch (e) { saved = {}; }
-    ["fsk", "res", "lang"].forEach(function (key) {
-      var on = saved[key] !== false;
-      $("grid").classList.toggle("hide-" + key, !on);
-      var cb = $("dispPanel").querySelector('[data-disp="' + key + '"]');
-      if (cb) { cb.checked = on; }
-    });
-    $("dispPanel").querySelectorAll("input").forEach(function (cb) {
-      cb.onchange = function () {
-        var key = cb.getAttribute("data-disp");
-        $("grid").classList.toggle("hide-" + key, !cb.checked);
-        saved[key] = cb.checked;
-        try { localStorage.setItem("smh-disp", JSON.stringify(saved)); } catch (e) { /* ignore */ }
-      };
-    });
-  }
-
   function fmtDate(iso) {
     try {
       var d = new Date(iso);
@@ -410,13 +390,11 @@
     $("filterBtn").onclick = function (e) { e.stopPropagation(); $("filterPanel").classList.toggle("open"); };
     $("filterPanel").onclick = function (e) { e.stopPropagation(); };
     $("colBtn").onclick = function (e) { e.stopPropagation(); $("colPanel").classList.toggle("open"); };
-    $("dispBtn").onclick = function (e) { e.stopPropagation(); $("dispPanel").classList.toggle("open"); };
     document.addEventListener("click", function () {
-      $("colPanel").classList.remove("open"); $("dispPanel").classList.remove("open");
+      $("colPanel").classList.remove("open");
       $("filterPanel").classList.remove("open");
     });
     $("colPanel").onclick = function (e) { e.stopPropagation(); };
-    $("dispPanel").onclick = function (e) { e.stopPropagation(); };
 
     initSyncTooltip();
   }
@@ -424,7 +402,6 @@
   fillFilters();
   updateFilterCount();
   buildColMenu();
-  initDisp();
   wire();
   render();
 })();
