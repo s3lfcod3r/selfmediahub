@@ -7,12 +7,8 @@ import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 
-from .. import config, db
-from ..connectors.emby import EmbyConnector
-from ..connectors.jellyfin import JellyfinConnector
-from ..connectors.local import LocalConnector
-from ..connectors.plex import PlexConnector
-from . import analysis, completeness, coverage, fsk, notify, rules, tmdb
+from .. import db
+from . import analysis, completeness, coverage, fsk, notify, rules, sources, tmdb
 
 # Wieviele TMDb-Abfragen gleichzeitig (TMDb erlaubt reichlich).
 TMDB_WORKERS = 8
@@ -37,27 +33,13 @@ def _set(**kw) -> None:
 
 
 def build_connectors() -> list:
-    conns = []
-    if config.emby_configured():
-        conns.append(EmbyConnector(config.EMBY_URL, config.EMBY_API_KEY))
-    if config.jellyfin_configured():
-        conns.append(JellyfinConnector(config.JELLYFIN_URL, config.JELLYFIN_API_KEY))
-    if config.plex_configured():
-        conns.append(PlexConnector(config.PLEX_URL, config.PLEX_TOKEN))
-    if config.local_configured():
-        conns.append(LocalConnector(config.LOCAL_PATHS))
-    return conns
+    """Aktive Quellen aus der DB als Connectoren (Phase 4a)."""
+    return sources.build_connectors()
 
 
 def connector_for(kind: str):
-    """Einzelnen Connector für eine Quelle bauen (z.B. für Detail-Abrufe)."""
-    if kind == "emby" and config.emby_configured():
-        return EmbyConnector(config.EMBY_URL, config.EMBY_API_KEY)
-    if kind == "jellyfin" and config.jellyfin_configured():
-        return JellyfinConnector(config.JELLYFIN_URL, config.JELLYFIN_API_KEY)
-    if kind == "plex" and config.plex_configured():
-        return PlexConnector(config.PLEX_URL, config.PLEX_TOKEN)
-    return None
+    """Einzelnen Connector einer aktiven Quelle bauen (z.B. für Detail-Abrufe)."""
+    return sources.connector_for(kind)
 
 
 def _enrich_one(item: dict, existing: dict, cache: dict) -> None:

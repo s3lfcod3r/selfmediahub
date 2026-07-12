@@ -7,7 +7,9 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from .. import config, db
-from ..services import auth, queries, rules, settings as settings_service, tags, updatecheck
+from ..services import (
+    auth, queries, rules, settings as settings_service, sources, tags, updatecheck,
+)
 
 router = APIRouter()
 
@@ -29,7 +31,7 @@ def _ctx(request: Request, **extra) -> dict:
 
 @router.get("/", response_class=HTMLResponse)
 def index(request: Request):
-    if not config.any_source_configured():
+    if not sources.any_enabled():
         return templates.TemplateResponse(request, "setup.html", _ctx(request))
     items = queries.get_items()
     return templates.TemplateResponse(request, "index.html", _ctx(

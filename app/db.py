@@ -132,6 +132,22 @@ CREATE TABLE IF NOT EXISTS fsk_acks (
   source_id   TEXT NOT NULL,
   PRIMARY KEY (source_kind, source_id)
 );
+
+-- Datenquellen (Phase 4a): in der DB statt in ENV-Variablen. 4a = eine Quelle
+-- je Typ (kind ist UNIQUE); Mehrfach-Quellen folgen in 4b. `secret` ist der
+-- verschluesselte API-Key/Token (crypto-Service). `libraries`/`local_paths`
+-- als JSON-Liste; libraries leer = alle Bibliotheken.
+CREATE TABLE IF NOT EXISTS sources (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  kind        TEXT NOT NULL UNIQUE,
+  name        TEXT NOT NULL,
+  base_url    TEXT DEFAULT '',
+  secret      TEXT DEFAULT '',
+  local_paths TEXT DEFAULT '',
+  libraries   TEXT DEFAULT '',
+  enabled     INTEGER NOT NULL DEFAULT 1,
+  created_at  TEXT
+);
 """
 
 

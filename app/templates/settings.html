@@ -76,10 +76,15 @@
 
       <!-- Datenquellen & Bibliotheken -->
       <section class="set-panel" data-cat="quellen">
-        <h2 class="card-h">Datenquellen &amp; Bibliotheken <span class="phase-badge">Phase 4</span></h2>
-        <p class="set-placeholder">Hier entstehen: Emby-, Plex-, Jellyfin- und lokale Quellen
-           verwalten, mehrere Quellen parallel betreiben und je Quelle auswählen, welche
-           Bibliotheken überwacht werden (z.B. „Test-Anime" ausschließen).</p>
+        <h2 class="card-h">Datenquellen &amp; Bibliotheken</h2>
+        <p class="set-desc">Verbinde deine Medienserver oder lokale Ordner. Zugangsdaten werden
+           <strong>verschlüsselt</strong> gespeichert. {{ app.APP_NAME }} liest nur - es schreibt
+           nie zurück (Ausnahme: FSK, separat aktivierbar). Pro Typ ist aktuell eine Quelle
+           möglich; je Server kannst du auswählen, welche Bibliotheken überwacht werden
+           (leer = alle).</p>
+        <div id="sourcesRoot" class="sources-root">
+          <p class="set-desc" id="sourcesLoading">Lade Quellen …</p>
+        </div>
       </section>
 
       <!-- Metadatendienste -->

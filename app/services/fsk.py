@@ -72,12 +72,12 @@ def analyze(item: dict) -> dict:
 _admin_uid = None
 
 
-def _emby_admin_uid(headers: dict) -> str:
+def _emby_admin_uid(base_url: str, headers: dict) -> str:
     """Admin-User-Id ermitteln und cachen (für Massen-Schreiben)."""
     global _admin_uid
     if _admin_uid:
         return _admin_uid
-    users = requests.get(f"{config.EMBY_URL}/emby/Users", headers=headers, timeout=15).json()
+    users = requests.get(f"{base_url}/emby/Users", headers=headers, timeout=15).json()
     _admin_uid = next((u["Id"] for u in users if u.get("Policy", {}).get("IsAdministrator")), None)
     if not _admin_uid:
         raise RuntimeError("Kein Emby-Admin gefunden")
@@ -85,19 +85,26 @@ def _emby_admin_uid(headers: dict) -> str:
 
 
 def write_emby(source_id: str, rating: str) -> None:
-    """AUSNAHME: Freigabe aktiv nach Emby schreiben. Nur mit ALLOW_EMBY_WRITE."""
+    """AUSNAHME: Freigabe aktiv nach Emby schreiben. Nur mit ALLOW_EMBY_WRITE.
+
+    Server-Adresse und Token kommen aus der in der DB gespeicherten Emby-Quelle
+    (Phase 4a) - nicht mehr aus ENV-Variablen.
+    """
     if not config.ALLOW_EMBY_WRITE:
         raise RuntimeError("Zurückschreiben ist deaktiviert (ALLOW_EMBY_WRITE=0).")
-    if not config.emby_configured():
+    from . import crypto, sources
+    src = sources.get_by_kind("emby")
+    if not src or not src["enabled"]:
         raise RuntimeError("Emby ist nicht konfiguriert.")
-    headers = {"X-Emby-Token": config.EMBY_API_KEY}
-    uid = _emby_admin_uid(headers)
+    base_url = (src["base_url"] or "").rstrip("/")
+    headers = {"X-Emby-Token": crypto.decrypt(src["secret"] or "")}
+    uid = _emby_admin_uid(base_url, headers)
     full = requests.get(
-        f"{config.EMBY_URL}/emby/Users/{uid}/Items/{source_id}", headers=headers, timeout=15
+        f"{base_url}/emby/Users/{uid}/Items/{source_id}", headers=headers, timeout=15
     ).json()
     full["OfficialRating"] = rating or None
     resp = requests.post(
-        f"{config.EMBY_URL}/emby/Items/{source_id}",
+        f"{base_url}/emby/Items/{source_id}",
         headers={**headers, "Content-Type": "application/json"},
         data=json.dumps(full), timeout=30,
     )

@@ -21,9 +21,11 @@ def _guids(meta: dict) -> dict:
 class PlexConnector(Connector):
     kind = "plex"
 
-    def __init__(self, base_url: str, token: str):
+    def __init__(self, base_url: str, token: str, libraries=None):
         self.base_url = base_url.rstrip("/")
         self.token = token
+        # Ausgewaehlte Section-Keys (leer/None = alle ueberwachen).
+        self.libraries = {str(x) for x in libraries} if libraries else None
 
     def _get(self, path: str, params: dict = None):
         params = dict(params or {})
@@ -41,9 +43,20 @@ class PlexConnector(Connector):
     def fetch_items(self) -> list:
         items = []
         for sec in self._get("/library/sections").get("Directory", []):
-            if sec.get("type") in ("movie", "show"):
-                items.extend(self._fetch_section(sec))
+            if sec.get("type") not in ("movie", "show"):
+                continue
+            if self.libraries and str(sec.get("key")) not in self.libraries:
+                continue
+            items.extend(self._fetch_section(sec))
         return items
+
+    def list_libraries(self) -> list:
+        """Verfuegbare Bibliotheken [{id, name}] fuer die UI-Auswahl."""
+        out = []
+        for sec in self._get("/library/sections").get("Directory", []):
+            if sec.get("type") in ("movie", "show"):
+                out.append({"id": str(sec.get("key")), "name": sec.get("title", "")})
+        return out
 
     def _fetch_section(self, sec: dict) -> list:
         data = self._get(f"/library/sections/{sec['key']}/all")

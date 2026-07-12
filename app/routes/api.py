@@ -5,8 +5,8 @@ from fastapi.responses import Response
 
 from .. import config, db
 from ..services import (
-    auth, coverage, fsk, queries, rules, settings as settings_service, sync as sync_service,
-    tags, tmdb, updatecheck,
+    auth, coverage, fsk, queries, rules, settings as settings_service,
+    sources as sources_service, sync as sync_service, tags, tmdb, updatecheck,
 )
 
 router = APIRouter(prefix="/api")
@@ -180,6 +180,73 @@ async def api_settings_save(request: Request):
         except Exception:  # noqa: BLE001
             pass
     return {"ok": True, "saved": sorted(clean), "settings": settings_service.all_settings()}
+
+
+# -- Datenquellen (Phase 4a) ------------------------------------------------
+@router.get("/sources")
+def api_sources_list():
+    return {"sources": sources_service.list_sources(),
+            "kinds": list(sources_service.KINDS),
+            "server_kinds": list(sources_service.SERVER_KINDS)}
+
+
+@router.post("/sources")
+async def api_source_create(request: Request):
+    d = await request.json()
+    try:
+        sid = sources_service.create_source(
+            (d.get("kind") or "").strip(), d.get("name") or "",
+            d.get("base_url") or "", d.get("secret") or "",
+            d.get("local_paths"), d.get("libraries"), d.get("enabled", True),
+        )
+        return {"ok": True, "id": sid}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.put("/sources/{source_id}")
+async def api_source_update(source_id: int, request: Request):
+    d = await request.json()
+    # Leeres Secret-Feld = Key behalten (None); nur ein echter Wert ersetzt ihn.
+    secret = d.get("secret")
+    try:
+        sources_service.update_source(
+            source_id,
+            name=d.get("name"), base_url=d.get("base_url"),
+            secret=(secret if secret else None),
+            local_paths=d.get("local_paths"), libraries=d.get("libraries"),
+            enabled=d.get("enabled"),
+        )
+        return {"ok": True}
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
+@router.delete("/sources/{source_id}")
+def api_source_delete(source_id: int):
+    sources_service.delete_source(source_id)
+    return {"ok": True}
+
+
+@router.post("/sources/{source_id}/test")
+def api_source_test(source_id: int):
+    try:
+        sources_service.test_connection(source_id)
+        return {"ok": True}
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:  # noqa: BLE001 - Verbindungsfehler an die UI melden
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.get("/sources/{source_id}/libraries")
+def api_source_libraries(source_id: int):
+    try:
+        return {"libraries": sources_service.list_libraries(source_id)}
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    except Exception as exc:  # noqa: BLE001 - Verbindungsfehler an die UI melden
+        raise HTTPException(status_code=400, detail=str(exc))
 
 
 # -- Tags -------------------------------------------------------------------

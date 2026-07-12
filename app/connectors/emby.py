@@ -59,9 +59,11 @@ class EmbyConnector(Connector):
     kind = "emby"
     prefix = "/emby"
 
-    def __init__(self, base_url: str, api_key: str):
+    def __init__(self, base_url: str, api_key: str, libraries=None):
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
+        # Ausgewaehlte Bibliotheks-IDs (leer/None = alle ueberwachen).
+        self.libraries = {str(x) for x in libraries} if libraries else None
         self._admin_id = None
 
     # -- HTTP ---------------------------------------------------------------
@@ -97,10 +99,23 @@ class EmbyConnector(Connector):
         return items
 
     # -- Detailschritte -----------------------------------------------------
-    def _libraries(self, uid: str) -> list:
+    def _all_views(self, uid: str) -> list:
+        """Alle Film-/Serien-Bibliotheken (ohne Auswahl-Filter)."""
         data = self._get(f"/Users/{uid}/Views")
         return [v for v in data.get("Items", [])
                 if v.get("CollectionType") in LIBRARY_TYPES]
+
+    def _libraries(self, uid: str) -> list:
+        views = self._all_views(uid)
+        if self.libraries:
+            views = [v for v in views if str(v.get("Id")) in self.libraries]
+        return views
+
+    def list_libraries(self) -> list:
+        """Verfuegbare Bibliotheken [{id, name}] fuer die UI-Auswahl."""
+        uid = self._admin_user_id()
+        return [{"id": str(v.get("Id")), "name": v.get("Name", "")}
+                for v in self._all_views(uid)]
 
     def _fetch_view(self, uid: str, view: dict) -> list:
         params = {

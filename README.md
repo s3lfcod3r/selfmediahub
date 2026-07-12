@@ -87,13 +87,12 @@ deploy style (GHCR → Unraid).
 ```bash
 docker run -d --name selfmediahub -p 8092:8092 \
   -v /path/to/data:/data \
-  -e EMBY_URL=http://192.168.1.19:8096 \
-  -e EMBY_API_KEY=YOUR_EMBY_KEY \
   -e TMDB_API_KEY=YOUR_TMDB_KEY \
   ghcr.io/s3lfcod3r/selfmediahub:latest
 ```
 
-Open `http://<host>:8092/` and click **“Neu einlesen”** (re-scan) in the top right.
+Open `http://<host>:8092/`, add your media source under **Settings → Data sources**
+(URL + API key, stored encrypted), then click **”Neu einlesen”** (re-scan) in the top right.
 
 ### 🧩 Unraid
 
@@ -102,12 +101,11 @@ map `/data` to `/mnt/user/appdata/selfmediahub`, and fill in the sources you use
 
 ### ⚙️ Configuration
 
+> **Media sources** (Emby/Jellyfin/Plex/local folders) are configured in the UI under
+> **Settings → Data sources** and stored **encrypted** in the database — not via environment variables.
+
 | Variable | Meaning |
 |----------|---------|
-| `EMBY_URL` / `EMBY_API_KEY` | Emby server (read-only) |
-| `JELLYFIN_URL` / `JELLYFIN_API_KEY` | Jellyfin server (optional) |
-| `PLEX_URL` / `PLEX_TOKEN` | Plex server (optional) |
-| `LOCAL_PATHS` | local folders, comma-separated (inside the container) |
 | `TMDB_API_KEY` | themoviedb.org v3 — ratings, genres, completeness |
 | `SCAN_INTERVAL_HOURS` | background scan every N hours (`0` = off) |
 | `NOTIFY_WEBHOOK_URL` | JSON webhook for notifications |
@@ -143,8 +141,11 @@ All core phases are **live**: read-only import, own DB, cover + list views, tech
 TMDb enrichment, completeness, tag system + rule engine, monitoring &amp; notifications, and the FSK
 quality control ported from `emby-fsk-manager`.
 
+**Live since Phase 4a:** DB-backed source management in the UI (Emby/Jellyfin/Plex/local),
+encrypted credentials, per-source library selection.
+
 **Planned:** ffprobe for local files (per-file technical), movie-series / sequel tracking,
-DB-backed source management in the UI.
+multiple sources per type (Phase 4b).
 
 ---
 
@@ -217,13 +218,12 @@ gleiche Deploy-Art (GHCR → Unraid).
 ```bash
 docker run -d --name selfmediahub -p 8092:8092 \
   -v /pfad/zu/daten:/data \
-  -e EMBY_URL=http://192.168.1.19:8096 \
-  -e EMBY_API_KEY=DEIN_EMBY_KEY \
   -e TMDB_API_KEY=DEIN_TMDB_KEY \
   ghcr.io/s3lfcod3r/selfmediahub:latest
 ```
 
-Dann `http://<host>:8092/` öffnen und oben rechts **„Neu einlesen“** klicken.
+Dann `http://<host>:8092/` öffnen, unter **Einstellungen → Datenquellen** deine Quelle
+anlegen (URL + API-Key, verschlüsselt gespeichert) und oben rechts **„Neu einlesen”** klicken.
 
 ### 🧩 Unraid
 
@@ -232,12 +232,12 @@ einbinden, `/data` auf `/mnt/user/appdata/selfmediahub` mappen und die gewünsch
 
 ### ⚙️ Konfiguration
 
+> **Datenquellen** (Emby/Jellyfin/Plex/lokale Ordner) werden im UI unter
+> **Einstellungen → Datenquellen** angelegt und **verschlüsselt** in der Datenbank
+> gespeichert — nicht mehr über Umgebungsvariablen.
+
 | Variable | Bedeutung |
 |----------|-----------|
-| `EMBY_URL` / `EMBY_API_KEY` | Emby-Server (read-only) |
-| `JELLYFIN_URL` / `JELLYFIN_API_KEY` | Jellyfin-Server (optional) |
-| `PLEX_URL` / `PLEX_TOKEN` | Plex-Server (optional) |
-| `LOCAL_PATHS` | lokale Ordner, Komma-getrennt (im Container) |
 | `TMDB_API_KEY` | themoviedb.org v3 — Freigaben, Genres, Vollständigkeit |
 | `SCAN_INTERVAL_HOURS` | Hintergrund-Scan alle N Stunden (`0` = aus) |
 | `NOTIFY_WEBHOOK_URL` | JSON-Webhook für Benachrichtigungen |
@@ -273,8 +273,11 @@ Alle Kern-Phasen sind **live**: read-only Import, eigene DB, Cover- + Listenansi
 analyse, TMDb-Abgleich, Vollständigkeit, Tag-System + Regel-Engine, Monitoring &amp; Benachrichtigungen
 sowie die FSK-Qualitätskontrolle (portiert aus `emby-fsk-manager`).
 
+**Live seit Phase 4a:** DB-gestützte Quellenverwaltung im UI (Emby/Jellyfin/Plex/lokal),
+verschlüsselte Zugangsdaten, Bibliotheks-Auswahl je Quelle.
+
 **Geplant:** ffprobe für lokale Dateien (Technik pro Datei), Filmreihen-/Sequel-Tracking,
-DB-gestützte Quellenverwaltung im UI.
+mehrere Quellen je Typ (Phase 4b).
 
 ---
 

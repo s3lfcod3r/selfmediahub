@@ -582,6 +582,21 @@ table.list tbody tr { cursor: pointer; }
 .ssum-foot { padding: 8px 13px; font-size: 11px; color: var(--self-text-3);
   background: var(--self-bg-0); }
 
+/* Datenquellen-Editor (Einstellungen -> Datenquellen) */
+.sources-root { display: grid; gap: 16px; margin-top: 16px; }
+.src-card { border: 1px solid var(--self-line); border-radius: var(--self-radius-sm);
+  padding: 16px 18px; background: var(--self-bg-1); }
+.src-card.src-off { opacity: 0.66; }
+.src-head { display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-bottom: 12px; }
+.src-head h3 { margin: 0; font-size: 16px; }
+.src-libs-list { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 6px; }
+.src-lib { display: inline-flex; align-items: center; gap: 6px; font-size: 13px;
+  color: var(--self-text); cursor: pointer; }
+.src-status { min-height: 18px; margin-top: 10px; }
+.src-status.s-ok { color: var(--self-green); }
+.src-status.s-err { color: var(--self-red); }
+
 .pathline {
   margin: 4px 0 18px; padding: 12px 14px;
   background: var(--self-bg-0); border: 1px solid var(--self-line);
