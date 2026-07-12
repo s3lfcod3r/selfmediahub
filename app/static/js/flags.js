@@ -32,8 +32,11 @@
   };
 
   // Teilweise-Variante: obere Haelfte farbig, untere diagonal ausgegraut.
-  // Alles in EINEM SVG: die Flagge zweimal - die zweite Kopie in ein unteres
-  // Dreieck geclippt (gerade Diagonale) und per Filter entsaettigt/abgedunkelt.
+  // Alles in EINEM SVG: die Flagge zweimal, entlang der Diagonale (oben-rechts
+  // -> unten-links) in zwei Dreiecke geclippt. Oben: farbig. Unten: rein
+  // entsaettigt (saturate 0) bei opacity 0.42 - dieselbe Graustufe wie die
+  // "keine"-Flagge (.cbadge.off .fl in app.css). Weil die farbige Kopie nur ins
+  // obere Dreieck geclippt ist, scheint unten KEINE Farbe mehr durch.
   // Keine CSS-Overlays -> keine Extralinie, keine krumme Kante.
   var _pid = 0;
   window.smhFlagPartial = function (code) {
@@ -43,11 +46,12 @@
     var id = "smhp" + (++_pid);
     return '<svg class="fl" viewBox="0 0 20 15">' +
       "<defs>" +
+        '<clipPath id="' + id + 'u"><polygon points="0,0 20,0 0,15"/></clipPath>' +
         '<clipPath id="' + id + 'c"><polygon points="20,0 20,15 0,15"/></clipPath>' +
         '<filter id="' + id + 'g"><feColorMatrix type="saturate" values="0"/></filter>' +
       "</defs>" +
-      inner +
-      '<g clip-path="url(#' + id + 'c)" filter="url(#' + id + 'g)" opacity="0.6">' +
+      '<g clip-path="url(#' + id + 'u)">' + inner + "</g>" +
+      '<g clip-path="url(#' + id + 'c)" filter="url(#' + id + 'g)" opacity="0.42">' +
         inner + "</g>" +
       "</svg>";
   };

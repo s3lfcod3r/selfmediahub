@@ -385,7 +385,12 @@ table.list td.name { font-weight: 600; }
   display: inline-flex; align-items: center; gap: 3px;
 }
 .cbadge.cb-ut { color: var(--self-teal-bright); }
-.cbadge.off { opacity: 0.42; filter: grayscale(1); }
+/* "fehlt": nur die Flagge ausgrauen - Hintergrund, Rahmen und UT-Text bleiben
+   normal. grayscale(1) + opacity 0.42 ist die Referenz-Graustufe; die untere
+   Haelfte der "teilweise"-Flagge (flags.js) wird auf exakt denselben Wert
+   gezogen. */
+.cbadge.off .fl { filter: grayscale(1); opacity: 0.42; }
+.cbadge.off .fl-code { opacity: 0.42; }
 
 /* Sichtbarer Tooltip (z.B. letzter Scan an 'Neu einlesen') */
 .smh-tip {
