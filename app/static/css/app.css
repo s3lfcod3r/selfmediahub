@@ -106,8 +106,9 @@ a:hover { text-decoration: underline; }
   margin: 10px 0 6px;
 }
 /* Kompakte Variante fuer die Uebersicht (weniger Luft, kein Label) */
-.hero-compact { padding: 18px 0 10px; }
+.hero-compact { padding: 10px 0 4px; }
 .hero-compact h1 { font-size: clamp(22px, 2.6vw, 30px); margin: 0; }
+.hero-compact + .stats { margin-top: 14px; }
 .hero p { color: var(--self-text-2); max-width: 60ch; margin: 0; }
 
 .stats {
@@ -649,9 +650,10 @@ table.list tbody tr { cursor: pointer; }
   margin-bottom: 22px; text-align: center; }
 .auth-logo { width: 56px; height: 56px; object-fit: contain;
   filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.45)); }
-.auth-brand { font-family: var(--self-font-display, var(--self-font-mono)); font-weight: 800;
-  font-size: 20px; letter-spacing: 0.02em; }
-.auth-brand .self { color: var(--self-teal-bright); }
+.auth-brand { font-family: var(--self-font-wordmark); font-weight: 800;
+  font-size: 24px; letter-spacing: 0.02em; }
+.auth-brand .self { color: var(--self-ice-bright); }
+.auth-brand .rest { color: var(--self-teal); }
 .auth-card h1 { font-size: 22px; margin: 0 0 6px; }
 .auth-sub { color: var(--self-text-3); font-size: 13px; margin: 0 0 18px; line-height: 1.5; }
 .auth-form { display: flex; flex-direction: column; gap: 14px; margin-top: 16px; }
