@@ -18,8 +18,8 @@ def _parse(row: dict) -> dict:
 
 
 def _acked_set() -> set:
-    return {(r["source_kind"], r["source_id"])
-            for r in db.query("SELECT source_kind, source_id FROM fsk_acks")}
+    return {(r["source_ref"], r["source_id"])
+            for r in db.query("SELECT source_ref, source_id FROM fsk_acks")}
 
 
 def get_items() -> list:
@@ -30,7 +30,7 @@ def get_items() -> list:
     for row in rows:
         item = _parse(row)
         item["tags"] = tagmap.get(item["id"], [])
-        item["fsk_acked"] = 1 if (item["source_kind"], item["source_id"]) in acked else 0
+        item["fsk_acked"] = 1 if (item["source_ref"], item["source_id"]) in acked else 0
         items.append(item)
     return items
 
@@ -40,7 +40,7 @@ def get_item(item_id: int):
     if not rows:
         return None
     item = _parse(rows[0])
-    item["fsk_acked"] = 1 if (item["source_kind"], item["source_id"]) in _acked_set() else 0
+    item["fsk_acked"] = 1 if (item["source_ref"], item["source_id"]) in _acked_set() else 0
     return item
 
 

@@ -5,7 +5,7 @@
 **Read-only analysis, monitoring &amp; quality-control layer for your media library — Emby, Jellyfin, Plex and local folders. Never a media server, never writes back.**
 
 [![Build](https://github.com/s3lfcod3r/selfmediahub/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/s3lfcod3r/selfmediahub/actions/workflows/docker-publish.yml)
-![Version](https://img.shields.io/badge/version-0.2.3-33A78C)
+![Version](https://img.shields.io/badge/version-0.2.4-33A78C)
 ![License](https://img.shields.io/badge/license-MIT-8A9CAA)
 ![Backend](https://img.shields.io/badge/backend-FastAPI-009688)
 ![Database](https://img.shields.io/badge/db-SQLite-1DB8D4)
@@ -146,11 +146,11 @@ All core phases are **live**: read-only import, own DB, cover + list views, tech
 TMDb enrichment, completeness, tag system + rule engine, monitoring &amp; notifications, and the FSK
 quality control ported from `emby-fsk-manager`.
 
-**Live since Phase 4a:** DB-backed source management in the UI (Emby/Jellyfin/Plex/local),
-encrypted credentials, per-source library selection.
+**Live:** DB-backed source management in the UI (Emby/Jellyfin/Plex/local) with a list +
+add/edit dialog, encrypted credentials, per-source library selection, a directory browser for
+local paths, and **multiple sources of the same type** (e.g. two Emby servers).
 
-**Planned:** ffprobe for local files (per-file technical), movie-series / sequel tracking,
-multiple sources per type (Phase 4b).
+**Planned:** ffprobe for local files (per-file technical), movie-series / sequel tracking.
 
 ---
 
@@ -283,11 +283,11 @@ Alle Kern-Phasen sind **live**: read-only Import, eigene DB, Cover- + Listenansi
 analyse, TMDb-Abgleich, Vollständigkeit, Tag-System + Regel-Engine, Monitoring &amp; Benachrichtigungen
 sowie die FSK-Qualitätskontrolle (portiert aus `emby-fsk-manager`).
 
-**Live seit Phase 4a:** DB-gestützte Quellenverwaltung im UI (Emby/Jellyfin/Plex/lokal),
-verschlüsselte Zugangsdaten, Bibliotheks-Auswahl je Quelle.
+**Live:** DB-gestützte Quellenverwaltung im UI (Emby/Jellyfin/Plex/lokal) mit Liste +
+Anlegen/Bearbeiten-Dialog, verschlüsselte Zugangsdaten, Bibliotheks-Auswahl je Quelle,
+Verzeichnis-Browser für lokale Pfade und **mehrere Quellen desselben Typs** (z. B. zwei Emby-Server).
 
-**Geplant:** ffprobe für lokale Dateien (Technik pro Datei), Filmreihen-/Sequel-Tracking,
-mehrere Quellen je Typ (Phase 4b).
+**Geplant:** ffprobe für lokale Dateien (Technik pro Datei), Filmreihen-/Sequel-Tracking.
 
 ---
 

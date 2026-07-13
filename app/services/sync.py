@@ -67,8 +67,8 @@ def _sync_episodes(connectors: list, lang: str) -> None:
         if not hasattr(conn, "fetch_episodes"):
             continue
         series = db.query(
-            "SELECT id, source_id FROM media_items WHERE source_kind=? AND item_type='Serie'",
-            (conn.kind,),
+            "SELECT id, source_id FROM media_items WHERE source_ref=? AND item_type='Serie'",
+            (conn.source_ref,),
         )
         total = len(series)
         for idx, s in enumerate(series, 1):
@@ -97,11 +97,12 @@ def run_sync() -> dict:
             items = conn.fetch_items()
             existing = {
                 r["source_id"]: dict(r)
-                for r in db.query("SELECT * FROM media_items WHERE source_kind=?", (conn.kind,))
+                for r in db.query("SELECT * FROM media_items WHERE source_ref=?", (conn.source_ref,))
             }
             groups.append((conn, items, existing))
         except Exception as exc:  # noqa: BLE001 - kaputte Quelle stoppt Rest nicht
-            sources.append({"kind": conn.kind, "ok": False, "error": str(exc)})
+            sources.append({"kind": conn.kind, "name": conn.source_name,
+                            "ok": False, "error": str(exc)})
 
     total = sum(len(items) for _c, items, _e in groups)
     _set(total=total, processed=0, phase=i18n.t("sync.phase.analyzing", lang))
@@ -126,10 +127,10 @@ def run_sync() -> dict:
     total_seen, total_new = 0, 0
     for conn, items, _existing in groups:
         _set(phase=i18n.t("sync.phase.saving", lang).format(kind=conn.kind))
-        res = db.upsert_items(conn.kind, items, now)
+        res = db.upsert_items(conn.source_ref, conn.kind, items, now)
         total_seen += res["seen"]
         total_new += len(res["new"])
-        sources.append({"kind": conn.kind, "seen": res["seen"],
+        sources.append({"kind": conn.kind, "name": conn.source_name, "seen": res["seen"],
                         "new": len(res["new"]), "removed": res["removed"], "ok": True})
 
     # 4) Episoden je Serie speichern (fuer Sprach-Abdeckung, Staffel-Status) ----

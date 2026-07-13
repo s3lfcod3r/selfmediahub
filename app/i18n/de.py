@@ -87,7 +87,7 @@ STRINGS = {
 
     # -- Einstellungen: Datenquellen --
     "settings.sources.title": "Datenquellen & Bibliotheken",
-    "settings.sources.intro": "Verbinde deine Medienserver oder lokale Ordner. Zugangsdaten werden <strong>verschlüsselt</strong> gespeichert. {app} liest nur - es schreibt nie zurück (Ausnahme: FSK, separat aktivierbar). Pro Typ ist aktuell eine Quelle möglich; je Server kannst du auswählen, welche Bibliotheken überwacht werden (leer = alle).",
+    "settings.sources.intro": "Verbinde deine Medienserver oder lokale Ordner. Zugangsdaten werden <strong>verschlüsselt</strong> gespeichert. {app} liest nur - es schreibt nie zurück (Ausnahme: FSK, separat aktivierbar). Du kannst mehrere Quellen je Typ anlegen; je Server wählst du beim Bearbeiten, welche Bibliotheken überwacht werden (leer = alle).",
     "settings.sources.loading": "Lade Quellen …",
 
     # -- Einstellungen: Metadaten --
@@ -180,6 +180,20 @@ STRINGS = {
     "sources.saving": "Speichere …",
     "sources.saved": "Quelle gespeichert",
     "sources.save_failed": "Speichern fehlgeschlagen",
+    "sources.add": "Quelle hinzufügen",
+    "sources.add_title": "Datenquelle hinzufügen",
+    "sources.edit_title": "Datenquelle bearbeiten",
+    "sources.edit": "Bearbeiten",
+    "sources.type": "Typ",
+    "sources.path": "Pfad (im Container)",
+    "sources.browse": "Verzeichnis durchsuchen",
+    "sources.empty": "Noch keine Datenquelle angelegt. Oben rechts über „+ Quelle hinzufügen“ starten.",
+    "sources.disabled": "deaktiviert",
+    "fs.title": "Verzeichnis wählen",
+    "fs.up": "übergeordnet",
+    "fs.pick": "Diesen Ordner übernehmen",
+    "fs.empty": "Keine Unterordner.",
+    "fs.load_failed": "Verzeichnis konnte nicht geladen werden.",
 
     # -- Uebersicht (index.html) --
     "index.hero_label": "Read-only Analyse & Übersicht",

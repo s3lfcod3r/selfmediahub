@@ -102,9 +102,12 @@
 
       <!-- Datenquellen & Bibliotheken -->
       <section class="set-panel" data-cat="quellen">
-        <h2 class="card-h">{{ t('settings.sources.title') }}</h2>
+        <div class="src-panel-head">
+          <h2 class="card-h">{{ t('settings.sources.title') }}</h2>
+          <button class="btn btn-primary" id="srcAddBtn">+ {{ t('sources.add') }}</button>
+        </div>
         <p class="set-desc">{{ t('settings.sources.intro').format(app=app.APP_NAME)|safe }}</p>
-        <div id="sourcesRoot" class="sources-root">
+        <div id="sourcesList" class="src-list">
           <p class="set-desc" id="sourcesLoading">{{ t('settings.sources.loading') }}</p>
         </div>
       </section>
@@ -158,6 +161,78 @@
           <p class="set-desc mono">github.com/{{ app.GITHUB_REPO }}</p>
         </div>
       </section>
+    </div>
+  </div>
+
+  <!-- Quelle anlegen/bearbeiten -->
+  <div class="modal" id="srcModal">
+    <div class="modal-panel src-modal-panel">
+      <button class="modal-close" id="srcModalClose" aria-label="{{ t('modal.close') }}">&times;</button>
+      <h2 class="card-h" id="srcModalTitle">{{ t('sources.add_title') }}</h2>
+
+      <div class="set-field">
+        <label for="srcKind">{{ t('sources.type') }}</label>
+        <select class="field" id="srcKind">
+          <option value="emby">Emby</option>
+          <option value="jellyfin">Jellyfin</option>
+          <option value="plex">Plex</option>
+          <option value="local">{{ t('sources.kind.local') }}</option>
+        </select>
+      </div>
+
+      <div class="set-field">
+        <label for="srcName">{{ t('sources.name') }}</label>
+        <input class="field" id="srcName" maxlength="60">
+      </div>
+
+      <div id="srcServerFields">
+        <div class="set-field">
+          <label for="srcUrl">{{ t('sources.server_url') }}</label>
+          <input class="field" id="srcUrl" placeholder="http://192.168.1.19:8096">
+        </div>
+        <div class="set-field">
+          <label for="srcSecret">{{ t('sources.api_key') }}</label>
+          <input class="field" id="srcSecret" type="password" autocomplete="new-password">
+        </div>
+        <div class="set-field" id="srcLibsWrap" hidden>
+          <label>{{ t('sources.libraries') }} <span class="set-hint">{{ t('sources.libraries_hint') }}</span></label>
+          <div class="src-libs-list" id="srcLibsList"></div>
+        </div>
+      </div>
+
+      <div id="srcLocalFields" hidden>
+        <div class="set-field">
+          <label for="srcPath">{{ t('sources.path') }}</label>
+          <div class="path-input">
+            <input class="field" id="srcPath" placeholder="/media/filme">
+            <button class="btn btn-icon" id="srcBrowse" type="button"
+                    title="{{ t('sources.browse') }}" aria-label="{{ t('sources.browse') }}">&#128269;</button>
+          </div>
+        </div>
+      </div>
+
+      <label class="set-toggle"><input type="checkbox" id="srcEnabled" checked><span>{{ t('sources.active') }}</span></label>
+
+      <p class="src-modal-status set-desc" id="srcModalStatus"></p>
+
+      <div class="set-actions">
+        <button class="btn" id="srcTestBtn" hidden>{{ t('sources.test') }}</button>
+        <button class="btn" id="srcLibsBtn" hidden>{{ t('sources.libraries_btn') }}</button>
+        <button class="btn btn-primary" id="srcSaveBtn">{{ t('sources.add') }}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Verzeichnis-Browser (lokale Pfade) -->
+  <div class="modal" id="fsModal">
+    <div class="modal-panel fs-modal-panel">
+      <button class="modal-close" id="fsModalClose" aria-label="{{ t('modal.close') }}">&times;</button>
+      <h2 class="card-h">{{ t('fs.title') }}</h2>
+      <p class="fs-current mono" id="fsCurrent">/</p>
+      <div class="fs-list" id="fsList"></div>
+      <div class="set-actions">
+        <button class="btn btn-primary" id="fsPickBtn">{{ t('fs.pick') }}</button>
+      </div>
     </div>
   </div>
 </main>

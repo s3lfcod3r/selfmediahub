@@ -82,7 +82,7 @@ STRINGS = {
 
     # -- Settings: data sources --
     "settings.sources.title": "Data sources & libraries",
-    "settings.sources.intro": "Connect your media servers or local folders. Credentials are stored <strong>encrypted</strong>. {app} only reads - it never writes back (exception: age ratings, enabled separately). One source per type for now; per server you can choose which libraries are monitored (empty = all).",
+    "settings.sources.intro": "Connect your media servers or local folders. Credentials are stored <strong>encrypted</strong>. {app} only reads - it never writes back (exception: age ratings, enabled separately). You can add several sources per type; per server you choose (when editing) which libraries are monitored (empty = all).",
     "settings.sources.loading": "Loading sources …",
 
     # -- Settings: metadata --
@@ -175,6 +175,20 @@ STRINGS = {
     "sources.saving": "Saving …",
     "sources.saved": "Source saved",
     "sources.save_failed": "Save failed",
+    "sources.add": "Add source",
+    "sources.add_title": "Add data source",
+    "sources.edit_title": "Edit data source",
+    "sources.edit": "Edit",
+    "sources.type": "Type",
+    "sources.path": "Path (inside the container)",
+    "sources.browse": "Browse directory",
+    "sources.empty": "No data sources yet. Start via “+ Add source” in the top right.",
+    "sources.disabled": "disabled",
+    "fs.title": "Choose a directory",
+    "fs.up": "up",
+    "fs.pick": "Use this folder",
+    "fs.empty": "No subfolders.",
+    "fs.load_failed": "Could not load directory.",
 
     # -- Overview (index.html) --
     "index.hero_label": "Read-only analysis & overview",

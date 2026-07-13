@@ -1,4 +1,6 @@
 """JSON-API: Sync, Tags, Regeln, FSK-Schreiben, Bild-Proxy."""
+import os
+
 import requests
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
@@ -249,6 +251,34 @@ def api_source_libraries(source_id: int):
         raise HTTPException(status_code=400, detail=str(exc))
 
 
+# -- Verzeichnis-Browser (fuer lokale Quellen) ------------------------------
+@router.get("/fs")
+def api_fs_list(path: str = "/"):
+    """Ordner unterhalb von ``path`` auflisten - nur-lesend, nur Verzeichnisse,
+    keine Datei-Inhalte. Dient der Pfad-Auswahl lokaler Quellen (im Container
+    sind die Medien per Mount unter ``/`` erreichbar)."""
+    base = os.path.abspath(path or "/")
+    if not os.path.isdir(base):
+        raise HTTPException(status_code=404, detail="Kein Verzeichnis")
+    dirs = []
+    try:
+        with os.scandir(base) as entries:
+            for entry in entries:
+                try:
+                    if entry.is_dir(follow_symlinks=False):
+                        dirs.append({"name": entry.name,
+                                     "path": os.path.join(base, entry.name).replace("\\", "/")})
+                except OSError:
+                    continue
+    except PermissionError:
+        raise HTTPException(status_code=403, detail="Kein Zugriff auf dieses Verzeichnis")
+    dirs.sort(key=lambda d: d["name"].lower())
+    parent = os.path.dirname(base.rstrip("/")) or "/"
+    if base in ("/", parent):
+        parent = None
+    return {"path": base.replace("\\", "/"), "parent": parent, "dirs": dirs}
+
+
 # -- Tags -------------------------------------------------------------------
 @router.get("/tags")
 def api_tags():
@@ -342,23 +372,24 @@ def api_rules_apply():
 async def api_fsk_ack(request: Request):
     """Einen FSK-Fall als 'passt so' bestätigen (überlebt Re-Sync)."""
     d = await request.json()
-    rows = db.query("SELECT source_kind, source_id FROM media_items WHERE id=?", (int(d["item_id"]),))
+    rows = db.query("SELECT source_kind, source_id, source_ref FROM media_items WHERE id=?",
+                    (int(d["item_id"]),))
     if not rows:
         raise HTTPException(status_code=404, detail="Eintrag nicht gefunden")
     db.execute(
-        "INSERT INTO fsk_acks(source_kind, source_id) VALUES(?, ?) "
-        "ON CONFLICT(source_kind, source_id) DO NOTHING",
-        (rows[0]["source_kind"], rows[0]["source_id"]),
+        "INSERT INTO fsk_acks(source_kind, source_id, source_ref) VALUES(?, ?, ?) "
+        "ON CONFLICT(source_ref, source_id) DO NOTHING",
+        (rows[0]["source_kind"], rows[0]["source_id"], rows[0]["source_ref"]),
     )
     return {"ok": True}
 
 
 @router.delete("/fsk/ack/{item_id}")
 def api_fsk_unack(item_id: int):
-    rows = db.query("SELECT source_kind, source_id FROM media_items WHERE id=?", (item_id,))
+    rows = db.query("SELECT source_id, source_ref FROM media_items WHERE id=?", (item_id,))
     if rows:
-        db.execute("DELETE FROM fsk_acks WHERE source_kind=? AND source_id=?",
-                   (rows[0]["source_kind"], rows[0]["source_id"]))
+        db.execute("DELETE FROM fsk_acks WHERE source_ref=? AND source_id=?",
+                   (rows[0]["source_ref"], rows[0]["source_id"]))
     return {"ok": True}
 
 
@@ -369,7 +400,7 @@ async def api_fsk_write_bulk(request: Request):
     changes = d.get("changes", [])
     saved, errors = 0, []
     for ch in changes:
-        rows = db.query("SELECT source_kind, source_id FROM media_items WHERE id=?",
+        rows = db.query("SELECT source_kind, source_id, source_ref FROM media_items WHERE id=?",
                         (int(ch["item_id"]),))
         if not rows:
             errors.append({"item_id": ch["item_id"], "error": "nicht gefunden"})
@@ -380,7 +411,7 @@ async def api_fsk_write_bulk(request: Request):
             continue
         rating = (ch.get("rating") or "").strip()
         try:
-            fsk.write_emby(r["source_id"], rating or None)
+            fsk.write_emby(r["source_ref"], r["source_id"], rating or None)
             db.execute("UPDATE media_items SET official_rating=?, fsk_suspicious=0, fsk_reason='' WHERE id=?",
                        (rating, int(ch["item_id"])))
             saved += 1
@@ -404,7 +435,7 @@ async def api_fsk_write(request: Request):
     else:
         rating = item.get("fsk_suggested") or item.get("official_rating") or ""
     try:
-        fsk.write_emby(item["source_id"], rating or None)
+        fsk.write_emby(item["source_ref"], item["source_id"], rating or None)
         db.execute("UPDATE media_items SET official_rating=?, fsk_suspicious=0, fsk_reason='' WHERE id=?",
                    (rating, item["id"]))
         return {"ok": True, "rating": rating or "(entfernt)"}

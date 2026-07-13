@@ -62,8 +62,7 @@ def any_enabled() -> bool:
 
 
 def emby_enabled() -> bool:
-    src = get_by_kind("emby")
-    return bool(src and src["enabled"])
+    return bool(db.query("SELECT 1 FROM sources WHERE kind='emby' AND enabled=1 LIMIT 1"))
 
 
 # -- Schreiben --------------------------------------------------------------
@@ -71,8 +70,6 @@ def create_source(kind: str, name: str = "", base_url: str = "", secret: str = "
                    local_paths=None, libraries=None, enabled: bool = True) -> int:
     if kind not in KINDS:
         raise ValueError(f"Unbekannter Quellentyp: {kind}")
-    if get_by_kind(kind):
-        raise ValueError(f"Es gibt bereits eine {kind}-Quelle (Phase 4a: eine je Typ).")
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     return db.execute(
         "INSERT INTO sources(kind, name, base_url, secret, local_paths, libraries, enabled, created_at) "
@@ -115,14 +112,19 @@ def _connector_from_row(row: dict):
     secret = crypto.decrypt(row["secret"] or "")
     libs = _json_list(row["libraries"]) or None
     if kind == "emby":
-        return EmbyConnector(row["base_url"], secret, libraries=libs)
-    if kind == "jellyfin":
-        return JellyfinConnector(row["base_url"], secret, libraries=libs)
-    if kind == "plex":
-        return PlexConnector(row["base_url"], secret, libraries=libs)
-    if kind == "local":
-        return LocalConnector(_json_list(row["local_paths"]))
-    return None
+        conn = EmbyConnector(row["base_url"], secret, libraries=libs)
+    elif kind == "jellyfin":
+        conn = JellyfinConnector(row["base_url"], secret, libraries=libs)
+    elif kind == "plex":
+        conn = PlexConnector(row["base_url"], secret, libraries=libs)
+    elif kind == "local":
+        conn = LocalConnector(_json_list(row["local_paths"]))
+    else:
+        return None
+    # Konkrete Instanz am Connector vermerken (Multi-Instanz: eindeutig ueber id).
+    conn.source_ref = row["id"]
+    conn.source_name = row["name"]
+    return conn
 
 
 def build_connectors() -> list:

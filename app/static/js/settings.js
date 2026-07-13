@@ -54,9 +54,12 @@
   }
 
   // ======================================================================
-  //  Datenquellen (Phase 4a) - Quellen-Editor im "Datenquellen"-Panel
+  //  Datenquellen - Liste + Modal (anlegen/bearbeiten) + Datei-Browser
   // ======================================================================
   var KIND_LABEL = { emby: "Emby", jellyfin: "Jellyfin", plex: "Plex", local: T("sources.kind.local") };
+  var SERVER_KINDS = ["emby", "jellyfin", "plex"];
+  var srcState = { id: null, src: null, libsLoaded: false };
+  var fsCurrent = "/";
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -64,188 +67,143 @@
     });
   }
 
-  function setStatus(el, msg, type) {
-    var s = el.querySelector(".src-status");
+  function isServerKind(k) { return SERVER_KINDS.indexOf(k) !== -1; }
+  function showModal(id) { $(id).classList.add("open"); }
+  function hideModal(id) { $(id).classList.remove("open"); }
+
+  function modalStatus(msg, type) {
+    var s = $("srcModalStatus");
     if (!s) { return; }
     s.textContent = msg || "";
-    s.className = "src-status set-desc" + (type ? " s-" + type : "");
+    s.className = "src-modal-status set-desc" + (type ? " s-" + type : "");
   }
 
-  function reloadSources() {
-    var root = $("sourcesRoot");
-    if (root) { loadSources(root); }
-  }
-
-  function loadSources(root) {
+  // -- Liste laden + rendern --------------------------------------------
+  function loadSources() {
+    var list = $("sourcesList");
+    if (!list) { return; }
     fetch("/api/sources")
       .then(function (r) { return r.json(); })
-      .then(function (data) { renderSources(root, data); })
+      .then(function (data) { renderList(list, data.sources || []); })
       .catch(function () {
-        root.innerHTML = '<p class="set-desc">' + esc(T("sources.load_failed")) + "</p>";
+        list.innerHTML = '<p class="set-desc">' + esc(T("sources.load_failed")) + "</p>";
       });
   }
 
-  function renderSources(root, data) {
-    var byKind = {};
-    (data.sources || []).forEach(function (s) { byKind[s.kind] = s; });
-    var serverKinds = data.server_kinds || ["emby", "jellyfin", "plex"];
-    root.innerHTML = "";
-    (data.kinds || ["emby", "jellyfin", "plex", "local"]).forEach(function (kind) {
-      var isServer = serverKinds.indexOf(kind) !== -1;
-      root.appendChild(buildCard(kind, byKind[kind] || null, isServer));
+  function subLine(s) {
+    return isServerKind(s.kind) ? (s.base_url || "") : (s.local_paths || []).join(", ");
+  }
+
+  function renderList(list, sources) {
+    if (!sources.length) {
+      list.innerHTML = '<div class="src-empty">' + esc(T("sources.empty")) + "</div>";
+      return;
+    }
+    list.innerHTML = sources.map(function (s) {
+      var label = KIND_LABEL[s.kind] || s.kind;
+      return '<div class="src-row' + (s.enabled ? "" : " src-off") + '" data-id="' + s.id + '">' +
+        '<div class="src-row-main">' +
+          '<div class="src-row-name">' + esc(s.name || label) +
+            '<span class="src-kind-badge">' + esc(label) + "</span>" +
+            (s.enabled ? "" : '<span class="src-off-badge">' + esc(T("sources.disabled")) + "</span>") +
+          "</div>" +
+          '<div class="src-row-sub mono">' + esc(subLine(s) || "-") + "</div>" +
+        "</div>" +
+        '<div class="src-row-actions">' +
+          '<button class="btn btn-icon src-edit" title="' + esc(T("sources.edit")) +
+            '" aria-label="' + esc(T("sources.edit")) + '">&#9998;</button>' +
+          '<button class="btn btn-icon btn-danger src-del" title="' + esc(T("sources.delete")) +
+            '" aria-label="' + esc(T("sources.delete")) + '">&#128465;</button>' +
+        "</div></div>";
+    }).join("");
+    Array.prototype.forEach.call(list.querySelectorAll(".src-row"), function (row) {
+      var id = row.getAttribute("data-id");
+      row.querySelector(".src-edit").onclick = function () { openEdit(id); };
+      row.querySelector(".src-del").onclick = function () { delSource(id); };
     });
   }
 
-  function buildCard(kind, src, isServer) {
-    var el = document.createElement("div");
-    el.className = "src-card" + (src && !src.enabled ? " src-off" : "");
-    el.setAttribute("data-kind", kind);
-    if (src) { el.setAttribute("data-id", src.id); }
-    var label = KIND_LABEL[kind] || kind;
-    var name = src ? src.name : "";
-    var enabled = src ? src.enabled : true;
-    var head =
-      '<div class="src-head"><h3>' + esc(label) + "</h3>" +
-        '<label class="set-toggle"><input type="checkbox" class="src-enabled"' +
-        (enabled ? " checked" : "") + "><span>" + esc(T("sources.active")) + "</span></label></div>" +
-      '<div class="set-field"><label>' + esc(T("sources.name")) + "</label>" +
-        '<input class="field src-name" maxlength="60" value="' + esc(name) +
-        '" placeholder="' + esc(label) + '"></div>';
-
-    var mid, actions;
-    if (isServer) {
-      var secretPh = src && src.has_secret ? T("sources.secret_keep") : T("sources.secret_enter");
-      mid =
-        '<div class="set-field"><label>' + esc(T("sources.server_url")) + "</label>" +
-          '<input class="field src-url" value="' + esc(src ? src.base_url : "") +
-          '" placeholder="http://192.168.1.19:8096"></div>' +
-        '<div class="set-field"><label>' + esc(T("sources.api_key")) + "</label>" +
-          '<input class="field src-secret" type="password" autocomplete="new-password" placeholder="' +
-          esc(secretPh) + '"></div>' +
-        '<div class="set-field src-libs" hidden><label>' + esc(T("sources.libraries")) + " " +
-          '<span class="set-hint">' + esc(T("sources.libraries_hint")) + "</span></label>" +
-          '<div class="src-libs-list"></div></div>';
-      actions =
-        '<button class="btn btn-primary src-save">' + esc(T("common.save")) + "</button>" +
-        '<button class="btn src-test"' + (src ? "" : " disabled") + ">" + esc(T("sources.test")) + "</button>" +
-        '<button class="btn src-libsbtn"' + (src ? "" : " disabled") + ">" + esc(T("sources.libraries_btn")) + "</button>" +
-        '<button class="btn src-del"' + (src ? "" : " disabled") + ">" + esc(T("sources.delete")) + "</button>";
-    } else {
-      var paths = src && src.local_paths ? src.local_paths.join("\n") : "";
-      mid =
-        '<div class="set-field"><label>' + esc(T("sources.paths")) + " " +
-          '<span class="set-hint">' + esc(T("sources.paths_hint")) + "</span></label>" +
-          '<textarea class="field src-paths" rows="3" placeholder="/media/filme">' +
-          esc(paths) + "</textarea></div>";
-      actions =
-        '<button class="btn btn-primary src-save">' + esc(T("common.save")) + "</button>" +
-        '<button class="btn src-del"' + (src ? "" : " disabled") + ">" + esc(T("sources.delete")) + "</button>";
-    }
-    el.innerHTML = head + mid + '<div class="set-actions">' + actions + "</div>" +
-      '<p class="src-status set-desc"></p>';
-    bindCard(el, kind, src, isServer);
-    return el;
+  // -- Modal: Felder je Typ ein-/ausblenden -----------------------------
+  function applyKindFields(kind) {
+    var server = isServerKind(kind);
+    $("srcServerFields").hidden = !server;
+    $("srcLocalFields").hidden = server;
   }
 
-  function bindCard(el, kind, src, isServer) {
-    var idOf = function () { return el.getAttribute("data-id"); };
-
-    el.querySelector(".src-save").onclick = function () { saveCard(el, kind, isServer); };
-
-    var delBtn = el.querySelector(".src-del");
-    if (delBtn) {
-      delBtn.onclick = function () {
-        var id = idOf();
-        if (!id) { return; }
-        if (!window.confirm(T("sources.delete_confirm"))) { return; }
-        fetch("/api/sources/" + id, { method: "DELETE" })
-          .then(function () { window.smhToast(T("sources.deleted"), "ok"); reloadSources(); })
-          .catch(function () { window.smhToast(T("sources.delete_failed"), "err"); });
-      };
-    }
-
-    var testBtn = el.querySelector(".src-test");
-    if (testBtn) {
-      testBtn.onclick = function () {
-        var id = idOf();
-        if (!id) { return; }
-        testBtn.disabled = true;
-        setStatus(el, T("sources.testing"), "");
-        fetch("/api/sources/" + id + "/test", { method: "POST" })
-          .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-          .then(function (res) {
-            if (res.ok) { setStatus(el, T("sources.test_ok"), "ok"); }
-            else { setStatus(el, T("sources.error_prefix") + (res.j.detail || "?"), "err"); }
-          })
-          .catch(function () { setStatus(el, T("sources.test_failed"), "err"); })
-          .then(function () { testBtn.disabled = false; });
-      };
-    }
-
-    var libsBtn = el.querySelector(".src-libsbtn");
-    if (libsBtn) {
-      libsBtn.onclick = function () {
-        var id = idOf();
-        if (!id) { return; }
-        libsBtn.disabled = true;
-        setStatus(el, T("sources.loading_libs"), "");
-        fetch("/api/sources/" + id + "/libraries")
-          .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-          .then(function (res) {
-            if (!res.ok) { setStatus(el, T("sources.error_prefix") + (res.j.detail || "?"), "err"); return; }
-            renderLibs(el, res.j.libraries || [], (src && src.libraries) || []);
-            setStatus(el, "", "");
-          })
-          .catch(function () { setStatus(el, T("sources.libs_failed"), "err"); })
-          .then(function () { libsBtn.disabled = false; });
-      };
-    }
+  function openAdd() {
+    srcState = { id: null, src: null, libsLoaded: false };
+    $("srcModalTitle").textContent = T("sources.add_title");
+    $("srcKind").value = "emby";
+    $("srcKind").disabled = false;
+    $("srcName").value = "";
+    $("srcUrl").value = "";
+    $("srcSecret").value = "";
+    $("srcSecret").placeholder = T("sources.secret_enter");
+    $("srcPath").value = "";
+    $("srcEnabled").checked = true;
+    $("srcLibsWrap").hidden = true;
+    $("srcLibsList").innerHTML = "";
+    $("srcTestBtn").hidden = true;
+    $("srcLibsBtn").hidden = true;
+    $("srcSaveBtn").textContent = T("sources.add");
+    applyKindFields("emby");
+    modalStatus("", "");
+    showModal("srcModal");
+    $("srcName").focus();
   }
 
-  function renderLibs(el, available, selected) {
-    var wrap = el.querySelector(".src-libs");
-    var list = el.querySelector(".src-libs-list");
-    if (!wrap || !list) { return; }
-    var selSet = {};
-    selected.forEach(function (x) { selSet[String(x)] = true; });
-    list.innerHTML = available.map(function (lib) {
-      var id = String(lib.id);
-      return '<label class="src-lib"><input type="checkbox" class="src-lib-cb" value="' + esc(id) +
-        '"' + (selSet[id] ? " checked" : "") + "><span>" + esc(lib.name || id) + "</span></label>";
-    }).join("") || '<p class="set-desc">' + esc(T("sources.no_libs")) + "</p>";
-    wrap.hidden = false;
-    wrap.setAttribute("data-loaded", "1");
+  function openEdit(id) {
+    fetch("/api/sources").then(function (r) { return r.json(); }).then(function (data) {
+      var src = (data.sources || []).filter(function (s) { return String(s.id) === String(id); })[0];
+      if (!src) { return; }
+      srcState = { id: src.id, src: src, libsLoaded: false };
+      $("srcModalTitle").textContent = T("sources.edit_title");
+      $("srcKind").value = src.kind;
+      $("srcKind").disabled = true;   // Typ einer bestehenden Quelle nicht aenderbar
+      $("srcName").value = src.name || "";
+      $("srcUrl").value = src.base_url || "";
+      $("srcSecret").value = "";
+      $("srcSecret").placeholder = src.has_secret ? T("sources.secret_keep") : T("sources.secret_enter");
+      $("srcPath").value = (src.local_paths || [])[0] || "";
+      $("srcEnabled").checked = !!src.enabled;
+      $("srcLibsWrap").hidden = true;
+      $("srcLibsList").innerHTML = "";
+      var server = isServerKind(src.kind);
+      $("srcTestBtn").hidden = !server;
+      $("srcLibsBtn").hidden = !server;
+      $("srcSaveBtn").textContent = T("common.save");
+      applyKindFields(src.kind);
+      modalStatus("", "");
+      showModal("srcModal");
+    });
   }
 
-  function saveCard(el, kind, isServer) {
-    var id = el.getAttribute("data-id");
-    var body = {
-      kind: kind,
-      name: el.querySelector(".src-name").value.trim(),
-      enabled: el.querySelector(".src-enabled").checked,
-    };
-    if (isServer) {
-      body.base_url = el.querySelector(".src-url").value.trim();
-      var secret = el.querySelector(".src-secret").value;
+  function saveModal() {
+    var kind = $("srcKind").value;
+    var server = isServerKind(kind);
+    var body = { kind: kind, name: $("srcName").value.trim(), enabled: $("srcEnabled").checked };
+    if (server) {
+      body.base_url = $("srcUrl").value.trim();
+      var secret = $("srcSecret").value;
       if (secret) { body.secret = secret; }
-      var libsWrap = el.querySelector(".src-libs");
-      if (libsWrap && libsWrap.getAttribute("data-loaded")) {
+      if (srcState.libsLoaded) {
         var ids = [];
-        Array.prototype.forEach.call(el.querySelectorAll(".src-lib-cb"), function (cb) {
+        Array.prototype.forEach.call($("srcLibsList").querySelectorAll(".src-lib-cb"), function (cb) {
           if (cb.checked) { ids.push(cb.value); }
         });
         body.libraries = ids;
       }
-      if (!body.base_url) { setStatus(el, T("sources.err_no_url"), "err"); return; }
-      if (!id && !secret) { setStatus(el, T("sources.err_no_key"), "err"); return; }
+      if (!body.base_url) { modalStatus(T("sources.err_no_url"), "err"); return; }
+      if (!srcState.id && !secret) { modalStatus(T("sources.err_no_key"), "err"); return; }
     } else {
-      body.local_paths = el.querySelector(".src-paths").value.split("\n")
-        .map(function (p) { return p.trim(); }).filter(Boolean);
-      if (!body.local_paths.length) { setStatus(el, T("sources.err_no_path"), "err"); return; }
+      var p = $("srcPath").value.trim();
+      body.local_paths = p ? [p] : [];
+      if (!body.local_paths.length) { modalStatus(T("sources.err_no_path"), "err"); return; }
     }
-    var save = el.querySelector(".src-save");
-    save.disabled = true;
-    setStatus(el, T("sources.saving"), "");
+    var btn = $("srcSaveBtn");
+    btn.disabled = true;
+    modalStatus(T("sources.saving"), "");
+    var id = srcState.id;
     fetch(id ? "/api/sources/" + id : "/api/sources", {
       method: id ? "PUT" : "POST",
       headers: { "Content-Type": "application/json" },
@@ -255,18 +213,128 @@
       .then(function (res) {
         if (!res.ok) { throw new Error(res.j.detail || "?"); }
         window.smhToast(T("sources.saved"), "ok");
-        reloadSources();
+        hideModal("srcModal");
+        loadSources();
       })
-      .catch(function (e) {
-        setStatus(el, T("msg.failed_prefix") + e.message, "err");
-        window.smhToast(T("sources.save_failed"), "err");
-        save.disabled = false;
+      .catch(function (e) { modalStatus(T("msg.failed_prefix") + e.message, "err"); })
+      .then(function () { btn.disabled = false; });
+  }
+
+  function delSource(id) {
+    if (!window.confirm(T("sources.delete_confirm"))) { return; }
+    fetch("/api/sources/" + id, { method: "DELETE" })
+      .then(function () { window.smhToast(T("sources.deleted"), "ok"); loadSources(); })
+      .catch(function () { window.smhToast(T("sources.delete_failed"), "err"); });
+  }
+
+  function testSource() {
+    if (!srcState.id) { return; }
+    var btn = $("srcTestBtn");
+    btn.disabled = true;
+    modalStatus(T("sources.testing"), "");
+    fetch("/api/sources/" + srcState.id + "/test", { method: "POST" })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        if (res.ok) { modalStatus(T("sources.test_ok"), "ok"); }
+        else { modalStatus(T("sources.error_prefix") + (res.j.detail || "?"), "err"); }
+      })
+      .catch(function () { modalStatus(T("sources.test_failed"), "err"); })
+      .then(function () { btn.disabled = false; });
+  }
+
+  function loadLibs() {
+    if (!srcState.id) { return; }
+    var btn = $("srcLibsBtn");
+    btn.disabled = true;
+    modalStatus(T("sources.loading_libs"), "");
+    fetch("/api/sources/" + srcState.id + "/libraries")
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        if (!res.ok) { modalStatus(T("sources.error_prefix") + (res.j.detail || "?"), "err"); return; }
+        renderLibs(res.j.libraries || [], (srcState.src && srcState.src.libraries) || []);
+        modalStatus("", "");
+      })
+      .catch(function () { modalStatus(T("sources.libs_failed"), "err"); })
+      .then(function () { btn.disabled = false; });
+  }
+
+  function renderLibs(available, selected) {
+    var selSet = {};
+    selected.forEach(function (x) { selSet[String(x)] = true; });
+    $("srcLibsList").innerHTML = available.map(function (lib) {
+      var id = String(lib.id);
+      return '<label class="src-lib"><input type="checkbox" class="src-lib-cb" value="' + esc(id) +
+        '"' + (selSet[id] ? " checked" : "") + "><span>" + esc(lib.name || id) + "</span></label>";
+    }).join("") || '<p class="set-desc">' + esc(T("sources.no_libs")) + "</p>";
+    $("srcLibsWrap").hidden = false;
+    srcState.libsLoaded = true;
+  }
+
+  // -- Datei-Browser (lokale Pfade) -------------------------------------
+  function openBrowser() {
+    fsBrowse($("srcPath").value.trim() || "/");
+    showModal("fsModal");
+  }
+
+  function fsBrowse(path) {
+    fetch("/api/fs?path=" + encodeURIComponent(path))
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        if (!res.ok) { if (path !== "/") { fsBrowse("/"); } return; }
+        fsCurrent = res.j.path;
+        $("fsCurrent").textContent = res.j.path;
+        renderFs(res.j);
+      })
+      .catch(function () {
+        $("fsList").innerHTML = '<p class="set-desc">' + esc(T("fs.load_failed")) + "</p>";
       });
   }
 
+  function renderFs(data) {
+    var html = "";
+    if (data.parent !== null && data.parent !== undefined) {
+      html += '<button class="fs-item fs-up" data-path="' + esc(data.parent) + '">&#8598; ' +
+        esc(T("fs.up")) + "</button>";
+    }
+    html += (data.dirs || []).map(function (d) {
+      return '<button class="fs-item" data-path="' + esc(d.path) + '">&#128193; ' + esc(d.name) + "</button>";
+    }).join("");
+    if (!(data.dirs || []).length) {
+      html += '<p class="set-desc fs-empty">' + esc(T("fs.empty")) + "</p>";
+    }
+    $("fsList").innerHTML = html;
+    Array.prototype.forEach.call($("fsList").querySelectorAll(".fs-item"), function (b) {
+      b.onclick = function () { fsBrowse(b.getAttribute("data-path")); };
+    });
+  }
+
+  function pickFs() {
+    $("srcPath").value = fsCurrent;
+    hideModal("fsModal");
+  }
+
   function initSources() {
-    var root = $("sourcesRoot");
-    if (root) { loadSources(root); }
+    var addBtn = $("srcAddBtn");
+    if (!addBtn) { return; }   // nur auf der Einstellungsseite vorhanden
+    addBtn.onclick = openAdd;
+    $("srcKind").onchange = function () { applyKindFields($("srcKind").value); };
+    $("srcModalClose").onclick = function () { hideModal("srcModal"); };
+    $("srcSaveBtn").onclick = saveModal;
+    $("srcTestBtn").onclick = testSource;
+    $("srcLibsBtn").onclick = loadLibs;
+    $("srcBrowse").onclick = openBrowser;
+    $("fsModalClose").onclick = function () { hideModal("fsModal"); };
+    $("fsPickBtn").onclick = pickFs;
+    $("srcModal").addEventListener("click", function (e) {
+      if (e.target === $("srcModal")) { hideModal("srcModal"); }
+    });
+    $("fsModal").addEventListener("click", function (e) {
+      if (e.target === $("fsModal")) { hideModal("fsModal"); }
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") { hideModal("fsModal"); hideModal("srcModal"); }
+    });
+    loadSources();
   }
 
   document.addEventListener("DOMContentLoaded", function () {

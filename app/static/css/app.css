@@ -21,6 +21,8 @@ body {
 
 a { color: var(--self-teal-bright); text-decoration: none; }
 a:hover { text-decoration: underline; }
+/* Als Buttons/Chrome gestylte Links sollen beim Hovern NICHT unterstreichen. */
+.btn:hover, a.wordmark:hover, a.badge:hover { text-decoration: none; }
 
 .mono { font-family: var(--self-font-mono); }
 
@@ -73,6 +75,10 @@ a:hover { text-decoration: underline; }
 .badge-update:hover { background: color-mix(in oklab, var(--self-red) 12%, transparent); }
 
 .spacer { flex: 1; }
+
+/* Alle Topbar-Buttons auf gleiche Hoehe (Abmelden/Zahnrad/Theme/Sync). */
+.topbar-inner .btn { min-height: 38px; display: inline-flex;
+  align-items: center; justify-content: center; }
 
 /* --- Buttons ------------------------------------------------ */
 .btn {
@@ -596,20 +602,66 @@ table.list tbody tr { cursor: pointer; }
 .ssum-foot { padding: 8px 13px; font-size: 11px; color: var(--self-text-3);
   background: var(--self-bg-0); }
 
-/* Datenquellen-Editor (Einstellungen -> Datenquellen) */
-.sources-root { display: grid; gap: 16px; margin-top: 16px; }
-.src-card { border: 1px solid var(--self-line); border-radius: var(--self-radius-sm);
-  padding: 16px 18px; background: var(--self-bg-1); }
-.src-card.src-off { opacity: 0.66; }
-.src-head { display: flex; align-items: center; justify-content: space-between;
-  gap: 12px; margin-bottom: 12px; }
-.src-head h3 { margin: 0; font-size: 16px; }
+/* Datenquellen (Einstellungen -> Datenquellen) */
+.src-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.src-list {
+  margin-top: 14px; display: flex; flex-direction: column; gap: 8px;
+  max-height: 372px; overflow-y: auto;      /* ~5 Zeilen, dann scrollbar */
+  padding-right: 4px;
+}
+.src-empty { color: var(--self-text-3); padding: 26px; text-align: center;
+  border: 1px dashed var(--self-line-strong); border-radius: var(--self-radius-sm); }
+.src-row {
+  display: flex; align-items: center; gap: 12px;
+  border: 1px solid var(--self-line); border-radius: var(--self-radius-sm);
+  padding: 12px 14px; background: var(--self-bg-1);
+}
+.src-row.src-off { opacity: 0.6; }
+.src-row-main { flex: 1; min-width: 0; }
+.src-row-name { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.src-kind-badge, .src-off-badge {
+  font-family: var(--self-font-mono); font-size: 10px; letter-spacing: 0.08em;
+  text-transform: uppercase; border-radius: 999px; padding: 2px 8px;
+}
+.src-kind-badge { color: var(--self-teal-bright); border: 1px solid var(--self-line-strong); }
+.src-off-badge { color: var(--self-text-3); border: 1px solid var(--self-line); }
+.src-row-sub { color: var(--self-text-3); font-size: 12px; margin-top: 4px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.src-row-actions { display: flex; gap: 6px; flex: none; }
+.btn-danger { color: var(--self-red);
+  border-color: color-mix(in oklab, var(--self-red) 45%, transparent); }
+.btn-danger:hover { background: color-mix(in oklab, var(--self-red) 14%, transparent);
+  border-color: var(--self-red); }
+
+/* Quelle anlegen/bearbeiten + Datei-Browser (Modals) */
+.src-modal-panel, .fs-modal-panel { position: relative; max-width: 460px; padding: 26px 24px; }
+.src-modal-panel .modal-close, .fs-modal-panel .modal-close {
+  position: absolute; top: 16px; right: 16px; }
+.src-modal-panel .card-h, .fs-modal-panel .card-h { margin: 0 0 16px; padding-right: 40px; }
+.src-modal-panel .set-actions, .fs-modal-panel .set-actions {
+  display: flex; gap: 8px; flex-wrap: wrap; }
+.src-modal-status { min-height: 18px; margin: 8px 0 0; }
+.src-modal-status.s-ok { color: var(--self-green); }
+.src-modal-status.s-err { color: var(--self-red); }
+.path-input { display: flex; gap: 8px; }
+.path-input .field { flex: 1; }
 .src-libs-list { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 6px; }
 .src-lib { display: inline-flex; align-items: center; gap: 6px; font-size: 13px;
   color: var(--self-text); cursor: pointer; }
-.src-status { min-height: 18px; margin-top: 10px; }
-.src-status.s-ok { color: var(--self-green); }
-.src-status.s-err { color: var(--self-red); }
+
+.fs-current { color: var(--self-text-2); font-size: 12px; margin: 0 0 10px;
+  padding: 8px 10px; background: var(--self-bg-0); border: 1px solid var(--self-line);
+  border-radius: var(--self-radius-sm);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fs-list { display: flex; flex-direction: column; gap: 2px;
+  max-height: 320px; overflow-y: auto; margin-bottom: 14px; }
+.fs-item { display: block; width: 100%; text-align: left;
+  font-family: var(--self-font-sans); font-size: 14px; color: var(--self-text);
+  background: transparent; border: 1px solid transparent; border-radius: var(--self-radius-sm);
+  padding: 8px 10px; cursor: pointer; }
+.fs-item:hover { background: var(--self-bg-2); border-color: var(--self-line); }
+.fs-up { color: var(--self-teal-bright); }
+.fs-empty { padding: 10px; }
 
 .pathline {
   margin: 4px 0 18px; padding: 12px 14px;

@@ -69,32 +69,35 @@ def analyze(item: dict) -> dict:
     return item
 
 
-_admin_uid = None
+# Admin-User-Id je Server cachen (base_url -> uid) - bei mehreren Emby-Instanzen
+# darf die UID nicht serveruebergreifend wiederverwendet werden.
+_admin_uid_by_url: dict = {}
 
 
 def _emby_admin_uid(base_url: str, headers: dict) -> str:
-    """Admin-User-Id ermitteln und cachen (für Massen-Schreiben)."""
-    global _admin_uid
-    if _admin_uid:
-        return _admin_uid
+    """Admin-User-Id des Servers ermitteln und je base_url cachen."""
+    if base_url in _admin_uid_by_url:
+        return _admin_uid_by_url[base_url]
     users = requests.get(f"{base_url}/emby/Users", headers=headers, timeout=15).json()
-    _admin_uid = next((u["Id"] for u in users if u.get("Policy", {}).get("IsAdministrator")), None)
-    if not _admin_uid:
+    uid = next((u["Id"] for u in users if u.get("Policy", {}).get("IsAdministrator")), None)
+    if not uid:
         raise RuntimeError("Kein Emby-Admin gefunden")
-    return _admin_uid
+    _admin_uid_by_url[base_url] = uid
+    return uid
 
 
-def write_emby(source_id: str, rating: str) -> None:
+def write_emby(source_ref: int, source_id: str, rating: str) -> None:
     """AUSNAHME: Freigabe aktiv nach Emby schreiben. Nur mit ALLOW_EMBY_WRITE.
 
-    Server-Adresse und Token kommen aus der in der DB gespeicherten Emby-Quelle
-    (Phase 4a) - nicht mehr aus ENV-Variablen.
+    Ziel-Server ist die konkrete Emby-Instanz des Items (``source_ref``) -
+    wichtig, sobald mehrere Emby-Quellen existieren. Adresse und Token kommen
+    aus der in der DB gespeicherten Quelle, nicht aus ENV-Variablen.
     """
     if not config.ALLOW_EMBY_WRITE:
         raise RuntimeError("Zurückschreiben ist deaktiviert (ALLOW_EMBY_WRITE=0).")
     from . import crypto, sources
-    src = sources.get_by_kind("emby")
-    if not src or not src["enabled"]:
+    src = sources.get_source(source_ref) if source_ref is not None else None
+    if not src or src["kind"] != "emby" or not src["enabled"]:
         raise RuntimeError("Emby ist nicht konfiguriert.")
     base_url = (src["base_url"] or "").rstrip("/")
     headers = {"X-Emby-Token": crypto.decrypt(src["secret"] or "")}
