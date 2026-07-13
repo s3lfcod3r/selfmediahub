@@ -14,6 +14,7 @@ STRINGS = {
     "topbar.instance_name": "Instance name",
     "topbar.version_current": "Version v{v} is up to date",
     "topbar.version_update": "New version {latest} available (installed v{current}) - see release notes",
+    "topbar.update_available": "Update",
 
     # -- Account setup (first start) --
     "setup.account_title": "Set up account",
@@ -103,7 +104,9 @@ STRINGS = {
     "settings.about.status_unchecked": "Not checked yet.",
     "settings.about.check_now": "Check now",
     "settings.about.open_release": "Open release notes",
-    "settings.about.auto_desc": "Otherwise the check runs automatically in the background (at startup and once a day); the header shows green “up to date” or red “update available”.",
+    "settings.about.auto_desc": "Otherwise the check runs automatically in the background (at startup and once a day); the header shows a red “Update” hint when one is available.",
+    "settings.about.project": "Project",
+    "settings.about.github": "View on GitHub",
 
     # -- Language names (primary-language dropdown, detail, filter) --
     "langname.ger": "German",

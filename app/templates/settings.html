@@ -149,6 +149,14 @@
           </div>
           <p class="set-desc">{{ t('settings.about.auto_desc') }}</p>
         </div>
+        <div class="set-field">
+          <label>{{ t('settings.about.project') }}</label>
+          <div class="set-actions">
+            <a class="btn" href="https://github.com/{{ app.GITHUB_REPO }}" target="_blank" rel="noopener"
+               style="text-decoration:none">{{ t('settings.about.github') }} &#8599;</a>
+          </div>
+          <p class="set-desc mono">github.com/{{ app.GITHUB_REPO }}</p>
+        </div>
       </section>
     </div>
   </div>

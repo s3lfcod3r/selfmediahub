@@ -1,13 +1,12 @@
 <header class="topbar">
   <div class="wrap topbar-inner">
     <a href="/" class="wordmark" style="text-decoration:none">
+      <img src="/static/icon.png" alt="" class="brand-logo" width="30" height="30">
       <span class="self">Self</span><span class="rest">MediaHub</span>
     </a>
     {% if update and update.available %}
     <a class="badge badge-update" href="{{ update.url }}" target="_blank" rel="noopener"
-       title="{{ t('topbar.version_update').format(latest=update.latest, current=update.current) }}">v{{ app.VERSION }} &uarr;</a>
-    {% else %}
-    <span class="badge badge-current" title="{{ t('topbar.version_current').format(v=app.VERSION) }}">v{{ app.VERSION }}</span>
+       title="{{ t('topbar.version_update').format(latest=update.latest, current=update.current) }}">{{ t('topbar.update_available') }} &uarr;</a>
     {% endif %}
     {% if settings and settings['general.instance_name'] %}
     <span class="instance-name" title="{{ t('topbar.instance_name') }}">{{ settings['general.instance_name'] }}</span>

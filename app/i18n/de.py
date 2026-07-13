@@ -18,6 +18,7 @@ STRINGS = {
     "topbar.instance_name": "Instanzname",
     "topbar.version_current": "Version v{v} ist aktuell",
     "topbar.version_update": "Neue Version {latest} verfügbar (installiert v{current}) - zu den Release-Infos",
+    "topbar.update_available": "Update",
 
     # -- Konto einrichten (erster Start) --
     "setup.account_title": "Konto einrichten",
@@ -108,7 +109,9 @@ STRINGS = {
     "settings.about.status_unchecked": "Noch nicht geprüft.",
     "settings.about.check_now": "Jetzt prüfen",
     "settings.about.open_release": "Release-Infos öffnen",
-    "settings.about.auto_desc": "Die Prüfung läuft sonst automatisch im Hintergrund (beim Start und einmal täglich); die Kopfzeile zeigt grün „aktuell“ bzw. rot „Update verfügbar“.",
+    "settings.about.auto_desc": "Die Prüfung läuft sonst automatisch im Hintergrund (beim Start und einmal täglich); die Kopfzeile zeigt bei Bedarf einen roten „Update“-Hinweis.",
+    "settings.about.project": "Projekt",
+    "settings.about.github": "Auf GitHub ansehen",
 
     # -- Sprachnamen (Primaere-Sprache-Dropdown, Detail, Filter) --
     "langname.ger": "Deutsch",

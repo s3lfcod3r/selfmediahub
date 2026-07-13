@@ -55,6 +55,8 @@ a:hover { text-decoration: underline; }
 }
 .wordmark .self { color: var(--self-ice-bright); }
 .wordmark .rest { color: var(--self-teal); }
+.brand-logo { display: block; width: 30px; height: 30px; object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.35)); }
 .badge {
   margin-left: 10px;
   font-family: var(--self-font-mono);
@@ -103,6 +105,9 @@ a:hover { text-decoration: underline; }
   font-weight: 800; letter-spacing: -0.01em;
   margin: 10px 0 6px;
 }
+/* Kompakte Variante fuer die Uebersicht (weniger Luft, kein Label) */
+.hero-compact { padding: 18px 0 10px; }
+.hero-compact h1 { font-size: clamp(22px, 2.6vw, 30px); margin: 0; }
 .hero p { color: var(--self-text-2); max-width: 60ch; margin: 0; }
 
 .stats {
@@ -640,8 +645,12 @@ table.list tbody tr { cursor: pointer; }
   background: var(--self-bg-1); border: 1px solid var(--self-line-strong);
   border-radius: var(--self-radius); box-shadow: 0 24px 60px -30px rgba(0, 0, 0, 0.9);
 }
+.auth-head { display: flex; flex-direction: column; align-items: center; gap: 12px;
+  margin-bottom: 22px; text-align: center; }
+.auth-logo { width: 56px; height: 56px; object-fit: contain;
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.45)); }
 .auth-brand { font-family: var(--self-font-display, var(--self-font-mono)); font-weight: 800;
-  font-size: 20px; letter-spacing: 0.02em; margin-bottom: 18px; }
+  font-size: 20px; letter-spacing: 0.02em; }
 .auth-brand .self { color: var(--self-teal-bright); }
 .auth-card h1 { font-size: 22px; margin: 0 0 6px; }
 .auth-sub { color: var(--self-text-3); font-size: 13px; margin: 0 0 18px; line-height: 1.5; }
