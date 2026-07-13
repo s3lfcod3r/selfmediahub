@@ -5,7 +5,7 @@
 **Read-only analysis, monitoring &amp; quality-control layer for your media library — Emby, Jellyfin, Plex and local folders. Never a media server, never writes back.**
 
 [![Build](https://github.com/s3lfcod3r/selfmediahub/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/s3lfcod3r/selfmediahub/actions/workflows/docker-publish.yml)
-![Version](https://img.shields.io/badge/version-0.2.0-33A78C)
+![Version](https://img.shields.io/badge/version-0.2.3-33A78C)
 ![License](https://img.shields.io/badge/license-MIT-8A9CAA)
 ![Backend](https://img.shields.io/badge/backend-FastAPI-009688)
 ![Database](https://img.shields.io/badge/db-SQLite-1DB8D4)
@@ -62,6 +62,11 @@ deploy style (GHCR → Unraid).
 - **Stat tiles**: total · films · series · 4K/UHD · incomplete · without rating
 - **Detail window** (click a poster/title): resolution `W × H`, HDR, codec, size, runtime, **audio &amp; subtitle languages**, genres, TMDb data and the **file path**
 - For series: the **full episode list per season** — every episode **expandable** with its own resolution, codec, size, languages, subtitles and path; **missing episodes are highlighted**
+
+### 🌐 Interface &amp; account
+
+- **Bilingual interface (German / English)** — pick the UI language under **Settings → General**; every screen, filter and message is fully translated
+- **Optional single-account login** — protect the instance with username + password; toggle it on/off under **Settings → Account**
 
 ### 🎫 Age ratings (FSK)
 
@@ -193,6 +198,11 @@ gleiche Deploy-Art (GHCR → Unraid).
 - **Statistik-Kacheln**: Gesamt · Filme · Serien · 4K/UHD · unvollständig · ohne Freigabe
 - **Detail-Fenster** (Klick auf Poster/Titel): Auflösung `B × H`, HDR, Codec, Größe, Laufzeit, **Audio- &amp; Untertitelsprachen**, Genres, TMDb-Daten und der **Pfad im Verzeichnis**
 - Bei Serien: die **komplette Episodenliste je Staffel** — jede Folge **aufklappbar** mit eigener Auflösung, Codec, Größe, Sprachen, Untertiteln und Pfad; **fehlende Folgen sind markiert**
+
+### 🌐 Oberfläche &amp; Konto
+
+- **Zweisprachige Oberfläche (Deutsch / Englisch)** — UI-Sprache unter **Einstellungen → Allgemein** wählen; alle Ansichten, Filter und Meldungen sind vollständig übersetzt
+- **Optionaler Ein-Konto-Login** — Instanz mit Benutzername + Passwort schützen; unter **Einstellungen → Konto** an/aus
 
 ### 🎫 Freigaben (FSK)
 
