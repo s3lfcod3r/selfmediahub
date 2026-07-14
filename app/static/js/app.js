@@ -185,12 +185,18 @@
   function renderGrid(rows) {
     $("grid").innerHTML = rows.map(function (i) {
       var editable = window.__ALLOW_WRITE__ && i.source_kind === "emby";
-      var cls = "rating" + (i.official_rating ? "" : " none") + (editable ? " editable" : "");
+      var hasRating = !!i.official_rating;
+      var rlabel = i.rating_disp || i.official_rating;   // in bevorzugter Rating-Art
+      // Ampel: gruen = in Emby gesperrt/erledigt, neutral = Rating unbestaetigt,
+      // .none = keine Freigabe (Warnung). Nur bei aktivem FSK-Feature.
+      var cls = "rating" + (hasRating ? "" : " none") +
+        (i.rating_locked ? " locked" : "") + (editable ? " editable" : "");
       var did = editable ? ' data-id="' + i.id + '"' : "";
+      var lock = i.rating_locked ? '<span class="rlock" aria-hidden="true">&#128274;</span>' : "";
       var rating = FSK_ON
         ? '<span class="' + cls + '"' + did +
           (editable ? ' title="' + esc(T("grid.fsk_change_title")) + '"' : "") + ">" +
-          (i.official_rating ? esc(i.official_rating) : esc(T("grid.no_fsk"))) + "</span>"
+          lock + (hasRating ? esc(rlabel) : esc(T("grid.no_fsk"))) + "</span>"
         : "";
       var res = i.resolution ? '<span class="qbadge res">' + esc(i.resolution) + "</span>" : "";
       var comp = i.completeness === "incomplete"

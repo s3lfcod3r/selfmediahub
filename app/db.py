@@ -17,7 +17,7 @@ ITEM_COLUMNS = [
     "video_codec", "width", "height",
     "resolution", "hdr", "audio_codecs", "audio_langs", "subtitle_langs",
     "runtime_min", "size_bytes", "fsk_suggested", "fsk_suspicious", "fsk_reason",
-    "synced_at",
+    "rating_locked", "synced_at",
 ]
 JSON_COLUMNS = {"genres", "audio_codecs", "audio_langs", "subtitle_langs"}
 
@@ -45,6 +45,7 @@ _ITEM_COLDEF = {
     "audio_langs": "TEXT", "subtitle_langs": "TEXT", "runtime_min": "INTEGER",
     "size_bytes": "INTEGER",
     "fsk_suggested": "TEXT", "fsk_suspicious": "INTEGER", "fsk_reason": "TEXT",
+    "rating_locked": "INTEGER",
     "synced_at": "TEXT",
     # Abdeckung der primaeren Sprache (Prozent 0-100); per coverage-Service befuellt.
     "primary_audio_pct": "INTEGER", "primary_sub_pct": "INTEGER",
@@ -68,6 +69,7 @@ CREATE TABLE IF NOT EXISTS media_items (
   audio_codecs TEXT, audio_langs TEXT, subtitle_langs TEXT, runtime_min INTEGER,
   size_bytes INTEGER,
   fsk_suggested TEXT, fsk_suspicious INTEGER, fsk_reason TEXT,
+  rating_locked INTEGER,
   synced_at TEXT,
   primary_audio_pct INTEGER, primary_sub_pct INTEGER,
   UNIQUE(source_ref, source_id)

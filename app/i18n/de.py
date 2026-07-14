@@ -244,6 +244,7 @@ STRINGS = {
     "stats.uhd": "4K / UHD",
     "stats.incomplete": "Unvollständig",
     "stats.no_rating": "FSK Ohne Freigabe",
+    "stats.unreviewed": "FSK Unbearbeitet",
 
     # -- Filter --
     "filter.all_libraries": "Alle Bibliotheken",

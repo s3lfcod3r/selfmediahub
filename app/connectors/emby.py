@@ -13,7 +13,7 @@ IMAGE_MAX_HEIGHT = 450
 TICKS_PER_MINUTE = 600_000_000
 ITEM_FIELDS = (
     "OfficialRating,ProductionYear,Genres,CommunityRating,ChildCount,"
-    "RecursiveItemCount,Overview,SortName,ProviderIds,MediaSources,RunTimeTicks,Path"
+    "RecursiveItemCount,Overview,SortName,ProviderIds,MediaSources,RunTimeTicks,Path,LockedFields"
 )
 LIBRARY_TYPES = ("movies", "tvshows", "mixed")
 
@@ -162,6 +162,9 @@ class EmbyConnector(Connector):
             "tmdb_id": ids.get("tmdb"),
             "imdb_id": ids.get("imdb"),
             "external_ids": json.dumps(ids),
+            # Freigabe in Emby gesperrt? (ganzes Item oder Feld OfficialRating)
+            "rating_locked": 1 if (it.get("LockData")
+                                   or "OfficialRating" in (it.get("LockedFields") or [])) else 0,
             "runtime_min": round(ticks / TICKS_PER_MINUTE) if ticks else None,
         }
         if is_series:

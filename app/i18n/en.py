@@ -239,6 +239,7 @@ STRINGS = {
     "stats.uhd": "4K / UHD",
     "stats.incomplete": "Incomplete",
     "stats.no_rating": "No age rating",
+    "stats.unreviewed": "Rating unreviewed",
 
     # -- Filters --
     "filter.all_libraries": "All libraries",

@@ -17,6 +17,7 @@
     <div class="stat warn"><div class="num">{{ stats.incomplete }}</div><div class="cap label">{{ t('stats.incomplete') }}</div></div>
     {% if settings['fsk.enabled'] %}
     <div class="stat warn"><div class="num">{{ stats.no_rating }}</div><div class="cap label">{{ t('stats.no_rating') }}</div></div>
+    <div class="stat"><div class="num">{{ stats.unreviewed }}</div><div class="cap label">{{ t('stats.unreviewed') }}</div></div>
     {% endif %}
   </section>
 

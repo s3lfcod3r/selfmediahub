@@ -237,6 +237,10 @@ select.field {
   border: 1px solid var(--self-line-strong);
 }
 .poster .rating.none { color: var(--self-yellow); border-color: var(--self-yellow); }
+/* gruen = in Emby gesperrt/erledigt; steht NACH .none, damit leer+gesperrt
+   (bewusst keine Freigabe) gruen statt gelb ist. */
+.poster .rating.locked { color: var(--self-green); border-color: var(--self-green); }
+.rating .rlock { font-size: 9px; margin-right: 3px; opacity: 0.9; }
 .poster .type {
   position: absolute; top: 8px; right: 8px;
   font-family: var(--self-font-mono); font-size: 10px; letter-spacing: 0.08em;
