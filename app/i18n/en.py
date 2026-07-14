@@ -12,7 +12,12 @@ STRINGS = {
     "fskpage.filter.todo": "Needs attention only",
     "fskpage.filter.all": "All",
     "fskpage.filter.none": "Without rating only",
+    "fskpage.filter.drifted": "Changed externally only",
     "fskpage.filter.locked": "Locked/done only",
+    "fskpage.drift_title": "Changed outside SelfMediaHub since the last write-back - either by you, or your Emby permissions are more open than expected.",
+    "fskpage.accept": "Accept",
+    "fskpage.accept_title": "Accept the current Emby value as the new baseline (no write-back)",
+    "fskpage.accepted": "Accepted as new baseline",
     "fskpage.legend_xlated": "converted to your rating type",
     "fskpage.apply": "Write changes back",
     "fskpage.write_off": "Write-back is off (ALLOW_EMBY_WRITE=0)",
@@ -262,6 +267,7 @@ STRINGS = {
     "stats.incomplete": "Incomplete",
     "stats.no_rating": "No age rating",
     "stats.unreviewed": "Rating unreviewed",
+    "stats.drifted": "Rating changed",
 
     # -- Filters --
     "filter.all_libraries": "All libraries",

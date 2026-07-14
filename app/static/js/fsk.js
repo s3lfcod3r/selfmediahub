@@ -32,6 +32,7 @@
 
   function isEmby(i) { return i.source_kind === "emby"; }
   function actionable(i) {
+    if (i.rating_drift) { return true; }                                // abgewichen
     if (!isEmby(i) || i.rating_locked) { return false; }
     if (!i.official_rating) { return true; }                            // fehlt
     return i.suggested_age != null && i.rating_age !== i.suggested_age;  // Abweichung
@@ -40,10 +41,15 @@
     if (state.q && i.name.toLowerCase().indexOf(state.q) === -1) { return false; }
     if (state.filter === "todo") { return actionable(i); }
     if (state.filter === "none") { return !i.official_rating; }
+    if (state.filter === "drifted") { return !!i.rating_drift; }
     if (state.filter === "locked") { return !!i.rating_locked; }
     return true;
   }
   function defaultSel(i) {
+    if (i.rating_drift) {   // Vorauswahl = erneut durchsetzen (SMHs alter Wert)
+      if (i.rating_written === "") { return "none"; }
+      if (i.written_age != null) { return String(bucketUp(i.written_age)); }
+    }
     if (!isEmby(i) || i.rating_locked) { return "keep"; }
     if (i.suggested_age != null) { return String(bucketUp(i.suggested_age)); }
     return "keep";
@@ -60,10 +66,15 @@
   }
 
   function srcBadge(i) {
-    if (!i.official_rating) { return '<span class="fsk-badge none">' + esc(T("fskpage.no_rating")) + "</span>"; }
+    var drift = i.rating_drift
+      ? '<span class="fsk-drift" title="' + esc(T("fskpage.drift_title")) + '">&#8800; ' +
+        esc(i.written_disp || T("fskpage.no_rating")) + "</span>" : "";
+    if (!i.official_rating) {
+      return '<span class="fsk-badge none">' + esc(T("fskpage.no_rating")) + "</span>" + drift;
+    }
     var lock = i.rating_locked ? '<span class="rlock" aria-hidden="true">&#128274;</span>' : "";
     return '<span class="fsk-badge' + (i.rating_locked ? " locked" : "") + '">' +
-      lock + esc(i.rating_disp || i.official_rating) + "</span>";
+      lock + esc(i.rating_disp || i.official_rating) + "</span>" + drift;
   }
   function suggBadge(i) {
     if (!i.suggested_disp) { return '<span class="fsk-dash">&mdash;</span>'; }
@@ -89,13 +100,29 @@
         : '<span class="fsk-cover noimg"></span>';
       var year = i.year ? ' <span class="fsk-year">(' + i.year + ")</span>" : "";
       var dis = (!CAN_WRITE || !isEmby(i)) ? " disabled" : "";
+      var accept = i.rating_drift
+        ? '<button class="btn btn-small fsk-accept" data-id="' + i.id + '" title="' +
+          esc(T("fskpage.accept_title")) + '">' + esc(T("fskpage.accept")) + "</button>" : "";
       return '<div class="fsk-row" data-id="' + i.id + '">' + img +
         '<span class="fsk-title">' + esc(i.name) + year + "</span>" +
         '<span class="fsk-col">' + srcBadge(i) + "</span>" +
         '<span class="fsk-col">' + suggBadge(i) + "</span>" +
-        '<span class="fsk-col"><select class="field fsk-sel" data-id="' + i.id + '"' + dis + ">" +
-        optionsHtml(i) + "</select></span></div>";
+        '<span class="fsk-col fsk-desired"><select class="field fsk-sel" data-id="' + i.id + '"' + dis + ">" +
+        optionsHtml(i) + "</select>" + accept + "</span></div>";
     }).join("");
+    Array.prototype.forEach.call(list.querySelectorAll(".fsk-accept"), function (b) {
+      b.onclick = function () { acceptDrift(+b.getAttribute("data-id")); };
+    });
+  }
+
+  function acceptDrift(id) {
+    fetch("/api/fsk/accept-drift", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ item_id: id }),
+    })
+      .then(function (r) { return r.json(); })
+      .then(function () { window.smhToast(T("fskpage.accepted"), "ok"); location.reload(); })
+      .catch(function (e) { window.smhToast(T("msg.failed_prefix") + e.message, "err"); });
   }
 
   function apply() {

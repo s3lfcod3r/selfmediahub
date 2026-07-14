@@ -698,6 +698,10 @@ table.list tbody tr { cursor: pointer; }
 .fsk-badge .xmark, .fsk-legend .xmark { color: var(--self-teal-bright); font-size: 9px; margin-left: 4px; }
 .fsk-dash { color: var(--self-text-3); }
 .fsk-sel { padding: 5px 8px; width: 100%; }
+.fsk-desired { display: flex; flex-direction: column; gap: 5px; align-items: stretch; }
+.fsk-accept { align-self: flex-start; }
+.fsk-drift { display: block; margin-top: 4px; color: var(--self-red);
+  font-family: var(--self-font-mono); font-size: 11px; }
 .fsk-legend { color: var(--self-text-3); font-size: 12px; }
 .fsk-writehint { color: var(--self-text-3); }
 .path-input .field { flex: 1; }

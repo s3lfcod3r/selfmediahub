@@ -445,10 +445,11 @@ async def api_fsk_write_bulk(request: Request):
         rating = (ch.get("rating") or "").strip()
         try:
             fsk.write_emby(r["source_ref"], r["source_id"], rating or None)
-            # write_emby sperrt das Feld -> rating_locked sofort setzen (Ampel gruen).
+            # write_emby sperrt das Feld -> rating_locked sofort setzen (Ampel gruen);
+            # rating_written merkt den Wert als Drift-Basis (5c.5).
             db.execute("UPDATE media_items SET official_rating=?, rating_locked=1, "
-                       "fsk_suspicious=0, fsk_reason='' WHERE id=?",
-                       (rating, int(ch["item_id"])))
+                       "rating_written=?, fsk_suspicious=0, fsk_reason='' WHERE id=?",
+                       (rating, rating, int(ch["item_id"])))
             saved += 1
         except Exception as exc:  # noqa: BLE001
             errors.append({"item_id": ch["item_id"], "error": str(exc)})
@@ -471,10 +472,24 @@ async def api_fsk_write(request: Request):
         rating = item.get("fsk_suggested") or item.get("official_rating") or ""
     try:
         fsk.write_emby(item["source_ref"], item["source_id"], rating or None)
-        # write_emby sperrt das Feld -> rating_locked sofort setzen (Ampel gruen).
+        # write_emby sperrt das Feld -> rating_locked sofort setzen (Ampel gruen);
+        # rating_written merkt den Wert als Drift-Basis (5c.5).
         db.execute("UPDATE media_items SET official_rating=?, rating_locked=1, "
-                   "fsk_suspicious=0, fsk_reason='' WHERE id=?",
-                   (rating, item["id"]))
+                   "rating_written=?, fsk_suspicious=0, fsk_reason='' WHERE id=?",
+                   (rating, rating, item["id"]))
         return {"ok": True, "rating": rating or "(entfernt)"}
     except Exception as exc:  # noqa: BLE001
         _fail(exc)
+
+
+@router.post("/fsk/accept-drift")
+async def api_fsk_accept_drift(request: Request):
+    """Externe Aenderung als neue Basis akzeptieren (5c.5): rating_written = aktueller Wert.
+    Schreibt NICHT nach Emby - loescht nur den 'abgewichen'-Zustand."""
+    d = await request.json()
+    rows = db.query("SELECT id, official_rating FROM media_items WHERE id=?", (int(d["item_id"]),))
+    if not rows:
+        raise HTTPException(status_code=404, detail="Eintrag nicht gefunden")
+    db.execute("UPDATE media_items SET rating_written=? WHERE id=?",
+               (rows[0]["official_rating"] or "", rows[0]["id"]))
+    return {"ok": True}

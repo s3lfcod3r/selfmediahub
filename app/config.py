@@ -2,7 +2,7 @@
 import os
 
 APP_NAME = "SelfMediaHub"
-VERSION = "0.4.4"
+VERSION = "0.4.5"
 
 # GitHub-Repo fuer die Update-Pruefung (vergleicht mit dem neuesten Release).
 GITHUB_REPO = os.environ.get("GITHUB_REPO", "s3lfcod3r/selfmediahub").strip()

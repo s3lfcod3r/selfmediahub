@@ -16,7 +16,12 @@ STRINGS = {
     "fskpage.filter.todo": "Nur Handlungsbedarf",
     "fskpage.filter.all": "Alle",
     "fskpage.filter.none": "Nur ohne Freigabe",
+    "fskpage.filter.drifted": "Nur abgewichen",
     "fskpage.filter.locked": "Nur gesperrt/erledigt",
+    "fskpage.drift_title": "Seit dem letzten Zurückschreiben außerhalb SelfMediaHub geändert - entweder von dir, oder deine Emby-Rechte sind offener als gedacht.",
+    "fskpage.accept": "Übernehmen",
+    "fskpage.accept_title": "Aktuellen Emby-Wert als neue Basis akzeptieren (kein Zurückschreiben)",
+    "fskpage.accepted": "Als neue Basis übernommen",
     "fskpage.legend_xlated": "in deine Rating-Art übersetzt",
     "fskpage.apply": "Änderungen zurückschreiben",
     "fskpage.write_off": "Zurückschreiben ist aus (ALLOW_EMBY_WRITE=0)",
@@ -267,6 +272,7 @@ STRINGS = {
     "stats.incomplete": "Unvollständig",
     "stats.no_rating": "FSK Ohne Freigabe",
     "stats.unreviewed": "FSK Unbearbeitet",
+    "stats.drifted": "FSK Abgewichen",
 
     # -- Filter --
     "filter.all_libraries": "Alle Bibliotheken",

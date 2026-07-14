@@ -33,6 +33,14 @@ def _add_rating_display(item: dict, art: str) -> None:
     item["suggested_disp"] = sug_disp
     item["suggested_xlated"] = 1 if sug_xlated else 0
     item["suggested_age"] = ratings.age_of(item.get("fsk_suggested"))
+    # Drift (5c.5): SelfMediaHub hat mal geschrieben, Emby weicht jetzt ab. Vergleich
+    # ueber das ALTER - format-tolerant (Emby gibt den Wert evtl. anders zurueck).
+    written = item.get("rating_written")
+    item["rating_drift"] = 1 if (written is not None
+                                 and ratings.age_of(written) != item["rating_age"]) else 0
+    wdisp, _ = ratings.translate(written, art)
+    item["written_disp"] = wdisp
+    item["written_age"] = ratings.age_of(written)
 
 
 def get_items() -> list:
@@ -77,6 +85,8 @@ def compute_stats(items: list) -> dict:
         # unbearbeitet = hat eine Freigabe, aber (noch) nicht in Emby gesperrt/angefasst
         "unreviewed": sum(1 for i in items
                           if i.get("official_rating") and not i.get("rating_locked")),
+        # abgewichen = seit SMHs letztem Schreiben ausserhalb geaendert (5c.5)
+        "drifted": sum(1 for i in items if i.get("rating_drift")),
         "incomplete": sum(1 for i in items if i.get("completeness") == "incomplete"),
         "suspicious": sum(1 for i in items if i.get("fsk_suspicious")),
         "uhd": sum(1 for i in items if i.get("resolution") == "4K"),
