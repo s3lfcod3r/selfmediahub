@@ -122,6 +122,12 @@ STRINGS = {
     "settings.fsk.title": "Age ratings",
     "settings.fsk.enable": "Enable age-rating check",
     "settings.fsk.enable_desc": "When off, all rating elements disappear from the UI: the rating corner on covers, the rating filter, the “No rating” stat, plus rating info, editor and warnings in the detail view. The data is kept - turning it back on shows everything instantly, no re-scan needed.",
+    "settings.fsk.rating_art": "Preferred rating type",
+    "settings.fsk.rating_art_desc": "How ratings are shown. Other systems are converted (rounded up to the safe, higher band) and flagged with a hint symbol.",
+    "settings.fsk.art.fsk": "FSK (0/6/12/16/18)",
+    "settings.fsk.art.usk": "USK (0/6/12/16/18)",
+    "settings.fsk.art.pegi": "PEGI (3/7/12/16/18)",
+    "settings.fsk.art.age": "Number only (16+)",
     "settings.fsk.placeholder": "Unifying international ratings (FSK / PEGI / USK / age label), setting a display preference and the rating cross-check across sources are coming in <strong>Phase 5</strong>.",
 
     # -- Settings: about & updates --

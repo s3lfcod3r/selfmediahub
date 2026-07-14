@@ -159,7 +159,16 @@
           </label>
           <p class="set-desc">{{ t('settings.fsk.enable_desc') }}</p>
         </div>
-        <div class="set-placeholder">{{ t('settings.fsk.placeholder')|safe }}</div>
+        <div class="set-field">
+          <label for="ratingArt">{{ t('settings.fsk.rating_art') }}</label>
+          <select class="field" id="ratingArt">
+            <option value="fsk" {{ 'selected' if settings['display.rating_art'] == 'fsk' }}>{{ t('settings.fsk.art.fsk') }}</option>
+            <option value="usk" {{ 'selected' if settings['display.rating_art'] == 'usk' }}>{{ t('settings.fsk.art.usk') }}</option>
+            <option value="pegi" {{ 'selected' if settings['display.rating_art'] == 'pegi' }}>{{ t('settings.fsk.art.pegi') }}</option>
+            <option value="age" {{ 'selected' if settings['display.rating_art'] == 'age' }}>{{ t('settings.fsk.art.age') }}</option>
+          </select>
+          <p class="set-desc">{{ t('settings.fsk.rating_art_desc') }}</p>
+        </div>
       </section>
 
       <!-- Über & Updates -->

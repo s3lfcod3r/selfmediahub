@@ -5,7 +5,7 @@ Alles read-only und best-effort: Fehler brechen den Sync nicht ab.
 import requests
 
 from .. import config
-from . import providers
+from . import providers, ratings
 
 BASE = "https://api.themoviedb.org/3"
 TIMEOUT = 8
@@ -63,6 +63,32 @@ def _tv_cert(data: dict):
         if entry.get("iso_3166_1") == "DE":
             return (entry.get("rating") or "").strip()
     return None
+
+
+def _all_movie_certs(data: dict) -> list:
+    out = []
+    for entry in data.get("release_dates", {}).get("results", []):
+        for rel in entry.get("release_dates", []):
+            if rel.get("certification"):
+                out.append(rel["certification"].strip())
+    return out
+
+
+def _all_tv_certs(data: dict) -> list:
+    return [(e.get("rating") or "").strip()
+            for e in data.get("content_ratings", {}).get("results", [])
+            if (e.get("rating") or "").strip()]
+
+
+def _resolve_rating(data: dict, is_series: bool):
+    """Freigabe-Vorschlag: DE bevorzugt, sonst hoechste sichere internationale
+    Einstufung (als Altersband). None, wenn nirgends etwas Verwertbares steht."""
+    cert = _tv_cert(data) if is_series else _movie_cert(data)
+    if cert in DE_CERTS:
+        return f"DE-{cert}"
+    certs = _all_tv_certs(data) if is_series else _all_movie_certs(data)
+    age = ratings.resolve(ratings.age_of(c) for c in certs)
+    return str(age) if age is not None else None
 
 
 def compute_missing(seasons: dict, present) -> list:
@@ -163,9 +189,10 @@ def enrich(item: dict, cache: dict) -> dict:
 
         # Fill-if-absent: ein hoeher priorisierter Provider (Kette, Phase 5b) hat
         # das Feld ggf. schon gesetzt und darf nicht ueberschrieben werden.
-        cert = _tv_cert(data) if is_series else _movie_cert(data)
-        if cert in DE_CERTS and not item.get("fsk_suggested"):
-            item["fsk_suggested"] = f"DE-{cert}"
+        if not item.get("fsk_suggested"):
+            suggested = _resolve_rating(data, is_series)
+            if suggested:
+                item["fsk_suggested"] = suggested
 
         if not item.get("genres"):
             item["genres"] = [g.get("name") for g in data.get("genres", []) if g.get("name")]

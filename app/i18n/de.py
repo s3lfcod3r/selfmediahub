@@ -127,6 +127,12 @@ STRINGS = {
     "settings.fsk.title": "FSK & Altersfreigaben",
     "settings.fsk.enable": "FSK-Prüfung aktivieren",
     "settings.fsk.enable_desc": "Ist das Feature aus, verschwinden alle FSK-Elemente aus der Oberfläche: FSK-Ecke am Cover, Freigabe-Filter, die Kennzahl „Ohne Freigabe“, sowie FSK-Angaben, -Editor und Warnhinweise im Detailfenster. Die Daten bleiben gespeichert - beim Wieder-Einschalten ist alles sofort da, kein neuer Scan nötig.",
+    "settings.fsk.rating_art": "Bevorzugte Rating-Art",
+    "settings.fsk.rating_art_desc": "In welcher Form Freigaben angezeigt werden. Andere Systeme werden umgerechnet (aufs sichere, höhere Band gerundet) und mit einem Hinweis-Symbol markiert.",
+    "settings.fsk.art.fsk": "FSK (0/6/12/16/18)",
+    "settings.fsk.art.usk": "USK (0/6/12/16/18)",
+    "settings.fsk.art.pegi": "PEGI (3/7/12/16/18)",
+    "settings.fsk.art.age": "Nur Zahl (16+)",
     "settings.fsk.placeholder": "Internationale Freigaben (FSK / PEGI / USK / Altersangabe) vereinheitlichen, eine Anzeigepräferenz festlegen und der FSK-Check zum Abgleich der Quellen kommen in <strong>Phase 5</strong>.",
 
     # -- Einstellungen: Über & Updates --

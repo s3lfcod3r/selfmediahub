@@ -23,8 +23,9 @@ DEFAULTS = {
     "general.ui_language": "de",       # Sprache der Oberflaeche (i18n): de | en
     # -- Anzeige (Phase 2) --
     "display.primary_language": "ger",  # primaere Sprache der Instanz (fuer Sprach-Abdeckung/Flaggen)
-    # -- FSK & Altersfreigaben (Phase 1) --
+    # -- FSK & Altersfreigaben (Phase 1 / 5c) --
     "fsk.enabled": True,               # FSK-Feature an/aus (nur UI - Daten bleiben gespeichert)
+    "display.rating_art": "fsk",       # bevorzugte Rating-Art: fsk | usk | pegi | age (Phase 5c.2)
 }
 
 

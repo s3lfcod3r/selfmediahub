@@ -430,6 +430,13 @@
       };
     }
 
+    var ratingArt = $("ratingArt");
+    if (ratingArt) {
+      ratingArt.onchange = function () {
+        saveSettings({ "display.rating_art": ratingArt.value }, T("msg.saved"));
+      };
+    }
+
     var lang = $("primaryLang");
     if (lang) {
       lang.onchange = function () {
