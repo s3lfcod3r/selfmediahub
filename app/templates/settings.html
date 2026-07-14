@@ -118,7 +118,7 @@
           <h2 class="card-h">{{ t('settings.metadata.title') }}</h2>
           <button class="btn btn-primary" id="mpAddBtn">+ {{ t('providers.add') }}</button>
         </div>
-        <p class="set-desc">{{ t('settings.metadata.intro') }}</p>
+        <p class="set-desc">{{ t('settings.metadata.intro')|safe }}</p>
         <div id="providersList" class="src-list">
           <p class="set-desc" id="providersLoading">{{ t('settings.metadata.loading') }}</p>
         </div>
