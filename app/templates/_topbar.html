@@ -15,6 +15,9 @@
       <a href="/"       class="{{ 'active' if active == 'home' }}">{{ t('nav.overview') }}</a>
       <a href="/tags"   class="{{ 'active' if active == 'tags' }}">{{ t('nav.tags') }}</a>
       <a href="/regeln" class="{{ 'active' if active == 'rules' }}">{{ t('nav.rules') }}</a>
+      {% if settings and settings['fsk.enabled'] %}
+      <a href="/fsk"    class="{{ 'active' if active == 'fsk' }}">{{ t('nav.fsk') }}</a>
+      {% endif %}
     </nav>
     <div class="spacer"></div>
     {% if auth_active and account %}

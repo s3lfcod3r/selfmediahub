@@ -28,8 +28,11 @@ def _add_rating_display(item: dict, art: str) -> None:
     disp, xlated = ratings.translate(item.get("official_rating"), art)
     item["rating_disp"] = disp
     item["rating_xlated"] = 1 if xlated else 0
-    sug_disp, _ = ratings.translate(item.get("fsk_suggested"), art)
+    item["rating_age"] = ratings.age_of(item.get("official_rating"))
+    sug_disp, sug_xlated = ratings.translate(item.get("fsk_suggested"), art)
     item["suggested_disp"] = sug_disp
+    item["suggested_xlated"] = 1 if sug_xlated else 0
+    item["suggested_age"] = ratings.age_of(item.get("fsk_suggested"))
 
 
 def get_items() -> list:

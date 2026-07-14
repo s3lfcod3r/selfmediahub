@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% set active = 'fsk' %}
+{% block title %}{{ app.APP_NAME }} - {{ t('fskpage.title') }}{% endblock %}
+{% block body %}
+{% include '_topbar.html' %}
+<main class="wrap">
+  <section class="hero hero-compact">
+    <h1>{{ t('fskpage.title') }}</h1>
+    <p class="label">{{ t('fskpage.intro') }}</p>
+  </section>
+
+  <div class="toolbar">
+    <input type="search" id="fskQ" placeholder="{{ t('index.search_placeholder') }}" autocomplete="off">
+    <select class="field" id="fskFilter">
+      <option value="todo">{{ t('fskpage.filter.todo') }}</option>
+      <option value="all">{{ t('fskpage.filter.all') }}</option>
+      <option value="none">{{ t('fskpage.filter.none') }}</option>
+      <option value="locked">{{ t('fskpage.filter.locked') }}</option>
+    </select>
+    <span class="spacer"></span>
+    <span class="fsk-legend"><span class="xmark">&#9650;</span> {{ t('fskpage.legend_xlated') }}</span>
+    <button class="btn btn-primary" id="fskApply"
+      {% if not allow_write %}disabled title="{{ t('fskpage.write_off') }}"{% endif %}>
+      {{ t('fskpage.apply') }}</button>
+  </div>
+  <div class="count-line"><span id="fskCount">0</span> {{ t('index.entries') }}
+    {% if not allow_write %}<span class="fsk-writehint">· {{ t('fskpage.write_off') }}</span>{% endif %}
+  </div>
+
+  <div class="fsk-table" id="fskList"></div>
+</main>
+
+<script>
+  window.__ITEMS__ = {{ items_json|safe }};
+  window.__RATING_ART__ = {{ rating_art|tojson }};
+  window.__ALLOW_WRITE__ = {{ 'true' if allow_write else 'false' }};
+</script>
+<script src="/static/js/fsk.js"></script>
+{% endblock %}

@@ -677,6 +677,29 @@ table.list tbody tr { cursor: pointer; }
 .switch input:checked + .switch-slider::before { transform: translateX(20px); background: #05110d; }
 .switch input:focus-visible + .switch-slider { outline: 2px solid var(--self-teal-bright);
   outline-offset: 2px; }
+
+/* FSK-Bearbeitungs-Seite */
+.fsk-table { margin-top: 12px; display: flex; flex-direction: column; gap: 3px; overflow-x: auto; }
+.fsk-row { display: grid; grid-template-columns: 46px minmax(160px, 2fr) 1fr 1fr 160px;
+  gap: 12px; align-items: center; padding: 6px 10px; border-radius: var(--self-radius-sm);
+  background: var(--self-bg-1); border: 1px solid var(--self-line); min-width: 640px; }
+.fsk-head { background: transparent; border: none; color: var(--self-text-3);
+  font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; padding: 0 10px 2px; }
+.fsk-cover { width: 46px; height: 69px; object-fit: cover; border-radius: 4px;
+  background: var(--self-bg-2); border: 1px solid var(--self-line); }
+.fsk-cover.noimg { display: inline-block; }
+.fsk-title { font-weight: 600; }
+.fsk-year { color: var(--self-text-3); font-weight: 400; font-family: var(--self-font-mono); font-size: 12px; }
+.fsk-badge { font-family: var(--self-font-mono); font-size: 12px; padding: 2px 7px;
+  border-radius: 6px; border: 1px solid var(--self-line-strong); white-space: nowrap; }
+.fsk-badge.none { color: var(--self-yellow); border-color: var(--self-yellow); }
+.fsk-badge.locked { color: var(--self-green); border-color: var(--self-green); }
+.fsk-badge .rlock { font-size: 9px; margin-right: 4px; }
+.fsk-badge .xmark, .fsk-legend .xmark { color: var(--self-teal-bright); font-size: 9px; margin-left: 4px; }
+.fsk-dash { color: var(--self-text-3); }
+.fsk-sel { padding: 5px 8px; width: 100%; }
+.fsk-legend { color: var(--self-text-3); font-size: 12px; }
+.fsk-writehint { color: var(--self-text-3); }
 .path-input .field { flex: 1; }
 .src-libs-list { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 6px; }
 .src-lib { display: inline-flex; align-items: center; gap: 6px; font-size: 13px;

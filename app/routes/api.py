@@ -445,7 +445,9 @@ async def api_fsk_write_bulk(request: Request):
         rating = (ch.get("rating") or "").strip()
         try:
             fsk.write_emby(r["source_ref"], r["source_id"], rating or None)
-            db.execute("UPDATE media_items SET official_rating=?, fsk_suspicious=0, fsk_reason='' WHERE id=?",
+            # write_emby sperrt das Feld -> rating_locked sofort setzen (Ampel gruen).
+            db.execute("UPDATE media_items SET official_rating=?, rating_locked=1, "
+                       "fsk_suspicious=0, fsk_reason='' WHERE id=?",
                        (rating, int(ch["item_id"])))
             saved += 1
         except Exception as exc:  # noqa: BLE001
@@ -469,7 +471,9 @@ async def api_fsk_write(request: Request):
         rating = item.get("fsk_suggested") or item.get("official_rating") or ""
     try:
         fsk.write_emby(item["source_ref"], item["source_id"], rating or None)
-        db.execute("UPDATE media_items SET official_rating=?, fsk_suspicious=0, fsk_reason='' WHERE id=?",
+        # write_emby sperrt das Feld -> rating_locked sofort setzen (Ampel gruen).
+        db.execute("UPDATE media_items SET official_rating=?, rating_locked=1, "
+                   "fsk_suspicious=0, fsk_reason='' WHERE id=?",
                    (rating, item["id"]))
         return {"ok": True, "rating": rating or "(entfernt)"}
     except Exception as exc:  # noqa: BLE001

@@ -90,6 +90,12 @@ def write_emby(source_ref: int, source_id: str, rating: str) -> None:
         f"{base_url}/emby/Users/{uid}/Items/{source_id}", headers=headers, timeout=15
     ).json()
     full["OfficialRating"] = rating or None
+    # Feld sperren, damit ein Emby-Metadaten-Refresh die Korrektur nicht ueberschreibt
+    # (auch "Kein Rating" = leer + gesperrt). Vorhandene Sperren bleiben erhalten.
+    locked = full.get("LockedFields") or []
+    if "OfficialRating" not in locked:
+        locked.append("OfficialRating")
+    full["LockedFields"] = locked
     resp = requests.post(
         f"{base_url}/emby/Items/{source_id}",
         headers={**headers, "Content-Type": "application/json"},

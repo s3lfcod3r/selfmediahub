@@ -3,7 +3,7 @@ import json
 import os
 
 from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from .. import config, db, i18n
@@ -42,6 +42,20 @@ def index(request: Request):
         libraries=queries.get_libraries(),
         stats=queries.compute_stats(items),
         last_sync=db.get_meta("last_sync") or "",
+        allow_write=config.ALLOW_EMBY_WRITE,
+    ))
+
+
+@router.get("/fsk", response_class=HTMLResponse)
+def fsk_page(request: Request):
+    # Nur erreichbar, wenn das FSK-Feature aktiv ist.
+    if not settings_service.get("fsk.enabled"):
+        return RedirectResponse("/", status_code=303)
+    items = queries.get_items()
+    return templates.TemplateResponse(request, "fsk.html", _ctx(
+        request,
+        items_json=json.dumps(items, ensure_ascii=False),
+        rating_art=settings_service.get("display.rating_art", "fsk"),
         allow_write=config.ALLOW_EMBY_WRITE,
     ))
 
