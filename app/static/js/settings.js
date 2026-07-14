@@ -338,152 +338,75 @@
   }
 
   // ======================================================================
-  //  Metadaten-Dienste - Liste + Modal (Phase 5a)
+  //  Metadaten-Dienste - zwei feste Dienste (TMDb + TheTVDB), Phase 5c
   // ======================================================================
-  var MP_LABEL = { tmdb: "TMDb", tvdb: "TheTVDB", omdb: "OMDb", anidb: "AniDB" };
-  var mpState = { id: null };
+  var MP_FIELDS = {
+    tmdb: { toggle: "mpTmdbEnabled", key: "mpTmdbKey", save: "mpTmdbSave" },
+    tvdb: { toggle: "mpTvdbEnabled", key: "mpTvdbKey", save: "mpTvdbSave" },
+  };
 
   function mpStatus(msg, type) {
-    var s = $("mpModalStatus");
+    var s = $("mpStatus");
     if (!s) { return; }
     s.textContent = msg || "";
     s.className = "src-modal-status set-desc" + (type ? " s-" + type : "");
   }
 
   function loadProviders() {
-    var list = $("providersList");
-    if (!list) { return; }
+    if (!$("mpTmdbEnabled")) { return; }   // nur auf der Einstellungsseite
     fetch("/api/providers")
       .then(function (r) { return r.json(); })
-      .then(function (data) { renderProviders(list, data.providers || []); })
-      .catch(function () {
-        list.innerHTML = '<p class="set-desc">' + esc(T("providers.load_failed")) + "</p>";
-      });
+      .then(function (data) {
+        (data.providers || []).forEach(function (p) {
+          var f = MP_FIELDS[p.kind];
+          if (!f) { return; }
+          $(f.toggle).checked = !!p.enabled;
+          $(f.key).value = "";
+          $(f.key).placeholder = p.has_key ? T("providers.key_keep") : T("providers.key_enter");
+        });
+      })
+      .catch(function () { mpStatus(T("providers.load_failed"), "err"); });
   }
 
-  function renderProviders(list, providers) {
-    if (!providers.length) {
-      list.innerHTML = '<div class="src-empty">' + esc(T("providers.empty")) + "</div>";
-      return;
-    }
-    list.innerHTML = providers.map(function (p) {
-      var label = MP_LABEL[p.kind] || p.kind;
-      var pr = p.priorities || {};
-      var sub = T("providers.mt.film") + " " + pr.film + " · " +
-        T("providers.mt.serie") + " " + pr.serie + " · " +
-        T("providers.mt.anime") + " " + pr.anime + " · " +
-        (p.has_key ? T("providers.key_set") : T("providers.key_missing"));
-      return '<div class="src-row' + (p.enabled ? "" : " src-off") + '" data-id="' + p.id + '">' +
-        '<div class="src-row-main">' +
-          '<div class="src-row-name">' + esc(p.name || label) +
-            '<span class="src-kind-badge">' + esc(label) + "</span>" +
-            (p.enabled ? "" : '<span class="src-off-badge">' + esc(T("sources.disabled")) + "</span>") +
-          "</div>" +
-          '<div class="src-row-sub mono">' + esc(sub) + "</div>" +
-        "</div>" +
-        '<div class="src-row-actions">' +
-          '<button class="btn btn-icon mp-edit" title="' + esc(T("sources.edit")) +
-            '" aria-label="' + esc(T("sources.edit")) + '">&#9998;</button>' +
-          '<button class="btn btn-icon btn-danger mp-del" title="' + esc(T("sources.delete")) +
-            '" aria-label="' + esc(T("sources.delete")) + '">&#128465;</button>' +
-        "</div></div>";
-    }).join("");
-    Array.prototype.forEach.call(list.querySelectorAll(".src-row"), function (row) {
-      var id = row.getAttribute("data-id");
-      row.querySelector(".mp-edit").onclick = function () { openEditProvider(id); };
-      row.querySelector(".mp-del").onclick = function () { delProvider(id); };
-    });
-  }
-
-  function openAddProvider() {
-    mpState = { id: null };
-    $("mpModalTitle").textContent = T("providers.add_title");
-    $("mpKind").value = "tmdb";
-    $("mpKind").disabled = false;
-    $("mpName").value = "";
-    $("mpKey").value = "";
-    $("mpKey").placeholder = T("providers.key_enter");
-    $("mpPrioFilm").value = "100";
-    $("mpPrioSerie").value = "100";
-    $("mpPrioAnime").value = "100";
-    $("mpEnabled").checked = true;
-    $("mpSaveBtn").textContent = T("providers.add");
-    mpStatus("", "");
-    showModal("mpModal");
-    $("mpName").focus();
-  }
-
-  function openEditProvider(id) {
-    fetch("/api/providers").then(function (r) { return r.json(); }).then(function (data) {
-      var p = (data.providers || []).filter(function (x) { return String(x.id) === String(id); })[0];
-      if (!p) { return; }
-      mpState = { id: p.id };
-      $("mpModalTitle").textContent = T("providers.edit_title");
-      $("mpKind").value = p.kind;
-      $("mpKind").disabled = true;   // Typ eines bestehenden Dienstes nicht aenderbar
-      $("mpName").value = p.name || "";
-      $("mpKey").value = "";
-      $("mpKey").placeholder = p.has_key ? T("providers.key_keep") : T("providers.key_enter");
-      var pr = p.priorities || {};
-      $("mpPrioFilm").value = String(pr.film != null ? pr.film : 100);
-      $("mpPrioSerie").value = String(pr.serie != null ? pr.serie : 100);
-      $("mpPrioAnime").value = String(pr.anime != null ? pr.anime : 100);
-      $("mpEnabled").checked = !!p.enabled;
-      $("mpSaveBtn").textContent = T("common.save");
-      mpStatus("", "");
-      showModal("mpModal");
-    });
-  }
-
-  function saveProvider() {
-    function prio(id) { var v = parseInt($(id).value, 10); return isNaN(v) || v < 0 ? 0 : v; }
-    var body = {
-      kind: $("mpKind").value,
-      name: $("mpName").value.trim(),
-      priorities: { film: prio("mpPrioFilm"), serie: prio("mpPrioSerie"), anime: prio("mpPrioAnime") },
-      enabled: $("mpEnabled").checked,
-    };
-    var key = $("mpKey").value;
-    if (key) { body.api_key = key; }
-    if (!mpState.id && !key) { mpStatus(T("providers.err_no_key"), "err"); return; }
-    var btn = $("mpSaveBtn");
-    btn.disabled = true;
-    mpStatus(T("sources.saving"), "");
-    var id = mpState.id;
-    fetch(id ? "/api/providers/" + id : "/api/providers", {
-      method: id ? "PUT" : "POST",
+  function setProvider(kind, body, okMsg) {
+    return fetch("/api/providers/" + kind, {
+      method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     })
       .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
       .then(function (res) {
         if (!res.ok) { throw new Error(res.j.detail || "?"); }
-        window.smhToast(T("providers.saved"), "ok");
-        hideModal("mpModal");
-        loadProviders();
-      })
-      .catch(function (e) { mpStatus(T("msg.failed_prefix") + e.message, "err"); })
-      .then(function () { btn.disabled = false; });
-  }
-
-  function delProvider(id) {
-    if (!window.confirm(T("providers.delete_confirm"))) { return; }
-    fetch("/api/providers/" + id, { method: "DELETE" })
-      .then(function () { window.smhToast(T("providers.deleted"), "ok"); loadProviders(); })
-      .catch(function () { window.smhToast(T("sources.delete_failed"), "err"); });
+        if (okMsg) { window.smhToast(okMsg, "ok"); }
+      });
   }
 
   function initProviders() {
-    var addBtn = $("mpAddBtn");
-    if (!addBtn) { return; }
-    addBtn.onclick = openAddProvider;
-    $("mpModalClose").onclick = function () { hideModal("mpModal"); };
-    $("mpSaveBtn").onclick = saveProvider;
-    $("mpModal").addEventListener("click", function (e) {
-      if (e.target === $("mpModal")) { hideModal("mpModal"); }
-    });
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape") { hideModal("mpModal"); }
+    if (!$("mpTmdbEnabled")) { return; }   // nur auf der Einstellungsseite
+    Object.keys(MP_FIELDS).forEach(function (kind) {
+      var f = MP_FIELDS[kind];
+      $(f.toggle).onchange = function () {
+        var on = $(f.toggle).checked;
+        setProvider(kind, { enabled: on }, T(on ? "providers.enabled_on" : "providers.enabled_off"))
+          .catch(function (e) {
+            $(f.toggle).checked = !on;   // bei Fehler zuruecksetzen
+            mpStatus(T("msg.failed_prefix") + e.message, "err");
+          });
+      };
+      $(f.save).onclick = function () {
+        var key = $(f.key).value;
+        if (!key) { mpStatus(T("providers.err_no_key"), "err"); return; }
+        var btn = $(f.save);
+        btn.disabled = true;
+        setProvider(kind, { api_key: key }, T("providers.saved"))
+          .then(function () {
+            $(f.key).value = "";
+            $(f.key).placeholder = T("providers.key_keep");
+            mpStatus("", "");
+          })
+          .catch(function (e) { mpStatus(T("msg.failed_prefix") + e.message, "err"); })
+          .then(function () { btn.disabled = false; });
+      };
     });
     loadProviders();
   }

@@ -648,11 +648,31 @@ table.list tbody tr { cursor: pointer; }
 .src-modal-status.s-ok { color: var(--self-green); }
 .src-modal-status.s-err { color: var(--self-red); }
 .path-input { display: flex; gap: 8px; }
-/* Metadaten-Dienst: Prioritaet je Medienart (Film/Serie/Anime) */
-.mp-prio-row { display: flex; gap: 10px; }
-.mp-prio { flex: 1; display: flex; flex-direction: column; gap: 4px;
-  font-size: 12px; color: var(--self-text-3); }
-.mp-prio .field { text-align: center; }
+/* Metadaten-Dienste: zwei feste Karten + Swipe-Schalter */
+.mp-card { border: 1px solid var(--self-line); border-radius: var(--self-radius-sm);
+  padding: 16px; margin-top: 14px; background: var(--self-bg-1); }
+.mp-card-head { display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px; }
+.mp-card-name { font-weight: 600; }
+.mp-card-role { color: var(--self-text-3); font-size: 12px; font-weight: 400; margin-left: 8px; }
+.mp-key-row { display: flex; gap: 8px; }
+
+/* Swipe-Schalter (Teal-Schema) - wiederverwendbar via .switch */
+.switch { position: relative; display: inline-block; width: 44px; height: 24px;
+  flex: none; cursor: pointer; }
+.switch input { position: absolute; opacity: 0; width: 0; height: 0; }
+.switch-slider { position: absolute; inset: 0; border-radius: 999px;
+  background: var(--self-bg-3); border: 1px solid var(--self-line-strong);
+  transition: background var(--self-dur-fast) var(--self-ease),
+              border-color var(--self-dur-fast) var(--self-ease); }
+.switch-slider::before { content: ""; position: absolute; width: 18px; height: 18px;
+  left: 2px; top: 2px; border-radius: 50%; background: var(--self-text-3);
+  transition: transform var(--self-dur-fast) var(--self-ease),
+              background var(--self-dur-fast) var(--self-ease); }
+.switch input:checked + .switch-slider { background: var(--self-teal); border-color: transparent; }
+.switch input:checked + .switch-slider::before { transform: translateX(20px); background: #05110d; }
+.switch input:focus-visible + .switch-slider { outline: 2px solid var(--self-teal-bright);
+  outline-offset: 2px; }
 .path-input .field { flex: 1; }
 .src-libs-list { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 6px; }
 .src-lib { display: inline-flex; align-items: center; gap: 6px; font-size: 13px;

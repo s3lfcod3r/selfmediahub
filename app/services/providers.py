@@ -1,152 +1,115 @@
-"""Metadaten-Dienste-Verwaltung (Phase 5a) - TMDb/TheTVDB/OMDb/AniDB in der DB.
+"""Metadaten-Dienste (Phase 5c): zwei feste Dienste - TMDb + TheTVDB.
 
-Analog zu ``sources``: im UI angelegt, in der Tabelle ``metadata_providers``
-gespeichert, der API-Key liegt verschluesselt (``crypto``). ``priority`` gibt die
-Reihenfolge vor (kleiner = zuerst). In dieser Etappe wird nur TMDb tatsaechlich
-zur Anreicherung genutzt; die uebrigen Typen sind vorbereitet (Aufloesungslogik
-folgt in 5b).
+Genau zwei Eintraege, im UI nur ein-/ausschaltbar (Standard AUS) und mit
+API-Key (verschluesselt via ``crypto``). Die Anreicherungsreihenfolge ist fest
+verdrahtet: Serien/Anime zuerst TheTVDB (bessere Episoden), Filme zuerst TMDb
+(Abdeckung + Freigaben). Der jeweils andere Dienst dient als Rueckfall.
 """
-import json
 from datetime import datetime, timezone
 
 from .. import config, db
 from . import crypto
 
-# Reihenfolge = Vorschlags-/Anzeigereihenfolge im UI.
-KINDS = ("tmdb", "tvdb", "omdb", "anidb")
-KIND_LABELS = {"tmdb": "TMDb", "tvdb": "TheTVDB", "omdb": "OMDb", "anidb": "AniDB"}
-# Priorisierung erfolgt je Medienart (Phase 5b). 0 = Dienst fuer diesen Typ aus.
-MEDIA_TYPES = ("film", "serie", "anime")
-
-
-def _priorities(row: dict) -> dict:
-    """Prioritaet je Medienart. Fehlt ein Typ (5a-Bestand), gilt die alte globale
-    ``priority`` als Rueckfall. Ergebnis: {film, serie, anime} -> int."""
-    try:
-        pr = json.loads(row.get("priorities") or "{}")
-    except (ValueError, TypeError):
-        pr = {}
-    base = row["priority"]
-    return {t: int(pr.get(t, base)) for t in MEDIA_TYPES}
+KINDS = ("tmdb", "tvdb")
+KIND_LABELS = {"tmdb": "TMDb", "tvdb": "TheTVDB"}
+# Feste Reihenfolge je Medienart - nur aktivierte Dienste zaehlen.
+FIXED_ORDER = {
+    "film": ("tmdb", "tvdb"),
+    "serie": ("tvdb", "tmdb"),
+    "anime": ("tvdb", "tmdb"),
+}
 
 
 # -- Lesen ------------------------------------------------------------------
 def _public(row: dict) -> dict:
     """Dienst fuer die UI - ohne Klartext-Key, nur mit has_key-Flag."""
     return {
-        "id": row["id"],
         "kind": row["kind"],
         "name": row["name"],
         "has_key": bool(row["api_key"]),
         "enabled": bool(row["enabled"]),
-        "priorities": _priorities(row),
     }
 
 
-def list_providers() -> list:
-    return [
-        _public(dict(r))
-        for r in db.query("SELECT * FROM metadata_providers ORDER BY priority, id")
-    ]
-
-
-def get_provider(provider_id: int) -> dict | None:
-    rows = db.query("SELECT * FROM metadata_providers WHERE id=?", (provider_id,))
-    return dict(rows[0]) if rows else None
-
-
-def active_by_kind(kind: str) -> dict | None:
-    """Aktiver Dienst eines Typs mit hoechster Prioritaet (kleinste Zahl)."""
+def get_by_kind(kind: str) -> dict | None:
     rows = db.query(
-        "SELECT * FROM metadata_providers WHERE kind=? AND enabled=1 "
-        "ORDER BY priority, id LIMIT 1",
-        (kind,),
+        "SELECT * FROM metadata_providers WHERE kind=? ORDER BY id LIMIT 1", (kind,)
     )
     return dict(rows[0]) if rows else None
 
 
-def api_key_for(kind: str) -> str:
-    """Entschluesselter API-Key des aktiven Dienstes eines Typs ('' wenn keiner)."""
-    row = active_by_kind(kind)
-    return crypto.decrypt(row["api_key"] or "") if row else ""
-
-
-def chain_kinds(media_type: str) -> list:
-    """Reihenfolge der Dienst-Typen fuer eine Medienart: nur aktive Dienste mit
-    Prioritaet > 0, kleinste Prioritaet zuerst; je Typ nur der beste Eintrag."""
-    best = {}
-    for r in db.query("SELECT * FROM metadata_providers WHERE enabled=1"):
-        prio = _priorities(dict(r)).get(media_type, 0)
-        if prio <= 0:
-            continue
-        if r["kind"] not in best or prio < best[r["kind"]]:
-            best[r["kind"]] = prio
-    return [k for k, _p in sorted(best.items(), key=lambda kv: kv[1])]
-
-
-# -- Schreiben --------------------------------------------------------------
-def _clean_priorities(priorities) -> dict:
-    """Eingabe (dict oder None) -> {film, serie, anime} mit int >= 0. Standard 100."""
-    pr = priorities if isinstance(priorities, dict) else {}
-    out = {}
-    for t in MEDIA_TYPES:
-        try:
-            out[t] = max(0, int(pr.get(t, 100)))
-        except (ValueError, TypeError):
-            out[t] = 100
+def list_providers() -> list:
+    """Die zwei festen Dienste in kanonischer Reihenfolge (TMDb, TheTVDB)."""
+    out = []
+    for kind in KINDS:
+        row = get_by_kind(kind)
+        if row:
+            out.append(_public(row))
     return out
 
 
-def create_provider(kind: str, name: str = "", api_key: str = "",
-                    enabled: bool = True, priorities=None) -> int:
+def api_key_for(kind: str) -> str:
+    """Entschluesselter Key des Dienstes - '' wenn aus oder kein Key."""
+    row = get_by_kind(kind)
+    if not row or not row["enabled"]:
+        return ""
+    return crypto.decrypt(row["api_key"] or "")
+
+
+def chain_kinds(media_type: str) -> list:
+    """Feste Reihenfolge fuer eine Medienart, gefiltert auf aktivierte Dienste."""
+    order = FIXED_ORDER.get(media_type, ("tmdb", "tvdb"))
+    enabled = {
+        r["kind"] for r in db.query("SELECT kind FROM metadata_providers WHERE enabled=1")
+    }
+    return [k for k in order if k in enabled]
+
+
+# -- Schreiben --------------------------------------------------------------
+def set_provider(kind: str, api_key=None, enabled=None) -> None:
+    """Key und/oder Aktiv-Status eines festen Dienstes setzen. ``api_key=None``
+    (leeres Feld im UI) laesst den gespeicherten Key unveraendert."""
     if kind not in KINDS:
         raise ValueError(f"Unbekannter Metadaten-Dienst: {kind}")
-    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
-    pr = _clean_priorities(priorities)
-    return db.execute(
-        "INSERT INTO metadata_providers(kind, name, api_key, enabled, priority, priorities, created_at) "
-        "VALUES(?,?,?,?,?,?,?)",
-        (kind, (name or KIND_LABELS.get(kind, kind)).strip(),
-         crypto.encrypt(api_key or ""), 1 if enabled else 0,
-         min(pr.values()), json.dumps(pr), now),
-    )
-
-
-def update_provider(provider_id: int, name=None, api_key=None,
-                   enabled=None, priorities=None) -> None:
-    """Felder aktualisieren. ``api_key=None`` (leeres Feld im UI) laesst den Key
-    unveraendert; ``priorities=None`` laesst die Prioritaeten unveraendert."""
-    row = get_provider(provider_id)
+    row = get_by_kind(kind)
     if not row:
         raise ValueError("Metadaten-Dienst nicht gefunden")
     new_key = row["api_key"] if not api_key else crypto.encrypt(api_key)
-    pr = _priorities(row) if priorities is None else _clean_priorities(priorities)
     db.execute(
-        "UPDATE metadata_providers SET name=?, api_key=?, enabled=?, priority=?, priorities=? WHERE id=?",
-        (
-            row["name"] if name is None else name.strip(),
-            new_key,
-            row["enabled"] if enabled is None else (1 if enabled else 0),
-            min(pr.values()), json.dumps(pr),
-            provider_id,
-        ),
+        "UPDATE metadata_providers SET api_key=?, enabled=? WHERE kind=?",
+        (new_key, row["enabled"] if enabled is None else (1 if enabled else 0), kind),
     )
 
 
-def delete_provider(provider_id: int) -> None:
-    db.execute("DELETE FROM metadata_providers WHERE id=?", (provider_id,))
+def ensure_fixed_providers() -> None:
+    """Tabelle auf genau die zwei festen Dienste (je eine Zeile) normalisieren.
 
+    - Fremd-Typen aus der dynamischen 5a/5b-Phase (omdb/anidb) werden entfernt.
+    - Mehrfach-Eintraege gleichen Typs (5b erlaubte das) auf die *beste* Zeile
+      reduziert (aktiv + Key bevorzugt), der Rest geloescht - so lesen und
+      schreiben (get_by_kind/set_provider) garantiert dieselbe Zeile.
+    - Fehlende Dienste anlegen: TMDb uebernimmt einen ENV-Key und startet dann
+      aktiv (bestehende Installationen brechen nicht), sonst beide leer und AUS.
 
-# -- Einmalige Migration env -> DB ------------------------------------------
-def ensure_seed_from_env() -> None:
-    """TMDb-Key aus der alten ENV-Variable in die DB uebernehmen - genau einmal.
-
-    Nur wenn ``TMDB_API_KEY`` gesetzt ist UND noch kein TMDb-Dienst existiert.
-    So laeuft eine bestehende Installation ohne Zutun weiter; die ENV bleibt als
-    Fallback in ``tmdb`` erhalten.
+    Idempotent; laeuft bei jedem Start.
     """
-    if not config.TMDB_API_KEY:
-        return
-    if db.query("SELECT 1 FROM metadata_providers WHERE kind='tmdb' LIMIT 1"):
-        return
-    create_provider("tmdb", name="TMDb", api_key=config.TMDB_API_KEY, enabled=True)
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    db.execute("DELETE FROM metadata_providers WHERE kind NOT IN ('tmdb','tvdb')")
+    for kind in KINDS:
+        rows = db.query("SELECT * FROM metadata_providers WHERE kind=?", (kind,))
+        if not rows:
+            key = config.TMDB_API_KEY if kind == "tmdb" else ""
+            db.execute(
+                "INSERT INTO metadata_providers(kind, name, api_key, enabled, created_at) "
+                "VALUES(?,?,?,?,?)",
+                (kind, KIND_LABELS[kind], crypto.encrypt(key or ""), 1 if key else 0, now),
+            )
+        elif len(rows) > 1:
+            best = max(rows, key=lambda r: (
+                1 if r["enabled"] and r["api_key"] else 0,
+                1 if r["enabled"] else 0,
+                1 if r["api_key"] else 0,
+            ))
+            for r in rows:
+                if r["id"] != best["id"]:
+                    db.execute("DELETE FROM metadata_providers WHERE id=?", (r["id"],))

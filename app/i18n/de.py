@@ -92,7 +92,7 @@ STRINGS = {
 
     # -- Einstellungen: Metadaten --
     "settings.metadata.title": "Metadatendienste",
-    "settings.metadata.intro": "Metadaten-Quellen (TMDb, TheTVDB, OMDb, AniDB) mit eigenen API-Zugangsdaten. Der API-Key wird <strong>verschlüsselt</strong> gespeichert. Die <strong>Priorität je Medienart</strong> bestimmt, welcher Dienst zuerst gefragt wird (0 = für diesen Typ aus) - z.B. TheTVDB zuerst für Anime. Aktiv: TMDb und TheTVDB (Serien/Anime); OMDb/AniDB sind vorbereitet.",
+    "settings.metadata.intro": "Zwei Metadaten-Dienste. Der API-Key wird <strong>verschlüsselt</strong> gespeichert. Die Reihenfolge ist fest: bei <strong>Serien/Anime zuerst TheTVDB</strong> (bessere Episodenzahlen), bei <strong>Filmen zuerst TMDb</strong> - der jeweils andere dient als Rückfall. Standardmäßig aus: zum Nutzen einschalten und API-Key eintragen.",
     "settings.metadata.loading": "Lade Dienste …",
     # -- Metadaten-Dienste (Liste + Modal) --
     "providers.add": "Dienst hinzufügen",
@@ -107,6 +107,10 @@ STRINGS = {
     "providers.mt.serie": "Serie",
     "providers.mt.anime": "Anime",
     "providers.active": "aktiv",
+    "providers.role.tmdb": "Filme + Freigaben",
+    "providers.role.tvdb": "Serien-/Anime-Episoden",
+    "providers.enabled_on": "Dienst aktiviert",
+    "providers.enabled_off": "Dienst deaktiviert",
     "providers.empty": "Noch kein Metadaten-Dienst angelegt. Oben rechts über „+ Dienst hinzufügen“ starten.",
     "providers.loading": "Lade Dienste …",
     "providers.load_failed": "Dienste konnten nicht geladen werden.",

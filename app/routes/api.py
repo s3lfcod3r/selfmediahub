@@ -263,48 +263,25 @@ def api_source_libraries(source_id: int):
         raise HTTPException(status_code=400, detail=str(exc))
 
 
-# -- Metadaten-Dienste (Phase 5a) -------------------------------------------
+# -- Metadaten-Dienste (Phase 5c): zwei feste Dienste -----------------------
 @router.get("/providers")
 def api_providers_list():
     return {"providers": providers_service.list_providers(),
-            "kinds": list(providers_service.KINDS),
             "labels": providers_service.KIND_LABELS}
 
 
-@router.post("/providers")
-async def api_provider_create(request: Request):
-    d = await request.json()
-    try:
-        pid = providers_service.create_provider(
-            (d.get("kind") or "").strip(), d.get("name") or "",
-            d.get("api_key") or "", d.get("enabled", True),
-            priorities=d.get("priorities"),
-        )
-        return {"ok": True, "id": pid}
-    except ValueError as exc:
-        raise HTTPException(status_code=400, detail=str(exc))
-
-
-@router.put("/providers/{provider_id}")
-async def api_provider_update(provider_id: int, request: Request):
+@router.put("/providers/{kind}")
+async def api_provider_set(kind: str, request: Request):
     d = await request.json()
     # Leeres Key-Feld = Key behalten (None); nur ein echter Wert ersetzt ihn.
     api_key = d.get("api_key")
     try:
-        providers_service.update_provider(
-            provider_id,
-            name=d.get("name"), api_key=(api_key if api_key else None),
-            enabled=d.get("enabled"), priorities=d.get("priorities"),
+        providers_service.set_provider(
+            kind, api_key=(api_key if api_key else None), enabled=d.get("enabled"),
         )
         return {"ok": True}
     except ValueError as exc:
-        raise HTTPException(status_code=404, detail=str(exc))
-
-
-@router.delete("/providers/{provider_id}")
-def api_provider_delete(provider_id: int):
-    providers_service.delete_provider(provider_id)
-    return {"ok": True}
+        raise HTTPException(status_code=400, detail=str(exc))
 
 
 # -- Verzeichnis-Browser (fuer lokale Quellen) ------------------------------

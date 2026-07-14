@@ -18,7 +18,7 @@ _OPEN_PREFIXES = ("/static", "/api/health")
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     db.init_db()
-    providers.ensure_seed_from_env()  # TMDb-Key aus ENV einmalig in die DB
+    providers.ensure_fixed_providers()  # feste Dienste TMDb/TheTVDB sicherstellen
     scheduler.start()
     updatecheck.start()
     yield
