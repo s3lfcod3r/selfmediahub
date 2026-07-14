@@ -98,6 +98,14 @@ def api_item_detail(item_id: int):
                 elif not note:
                     note = ("Fehlende Folgen lassen sich hier nicht sicher bestimmen - "
                             "die Staffelnummerierung in Emby weicht von TMDb ab.")
+        elif episodes and not item.get("tmdb_id") and item.get("completeness") == "incomplete":
+            # Ohne TMDb-ID (z.B. Anime nur ueber TheTVDB angereichert) gibt es keine
+            # Pro-Staffel-Aufschluesselung - wenigstens die Gesamtzahl nennen.
+            miss = item.get("missing_episodes")
+            note = note or (
+                "Fehlende Folgen werden für diesen Titel nicht einzeln aufgeschlüsselt "
+                "(kein TMDb-Abgleich)"
+                + (f" - es fehlen laut Anbieter {miss} Folgen." if miss else "."))
 
     return {"item": item, "episodes": episodes, "note": note,
             "season_summary": season_summary,
@@ -270,7 +278,7 @@ async def api_provider_create(request: Request):
         pid = providers_service.create_provider(
             (d.get("kind") or "").strip(), d.get("name") or "",
             d.get("api_key") or "", d.get("enabled", True),
-            d.get("priority", 100),
+            priorities=d.get("priorities"),
         )
         return {"ok": True, "id": pid}
     except ValueError as exc:
@@ -286,7 +294,7 @@ async def api_provider_update(provider_id: int, request: Request):
         providers_service.update_provider(
             provider_id,
             name=d.get("name"), api_key=(api_key if api_key else None),
-            enabled=d.get("enabled"), priority=d.get("priority"),
+            enabled=d.get("enabled"), priorities=d.get("priorities"),
         )
         return {"ok": True}
     except ValueError as exc:

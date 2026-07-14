@@ -9,8 +9,8 @@ from datetime import datetime, timezone
 
 from .. import db, i18n
 from . import (
-    analysis, completeness, coverage, fsk, notify, rules,
-    settings as settings_service, sources, tmdb,
+    analysis, completeness, coverage, fsk, metaproviders, notify, rules,
+    settings as settings_service, sources,
 )
 
 # Wieviele TMDb-Abfragen gleichzeitig (TMDb erlaubt reichlich).
@@ -70,7 +70,7 @@ def _enrich_one(item: dict, existing: dict, cache: dict) -> None:
         if not item.get("genres") and prev.get("genres"):
             item["genres"] = json.loads(prev.get("genres") or "[]")
     else:
-        tmdb.enrich(item, cache)
+        metaproviders.enrich_item(item, cache)
     fsk.analyze(item)
 
 

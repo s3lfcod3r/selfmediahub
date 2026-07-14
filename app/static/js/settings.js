@@ -368,7 +368,10 @@
     }
     list.innerHTML = providers.map(function (p) {
       var label = MP_LABEL[p.kind] || p.kind;
-      var sub = T("providers.priority") + " " + p.priority + " · " +
+      var pr = p.priorities || {};
+      var sub = T("providers.mt.film") + " " + pr.film + " · " +
+        T("providers.mt.serie") + " " + pr.serie + " · " +
+        T("providers.mt.anime") + " " + pr.anime + " · " +
         (p.has_key ? T("providers.key_set") : T("providers.key_missing"));
       return '<div class="src-row' + (p.enabled ? "" : " src-off") + '" data-id="' + p.id + '">' +
         '<div class="src-row-main">' +
@@ -400,7 +403,9 @@
     $("mpName").value = "";
     $("mpKey").value = "";
     $("mpKey").placeholder = T("providers.key_enter");
-    $("mpPriority").value = "100";
+    $("mpPrioFilm").value = "100";
+    $("mpPrioSerie").value = "100";
+    $("mpPrioAnime").value = "100";
     $("mpEnabled").checked = true;
     $("mpSaveBtn").textContent = T("providers.add");
     mpStatus("", "");
@@ -419,7 +424,10 @@
       $("mpName").value = p.name || "";
       $("mpKey").value = "";
       $("mpKey").placeholder = p.has_key ? T("providers.key_keep") : T("providers.key_enter");
-      $("mpPriority").value = String(p.priority);
+      var pr = p.priorities || {};
+      $("mpPrioFilm").value = String(pr.film != null ? pr.film : 100);
+      $("mpPrioSerie").value = String(pr.serie != null ? pr.serie : 100);
+      $("mpPrioAnime").value = String(pr.anime != null ? pr.anime : 100);
       $("mpEnabled").checked = !!p.enabled;
       $("mpSaveBtn").textContent = T("common.save");
       mpStatus("", "");
@@ -428,10 +436,11 @@
   }
 
   function saveProvider() {
+    function prio(id) { var v = parseInt($(id).value, 10); return isNaN(v) || v < 0 ? 0 : v; }
     var body = {
       kind: $("mpKind").value,
       name: $("mpName").value.trim(),
-      priority: parseInt($("mpPriority").value, 10) || 100,
+      priorities: { film: prio("mpPrioFilm"), serie: prio("mpPrioSerie"), anime: prio("mpPrioAnime") },
       enabled: $("mpEnabled").checked,
     };
     var key = $("mpKey").value;

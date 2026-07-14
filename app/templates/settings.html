@@ -256,9 +256,16 @@
       </div>
 
       <div class="set-field">
-        <label for="mpPriority">{{ t('providers.priority') }}
+        <label>{{ t('providers.priority') }}
           <span class="set-hint">{{ t('providers.priority_hint') }}</span></label>
-        <input class="field" id="mpPriority" type="number" min="1" max="999" value="100">
+        <div class="mp-prio-row">
+          <label class="mp-prio"><span>{{ t('providers.mt.film') }}</span>
+            <input class="field" id="mpPrioFilm" type="number" min="0" max="999" value="100"></label>
+          <label class="mp-prio"><span>{{ t('providers.mt.serie') }}</span>
+            <input class="field" id="mpPrioSerie" type="number" min="0" max="999" value="100"></label>
+          <label class="mp-prio"><span>{{ t('providers.mt.anime') }}</span>
+            <input class="field" id="mpPrioAnime" type="number" min="0" max="999" value="100"></label>
+        </div>
       </div>
 
       <label class="set-toggle"><input type="checkbox" id="mpEnabled" checked><span>{{ t('providers.active') }}</span></label>

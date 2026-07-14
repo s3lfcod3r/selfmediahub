@@ -164,9 +164,13 @@ CREATE TABLE IF NOT EXISTS metadata_providers (
   api_key    TEXT DEFAULT '',
   enabled    INTEGER NOT NULL DEFAULT 1,
   priority   INTEGER NOT NULL DEFAULT 100,
+  priorities TEXT DEFAULT '',
   created_at TEXT
 );
 """
+
+# Nachtraeglich ergaenzte Spalten je Tabelle (fuer Migration bestehender DBs).
+_PROVIDER_COLDEF = {"priorities": "TEXT"}
 
 
 def _ensure_dir() -> None:
@@ -196,11 +200,16 @@ def _norm(sql: str) -> str:
 
 
 def _migrate_columns(conn: sqlite3.Connection) -> None:
-    """Fehlende einfache Spalten in einer aelteren media_items-Tabelle nachziehen."""
+    """Fehlende einfache Spalten in aelteren Tabellen nachziehen (media_items +
+    metadata_providers)."""
     have = {r["name"] for r in conn.execute("PRAGMA table_info(media_items)")}
     for col, coltype in _ITEM_COLDEF.items():
         if col not in have:
             conn.execute(f"ALTER TABLE media_items ADD COLUMN {col} {coltype}")
+    have_p = {r["name"] for r in conn.execute("PRAGMA table_info(metadata_providers)")}
+    for col, coltype in _PROVIDER_COLDEF.items():
+        if col not in have_p:
+            conn.execute(f"ALTER TABLE metadata_providers ADD COLUMN {col} {coltype}")
 
 
 def _rebuild_by_recreate(conn: sqlite3.Connection, table: str) -> None:

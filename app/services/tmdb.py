@@ -161,19 +161,22 @@ def enrich(item: dict, cache: dict) -> dict:
                 data = _get(f"/movie/{tmdb_id}", {"append_to_response": "release_dates"})
             cache[ckey] = data
 
+        # Fill-if-absent: ein hoeher priorisierter Provider (Kette, Phase 5b) hat
+        # das Feld ggf. schon gesetzt und darf nicht ueberschrieben werden.
         cert = _tv_cert(data) if is_series else _movie_cert(data)
-        if cert in DE_CERTS:
+        if cert in DE_CERTS and not item.get("fsk_suggested"):
             item["fsk_suggested"] = f"DE-{cert}"
 
         if not item.get("genres"):
             item["genres"] = [g.get("name") for g in data.get("genres", []) if g.get("name")]
 
+        if item.get("status") is None:
+            item["status"] = data.get("status")
         if is_series:
-            item["tmdb_seasons"] = data.get("number_of_seasons")
-            item["tmdb_episodes"] = data.get("number_of_episodes")
-            item["status"] = data.get("status")
-        else:
-            item["status"] = data.get("status")
+            if item.get("tmdb_seasons") is None:
+                item["tmdb_seasons"] = data.get("number_of_seasons")
+            if item.get("tmdb_episodes") is None:
+                item["tmdb_episodes"] = data.get("number_of_episodes")
     except requests.RequestException:
         return item
     return item
