@@ -48,8 +48,12 @@ class LocalConnector(Connector):
         if ep:
             show = _clean(ep.group("show")) or os.path.basename(dirpath)
             bucket = series.setdefault(show, {"seasons": set(), "eps": 0})
-            bucket["seasons"].add(int(ep.group("s")))
-            bucket["eps"] += 1
+            season = int(ep.group("s"))
+            # Staffel 0 (Specials) zaehlt nicht in Staffel-/Folgenzahl - konsistent
+            # zur Vollstaendigkeit (TMDb number_of_episodes ohne Specials).
+            if season >= 1:
+                bucket["seasons"].add(season)
+                bucket["eps"] += 1
             return
         mv = _MOVIE_RE.match(stem)
         title = _clean(mv.group("title")) if mv else _clean(stem)

@@ -76,8 +76,11 @@ def api_item_detail(item_id: int):
 
         # Konkret fehlende Episoden über TMDb bestimmen
         if episodes and item.get("tmdb_id"):
+            # Staffel 0 (Specials) fliesst nicht in die Fehlt-/Vollstaendigkeits-
+            # Rechnung ein - konsistent zu TMDb (number_of_episodes ohne Specials).
+            # Die Specials bleiben in der angezeigten Episodenliste erhalten.
             present = [(e["season"], e["episode"]) for e in episodes
-                       if e.get("season") is not None and e.get("episode") is not None]
+                       if (e.get("season") or 0) >= 1 and e.get("episode") is not None]
             seasons = tmdb.tv_season_counts(item["tmdb_id"])
             missing = tmdb.compute_missing(seasons, present)
             for m in missing:

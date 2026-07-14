@@ -11,7 +11,10 @@ ITEM_COLUMNS = [
     "official_rating", "community_rating", "genres", "image_url", "library_name",
     "child_count", "overview", "path", "tmdb_id", "imdb_id", "status",
     "tmdb_seasons", "tmdb_episodes", "have_seasons", "have_episodes",
-    "completeness", "missing_episodes", "video_codec", "width", "height",
+    # completeness/missing_episodes sind abgeleitet (completeness.recompute) und
+    # bewusst NICHT hier - sonst würde der Upsert sie bei jedem Sync auf NULL
+    # setzen, bis recompute laeuft (analog zu primary_audio_pct/primary_sub_pct).
+    "video_codec", "width", "height",
     "resolution", "hdr", "audio_codecs", "audio_langs", "subtitle_langs",
     "runtime_min", "size_bytes", "fsk_suggested", "fsk_suspicious", "fsk_reason",
     "synced_at",

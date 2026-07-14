@@ -331,6 +331,7 @@ STRINGS = {
     "sync.phase.analyzing": "Analyzing & matching with TMDb ...",
     "sync.phase.saving": "Saving {kind} ...",
     "sync.phase.episodes": "Reading episodes ({kind}) {idx}/{total} ...",
+    "sync.phase.completeness": "Computing completeness ...",
     "sync.phase.coverage": "Computing language coverage ...",
     "sync.phase.rules": "Applying rules ...",
 

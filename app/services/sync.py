@@ -45,11 +45,25 @@ def connector_for(kind: str):
     return sources.connector_for(kind)
 
 
+def _already_enriched(prev: dict, is_series: bool) -> bool:
+    """Ist eine Serie/ein Film wirklich schon bei TMDb angereichert?
+
+    NICHT an ``tmdb_id`` festmachen: die liefert Emby gratis mit (ProviderIds),
+    sie steht also auch dann, wenn der eigentliche TMDb-Abruf nie durchlief. Als
+    "fertig"-Signal zählt das Feld, das erst der Abruf setzt - bei Serien die
+    Episodenzahl, bei Filmen der Status. Sonst würden unfertige Einträge bei
+    jedem Re-Sync übersprungen und blieben für immer leer.
+    """
+    if not prev or not prev.get("tmdb_id"):
+        return False
+    return prev.get("tmdb_episodes" if is_series else "status") is not None
+
+
 def _enrich_one(item: dict, existing: dict, cache: dict) -> None:
     analysis.enrich(item)
     prev = existing.get(item["source_id"])
-    if prev and prev.get("tmdb_id"):
-        # Bereits abgeglichen -> TMDb-Daten übernehmen, kein Netzabruf.
+    if _already_enriched(prev, item.get("item_type") == "Serie"):
+        # Bereits vollständig abgeglichen -> TMDb-Daten übernehmen, kein Netzabruf.
         for field in _CARRY:
             if item.get(field) is None:
                 item[field] = prev.get(field)
@@ -57,7 +71,6 @@ def _enrich_one(item: dict, existing: dict, cache: dict) -> None:
             item["genres"] = json.loads(prev.get("genres") or "[]")
     else:
         tmdb.enrich(item, cache)
-    completeness.compute(item)
     fsk.analyze(item)
 
 
@@ -135,6 +148,12 @@ def run_sync() -> dict:
 
     # 4) Episoden je Serie speichern (fuer Sprach-Abdeckung, Staffel-Status) ----
     _sync_episodes([conn for conn, _i, _e in groups], lang)
+
+    # 4b) Vollstaendigkeit je Serie (Staffel 0 zaehlt nicht mit) -----------------
+    # Erst jetzt moeglich: die Einzelfolgen liegen in der DB, so laesst sich die
+    # HABEN-Seite ohne Specials zaehlen (konsistent zu TMDbs number_of_episodes).
+    _set(phase=i18n.t("sync.phase.completeness", lang))
+    completeness.recompute()
 
     # 5) Abdeckung der primaeren Sprache berechnen -------------------------------
     _set(phase=i18n.t("sync.phase.coverage", lang))
