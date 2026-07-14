@@ -3,6 +3,16 @@
    Single Source of Truth für Farben, Typografie, Motion.
    ============================================================ */
 
+/* Wortmarken-Schrift Orbitron LOKAL (Self-Marken-Standard, kein Google-Fonts-Zwang).
+   Datei unter app/static/fonts/, ausgeliefert als /static/fonts/Orbitron.ttf. */
+@font-face {
+  font-family: "Orbitron";
+  src: url("/static/fonts/Orbitron.ttf") format("truetype");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   /* --- Surfaces (dark = default) ------------------------- */
   --self-bg-0: #080c11;
