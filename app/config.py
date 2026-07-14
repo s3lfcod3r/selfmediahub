@@ -2,7 +2,7 @@
 import os
 
 APP_NAME = "SelfMediaHub"
-VERSION = "0.2.7"
+VERSION = "0.3.0"
 
 # GitHub-Repo fuer die Update-Pruefung (vergleicht mit dem neuesten Release).
 GITHUB_REPO = os.environ.get("GITHUB_REPO", "s3lfcod3r/selfmediahub").strip()
@@ -33,7 +33,3 @@ NOTIFY_WEBHOOK_URL = os.environ.get("NOTIFY_WEBHOOK_URL", "").strip()
 # --- Ausnahme: aktives Zurückschreiben nach Emby (FSK) ----------------
 # Standard AUS - SelfMediaHub ist read-only. Nur bewusst aktivieren.
 ALLOW_EMBY_WRITE = os.environ.get("ALLOW_EMBY_WRITE", "0").strip() in ("1", "true", "yes")
-
-
-def tmdb_enabled() -> bool:
-    return bool(TMDB_API_KEY)

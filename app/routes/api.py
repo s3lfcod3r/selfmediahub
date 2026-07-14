@@ -7,8 +7,9 @@ from fastapi.responses import Response
 
 from .. import config, db
 from ..services import (
-    auth, coverage, fsk, queries, rules, settings as settings_service,
-    sources as sources_service, sync as sync_service, tags, tmdb, updatecheck,
+    auth, coverage, fsk, providers as providers_service, queries, rules,
+    settings as settings_service, sources as sources_service,
+    sync as sync_service, tags, tmdb, updatecheck,
 )
 
 router = APIRouter(prefix="/api")
@@ -252,6 +253,50 @@ def api_source_libraries(source_id: int):
         raise HTTPException(status_code=404, detail=str(exc))
     except Exception as exc:  # noqa: BLE001 - Verbindungsfehler an die UI melden
         raise HTTPException(status_code=400, detail=str(exc))
+
+
+# -- Metadaten-Dienste (Phase 5a) -------------------------------------------
+@router.get("/providers")
+def api_providers_list():
+    return {"providers": providers_service.list_providers(),
+            "kinds": list(providers_service.KINDS),
+            "labels": providers_service.KIND_LABELS}
+
+
+@router.post("/providers")
+async def api_provider_create(request: Request):
+    d = await request.json()
+    try:
+        pid = providers_service.create_provider(
+            (d.get("kind") or "").strip(), d.get("name") or "",
+            d.get("api_key") or "", d.get("enabled", True),
+            d.get("priority", 100),
+        )
+        return {"ok": True, "id": pid}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
+
+@router.put("/providers/{provider_id}")
+async def api_provider_update(provider_id: int, request: Request):
+    d = await request.json()
+    # Leeres Key-Feld = Key behalten (None); nur ein echter Wert ersetzt ihn.
+    api_key = d.get("api_key")
+    try:
+        providers_service.update_provider(
+            provider_id,
+            name=d.get("name"), api_key=(api_key if api_key else None),
+            enabled=d.get("enabled"), priority=d.get("priority"),
+        )
+        return {"ok": True}
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+
+
+@router.delete("/providers/{provider_id}")
+def api_provider_delete(provider_id: int):
+    providers_service.delete_provider(provider_id)
+    return {"ok": True}
 
 
 # -- Verzeichnis-Browser (fuer lokale Quellen) ------------------------------

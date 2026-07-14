@@ -87,7 +87,29 @@ STRINGS = {
 
     # -- Settings: metadata --
     "settings.metadata.title": "Metadata services",
-    "settings.metadata.placeholder": "Coming here: multiple info sources (TMDb, TheTVDB, OMDb, AniDB …) with their own API credentials and a freely selectable order (priority) per media type - e.g. AniDB first for anime.",
+    "settings.metadata.intro": "Metadata sources (TMDb, TheTVDB, OMDb, AniDB) with their own API credentials. The API key is stored <strong>encrypted</strong>. The order (priority) decides which service is asked first. TMDb is currently used for enrichment; the other services are prepared.",
+    "settings.metadata.loading": "Loading services …",
+    # -- Metadata services (list + modal) --
+    "providers.add": "Add service",
+    "providers.add_title": "Add metadata service",
+    "providers.edit_title": "Edit metadata service",
+    "providers.type": "Type",
+    "providers.name": "Name",
+    "providers.api_key": "API key",
+    "providers.priority": "Priority",
+    "providers.priority_hint": "lower = first",
+    "providers.active": "active",
+    "providers.empty": "No metadata service yet. Start via „+ Add service“ in the top right.",
+    "providers.loading": "Loading services …",
+    "providers.load_failed": "Could not load services.",
+    "providers.saved": "Service saved",
+    "providers.deleted": "Service deleted",
+    "providers.delete_confirm": "Really delete this metadata service?",
+    "providers.err_no_key": "Please provide an API key.",
+    "providers.key_enter": "Enter API key",
+    "providers.key_keep": "Keep key (leave empty)",
+    "providers.key_set": "Key set",
+    "providers.key_missing": "no key",
 
     # -- Settings: age ratings --
     "settings.fsk.title": "Age ratings",

@@ -337,9 +337,152 @@
     loadSources();
   }
 
+  // ======================================================================
+  //  Metadaten-Dienste - Liste + Modal (Phase 5a)
+  // ======================================================================
+  var MP_LABEL = { tmdb: "TMDb", tvdb: "TheTVDB", omdb: "OMDb", anidb: "AniDB" };
+  var mpState = { id: null };
+
+  function mpStatus(msg, type) {
+    var s = $("mpModalStatus");
+    if (!s) { return; }
+    s.textContent = msg || "";
+    s.className = "src-modal-status set-desc" + (type ? " s-" + type : "");
+  }
+
+  function loadProviders() {
+    var list = $("providersList");
+    if (!list) { return; }
+    fetch("/api/providers")
+      .then(function (r) { return r.json(); })
+      .then(function (data) { renderProviders(list, data.providers || []); })
+      .catch(function () {
+        list.innerHTML = '<p class="set-desc">' + esc(T("providers.load_failed")) + "</p>";
+      });
+  }
+
+  function renderProviders(list, providers) {
+    if (!providers.length) {
+      list.innerHTML = '<div class="src-empty">' + esc(T("providers.empty")) + "</div>";
+      return;
+    }
+    list.innerHTML = providers.map(function (p) {
+      var label = MP_LABEL[p.kind] || p.kind;
+      var sub = T("providers.priority") + " " + p.priority + " · " +
+        (p.has_key ? T("providers.key_set") : T("providers.key_missing"));
+      return '<div class="src-row' + (p.enabled ? "" : " src-off") + '" data-id="' + p.id + '">' +
+        '<div class="src-row-main">' +
+          '<div class="src-row-name">' + esc(p.name || label) +
+            '<span class="src-kind-badge">' + esc(label) + "</span>" +
+            (p.enabled ? "" : '<span class="src-off-badge">' + esc(T("sources.disabled")) + "</span>") +
+          "</div>" +
+          '<div class="src-row-sub mono">' + esc(sub) + "</div>" +
+        "</div>" +
+        '<div class="src-row-actions">' +
+          '<button class="btn btn-icon mp-edit" title="' + esc(T("sources.edit")) +
+            '" aria-label="' + esc(T("sources.edit")) + '">&#9998;</button>' +
+          '<button class="btn btn-icon btn-danger mp-del" title="' + esc(T("sources.delete")) +
+            '" aria-label="' + esc(T("sources.delete")) + '">&#128465;</button>' +
+        "</div></div>";
+    }).join("");
+    Array.prototype.forEach.call(list.querySelectorAll(".src-row"), function (row) {
+      var id = row.getAttribute("data-id");
+      row.querySelector(".mp-edit").onclick = function () { openEditProvider(id); };
+      row.querySelector(".mp-del").onclick = function () { delProvider(id); };
+    });
+  }
+
+  function openAddProvider() {
+    mpState = { id: null };
+    $("mpModalTitle").textContent = T("providers.add_title");
+    $("mpKind").value = "tmdb";
+    $("mpKind").disabled = false;
+    $("mpName").value = "";
+    $("mpKey").value = "";
+    $("mpKey").placeholder = T("providers.key_enter");
+    $("mpPriority").value = "100";
+    $("mpEnabled").checked = true;
+    $("mpSaveBtn").textContent = T("providers.add");
+    mpStatus("", "");
+    showModal("mpModal");
+    $("mpName").focus();
+  }
+
+  function openEditProvider(id) {
+    fetch("/api/providers").then(function (r) { return r.json(); }).then(function (data) {
+      var p = (data.providers || []).filter(function (x) { return String(x.id) === String(id); })[0];
+      if (!p) { return; }
+      mpState = { id: p.id };
+      $("mpModalTitle").textContent = T("providers.edit_title");
+      $("mpKind").value = p.kind;
+      $("mpKind").disabled = true;   // Typ eines bestehenden Dienstes nicht aenderbar
+      $("mpName").value = p.name || "";
+      $("mpKey").value = "";
+      $("mpKey").placeholder = p.has_key ? T("providers.key_keep") : T("providers.key_enter");
+      $("mpPriority").value = String(p.priority);
+      $("mpEnabled").checked = !!p.enabled;
+      $("mpSaveBtn").textContent = T("common.save");
+      mpStatus("", "");
+      showModal("mpModal");
+    });
+  }
+
+  function saveProvider() {
+    var body = {
+      kind: $("mpKind").value,
+      name: $("mpName").value.trim(),
+      priority: parseInt($("mpPriority").value, 10) || 100,
+      enabled: $("mpEnabled").checked,
+    };
+    var key = $("mpKey").value;
+    if (key) { body.api_key = key; }
+    if (!mpState.id && !key) { mpStatus(T("providers.err_no_key"), "err"); return; }
+    var btn = $("mpSaveBtn");
+    btn.disabled = true;
+    mpStatus(T("sources.saving"), "");
+    var id = mpState.id;
+    fetch(id ? "/api/providers/" + id : "/api/providers", {
+      method: id ? "PUT" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        if (!res.ok) { throw new Error(res.j.detail || "?"); }
+        window.smhToast(T("providers.saved"), "ok");
+        hideModal("mpModal");
+        loadProviders();
+      })
+      .catch(function (e) { mpStatus(T("msg.failed_prefix") + e.message, "err"); })
+      .then(function () { btn.disabled = false; });
+  }
+
+  function delProvider(id) {
+    if (!window.confirm(T("providers.delete_confirm"))) { return; }
+    fetch("/api/providers/" + id, { method: "DELETE" })
+      .then(function () { window.smhToast(T("providers.deleted"), "ok"); loadProviders(); })
+      .catch(function () { window.smhToast(T("sources.delete_failed"), "err"); });
+  }
+
+  function initProviders() {
+    var addBtn = $("mpAddBtn");
+    if (!addBtn) { return; }
+    addBtn.onclick = openAddProvider;
+    $("mpModalClose").onclick = function () { hideModal("mpModal"); };
+    $("mpSaveBtn").onclick = saveProvider;
+    $("mpModal").addEventListener("click", function (e) {
+      if (e.target === $("mpModal")) { hideModal("mpModal"); }
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") { hideModal("mpModal"); }
+    });
+    loadProviders();
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     initNav();
     initSources();
+    initProviders();
 
     var allgBtn = $("saveAllgemein");
     if (allgBtn) {

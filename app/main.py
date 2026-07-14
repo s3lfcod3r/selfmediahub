@@ -9,7 +9,7 @@ from starlette.responses import JSONResponse, RedirectResponse
 
 from . import config, db
 from .routes import api, auth as auth_routes, health, pages
-from .services import auth, scheduler, updatecheck
+from .services import auth, providers, scheduler, updatecheck
 
 # Immer erreichbar (auch ohne Anmeldung): statische Dateien + Health-Check.
 _OPEN_PREFIXES = ("/static", "/api/health")
@@ -18,6 +18,7 @@ _OPEN_PREFIXES = ("/static", "/api/health")
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     db.init_db()
+    providers.ensure_seed_from_env()  # TMDb-Key aus ENV einmalig in die DB
     scheduler.start()
     updatecheck.start()
     yield

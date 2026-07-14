@@ -2,6 +2,8 @@
 
 Jellyfin erbt hiervon (fast identische API), siehe jellyfin.py.
 """
+import json
+
 import requests
 
 from .base import Connector
@@ -139,6 +141,9 @@ class EmbyConnector(Connector):
         item_id = it["Id"]
         is_series = it.get("Type") == "Series"
         providers = it.get("ProviderIds") or {}
+        # Alle externen IDs generisch merken (Basis fuer Multi-Provider, Phase 5).
+        # Schluessel klein geschrieben: tmdb, imdb, tvdb, anidb ...
+        ids = {k.lower(): str(v) for k, v in providers.items() if v}
         ticks = it.get("RunTimeTicks")
         item = {
             "source_id": item_id,
@@ -154,8 +159,9 @@ class EmbyConnector(Connector):
             "child_count": it.get("ChildCount"),
             "overview": it.get("Overview") or "",
             "path": it.get("Path") or "",
-            "tmdb_id": providers.get("Tmdb") or providers.get("tmdb"),
-            "imdb_id": providers.get("Imdb") or providers.get("imdb"),
+            "tmdb_id": ids.get("tmdb"),
+            "imdb_id": ids.get("imdb"),
+            "external_ids": json.dumps(ids),
             "runtime_min": round(ticks / TICKS_PER_MINUTE) if ticks else None,
         }
         if is_series:

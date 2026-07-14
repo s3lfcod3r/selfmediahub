@@ -92,7 +92,29 @@ STRINGS = {
 
     # -- Einstellungen: Metadaten --
     "settings.metadata.title": "Metadatendienste",
-    "settings.metadata.placeholder": "Hier entstehen: mehrere Informationsquellen (TMDb, TheTVDB, OMDb, AniDB …) mit eigenen API-Zugangsdaten und einer frei wählbaren Reihenfolge (Priorisierung) je Medienart - z.B. AniDB zuerst für Anime.",
+    "settings.metadata.intro": "Metadaten-Quellen (TMDb, TheTVDB, OMDb, AniDB) mit eigenen API-Zugangsdaten. Der API-Key wird <strong>verschlüsselt</strong> gespeichert. Die Reihenfolge (Priorität) bestimmt, welcher Dienst zuerst gefragt wird. Aktuell wird TMDb zur Anreicherung genutzt; die übrigen Dienste sind vorbereitet.",
+    "settings.metadata.loading": "Lade Dienste …",
+    # -- Metadaten-Dienste (Liste + Modal) --
+    "providers.add": "Dienst hinzufügen",
+    "providers.add_title": "Metadaten-Dienst hinzufügen",
+    "providers.edit_title": "Metadaten-Dienst bearbeiten",
+    "providers.type": "Typ",
+    "providers.name": "Name",
+    "providers.api_key": "API-Key",
+    "providers.priority": "Priorität",
+    "providers.priority_hint": "kleiner = zuerst",
+    "providers.active": "aktiv",
+    "providers.empty": "Noch kein Metadaten-Dienst angelegt. Oben rechts über „+ Dienst hinzufügen“ starten.",
+    "providers.loading": "Lade Dienste …",
+    "providers.load_failed": "Dienste konnten nicht geladen werden.",
+    "providers.saved": "Dienst gespeichert",
+    "providers.deleted": "Dienst gelöscht",
+    "providers.delete_confirm": "Diesen Metadaten-Dienst wirklich löschen?",
+    "providers.err_no_key": "Bitte einen API-Key angeben.",
+    "providers.key_enter": "API-Key eingeben",
+    "providers.key_keep": "Key behalten (leer lassen)",
+    "providers.key_set": "Key gesetzt",
+    "providers.key_missing": "kein Key",
 
     # -- Einstellungen: FSK --
     "settings.fsk.title": "FSK & Altersfreigaben",

@@ -5,14 +5,24 @@ Alles read-only und best-effort: Fehler brechen den Sync nicht ab.
 import requests
 
 from .. import config
+from . import providers
 
 BASE = "https://api.themoviedb.org/3"
 TIMEOUT = 8
 DE_CERTS = {"0", "6", "12", "16", "18"}
 
 
+def _key() -> str:
+    """Effektiver TMDb-Key: aktiver DB-Dienst (Phase 5a), sonst ENV-Fallback."""
+    return providers.api_key_for("tmdb") or config.TMDB_API_KEY
+
+
+def _enabled() -> bool:
+    return bool(_key())
+
+
 def _get(path: str, extra: dict = None):
-    params = {"api_key": config.TMDB_API_KEY}
+    params = {"api_key": _key()}
     if extra:
         params.update(extra)
     resp = requests.get(f"{BASE}{path}", params=params, timeout=TIMEOUT)
@@ -84,7 +94,7 @@ def compute_missing(seasons: dict, present) -> list:
 
 def tv_season_counts(tmdb_id) -> dict:
     """{Staffel: Episodenzahl} laut TMDb (nur Staffel >= 1). {} bei Fehler/deaktiviert."""
-    if not config.tmdb_enabled() or not tmdb_id:
+    if not _enabled() or not tmdb_id:
         return {}
     try:
         data = _get(f"/tv/{tmdb_id}")
@@ -134,7 +144,7 @@ def season_summary(seasons: dict, present) -> dict:
 
 def enrich(item: dict, cache: dict) -> dict:
     """Item mit TMDb-Daten anreichern (in-place). ``cache`` je Sync-Lauf."""
-    if not config.tmdb_enabled():
+    if not _enabled():
         return item
     is_series = item.get("item_type") == "Serie"
     try:

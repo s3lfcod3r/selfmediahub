@@ -114,8 +114,14 @@
 
       <!-- Metadatendienste -->
       <section class="set-panel" data-cat="metadaten">
-        <h2 class="card-h">{{ t('settings.metadata.title') }} <span class="phase-badge">Phase 5</span></h2>
-        <p class="set-placeholder">{{ t('settings.metadata.placeholder') }}</p>
+        <div class="src-panel-head">
+          <h2 class="card-h">{{ t('settings.metadata.title') }}</h2>
+          <button class="btn btn-primary" id="mpAddBtn">+ {{ t('providers.add') }}</button>
+        </div>
+        <p class="set-desc">{{ t('settings.metadata.intro') }}</p>
+        <div id="providersList" class="src-list">
+          <p class="set-desc" id="providersLoading">{{ t('settings.metadata.loading') }}</p>
+        </div>
       </section>
 
       <!-- FSK & Altersfreigaben -->
@@ -219,6 +225,48 @@
         <button class="btn" id="srcTestBtn" hidden>{{ t('sources.test') }}</button>
         <button class="btn" id="srcLibsBtn" hidden>{{ t('sources.libraries_btn') }}</button>
         <button class="btn btn-primary" id="srcSaveBtn">{{ t('sources.add') }}</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metadaten-Dienst anlegen/bearbeiten -->
+  <div class="modal" id="mpModal">
+    <div class="modal-panel src-modal-panel">
+      <button class="modal-close" id="mpModalClose" aria-label="{{ t('modal.close') }}">&times;</button>
+      <h2 class="card-h" id="mpModalTitle">{{ t('providers.add_title') }}</h2>
+
+      <div class="set-field">
+        <label for="mpKind">{{ t('providers.type') }}</label>
+        <select class="field" id="mpKind">
+          <option value="tmdb">TMDb</option>
+          <option value="tvdb">TheTVDB</option>
+          <option value="omdb">OMDb</option>
+          <option value="anidb">AniDB</option>
+        </select>
+      </div>
+
+      <div class="set-field">
+        <label for="mpName">{{ t('providers.name') }}</label>
+        <input class="field" id="mpName" maxlength="60">
+      </div>
+
+      <div class="set-field">
+        <label for="mpKey">{{ t('providers.api_key') }}</label>
+        <input class="field" id="mpKey" type="password" autocomplete="new-password">
+      </div>
+
+      <div class="set-field">
+        <label for="mpPriority">{{ t('providers.priority') }}
+          <span class="set-hint">{{ t('providers.priority_hint') }}</span></label>
+        <input class="field" id="mpPriority" type="number" min="1" max="999" value="100">
+      </div>
+
+      <label class="set-toggle"><input type="checkbox" id="mpEnabled" checked><span>{{ t('providers.active') }}</span></label>
+
+      <p class="src-modal-status set-desc" id="mpModalStatus"></p>
+
+      <div class="set-actions">
+        <button class="btn btn-primary" id="mpSaveBtn">{{ t('providers.add') }}</button>
       </div>
     </div>
   </div>

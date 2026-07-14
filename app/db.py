@@ -9,7 +9,7 @@ from . import config
 ITEM_COLUMNS = [
     "source_kind", "source_id", "source_ref", "item_type", "name", "sort_name", "year",
     "official_rating", "community_rating", "genres", "image_url", "library_name",
-    "child_count", "overview", "path", "tmdb_id", "imdb_id", "status",
+    "child_count", "overview", "path", "tmdb_id", "imdb_id", "external_ids", "status",
     "tmdb_seasons", "tmdb_episodes", "have_seasons", "have_episodes",
     # completeness/missing_episodes sind abgeleitet (completeness.recompute) und
     # bewusst NICHT hier - sonst würde der Upsert sie bei jedem Sync auf NULL
@@ -36,7 +36,7 @@ _ITEM_COLDEF = {
     "official_rating": "TEXT", "community_rating": "REAL", "genres": "TEXT",
     "image_url": "TEXT", "library_name": "TEXT", "child_count": "INTEGER",
     "overview": "TEXT", "path": "TEXT", "tmdb_id": "TEXT", "imdb_id": "TEXT",
-    "status": "TEXT",
+    "external_ids": "TEXT", "status": "TEXT",
     "tmdb_seasons": "INTEGER", "tmdb_episodes": "INTEGER",
     "have_seasons": "INTEGER", "have_episodes": "INTEGER",
     "completeness": "TEXT", "missing_episodes": "INTEGER",
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS media_items (
   sort_name TEXT, year INTEGER, official_rating TEXT, community_rating REAL,
   genres TEXT, image_url TEXT, library_name TEXT, child_count INTEGER, overview TEXT,
   path TEXT,
-  tmdb_id TEXT, imdb_id TEXT, status TEXT,
+  tmdb_id TEXT, imdb_id TEXT, external_ids TEXT, status TEXT,
   tmdb_seasons INTEGER, tmdb_episodes INTEGER, have_seasons INTEGER, have_episodes INTEGER,
   completeness TEXT, missing_episodes INTEGER,
   video_codec TEXT, width INTEGER, height INTEGER, resolution TEXT, hdr TEXT,
@@ -152,6 +152,19 @@ CREATE TABLE IF NOT EXISTS sources (
   libraries   TEXT DEFAULT '',
   enabled     INTEGER NOT NULL DEFAULT 1,
   created_at  TEXT
+);
+
+-- Metadaten-Dienste (Phase 5a): TMDb/TheTVDB/OMDb/AniDB, im UI verwaltet.
+-- `api_key` verschluesselt (crypto-Service). `priority` = Reihenfolge (kleiner
+-- zuerst); mehrere Dienste je Typ moeglich, eindeutig ist die id.
+CREATE TABLE IF NOT EXISTS metadata_providers (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  kind       TEXT NOT NULL,
+  name       TEXT NOT NULL,
+  api_key    TEXT DEFAULT '',
+  enabled    INTEGER NOT NULL DEFAULT 1,
+  priority   INTEGER NOT NULL DEFAULT 100,
+  created_at TEXT
 );
 """
 

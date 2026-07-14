@@ -1,4 +1,6 @@
 """Plex-Connector - liest Filme und Serien nur lesend über die Plex-API (JSON)."""
+import json
+
 import requests
 
 from .base import Connector
@@ -7,14 +9,15 @@ TIMEOUT = 60
 
 
 def _guids(meta: dict) -> dict:
-    """tmdb/imdb-IDs aus Plex-Guid-Liste ('tmdb://123', 'imdb://tt..')."""
+    """Alle externen IDs aus der Plex-Guid-Liste ('tmdb://123', 'imdb://tt..',
+    'tvdb://..', 'anidb://..'). Schluessel klein geschrieben."""
     out = {}
     for g in meta.get("Guid") or []:
         gid = g.get("id", "")
-        if gid.startswith("tmdb://"):
-            out["tmdb"] = gid.split("://", 1)[1]
-        elif gid.startswith("imdb://"):
-            out["imdb"] = gid.split("://", 1)[1]
+        if "://" in gid:
+            scheme, val = gid.split("://", 1)
+            if val:
+                out[scheme.lower()] = val
     return out
 
 
@@ -87,6 +90,7 @@ class PlexConnector(Connector):
             "overview": meta.get("summary") or "",
             "tmdb_id": ids.get("tmdb"),
             "imdb_id": ids.get("imdb"),
+            "external_ids": json.dumps(ids),
         }
         dur = meta.get("duration")
         item["runtime_min"] = round(dur / 60000) if dur else None
