@@ -186,7 +186,10 @@
     $("grid").innerHTML = rows.map(function (i) {
       var editable = window.__ALLOW_WRITE__ && i.source_kind === "emby";
       var hasRating = !!i.official_rating;
-      var rlabel = i.rating_disp || i.official_rating;   // in bevorzugter Rating-Art
+      // Cover zeigt den ROHEN Emby-Wert (kein Uebersetzen) - der Ist-Zustand der
+      // Bibliothek. Die Umrechnung in die bevorzugte Rating-Art passiert nur auf
+      // der FSK-Seite. (Phase 5d, Fix 1)
+      var rlabel = i.official_rating;
       // Ampel: gruen = in Emby gesperrt/erledigt, neutral = Rating unbestaetigt,
       // .none = keine Freigabe (Warnung). Nur bei aktivem FSK-Feature.
       var cls = "rating" + (hasRating ? "" : " none") +

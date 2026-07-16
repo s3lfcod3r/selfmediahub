@@ -25,7 +25,8 @@ DEFAULTS = {
     "display.primary_language": "ger",  # primaere Sprache der Instanz (fuer Sprach-Abdeckung/Flaggen)
     # -- FSK & Altersfreigaben (Phase 1 / 5c) --
     "fsk.enabled": True,               # FSK-Feature an/aus (nur UI - Daten bleiben gespeichert)
-    "display.rating_art": "fsk",       # bevorzugte Rating-Art: fsk | usk | pegi | age (Phase 5c.2)
+    "display.rating_translate": False,  # Freigaben in die bevorzugte Rating-Art umrechnen? (Phase 5d, Fix 3)
+    "display.rating_art": "fsk",       # bevorzugte Rating-Art: fsk|usk|pegi|mpaa|ustv|bbfc|age (Phase 5c.2 / 5d Fix 6)
 }
 
 

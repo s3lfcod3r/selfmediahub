@@ -56,6 +56,7 @@ def fsk_page(request: Request):
         request,
         items_json=json.dumps(items, ensure_ascii=False),
         rating_art=settings_service.get("display.rating_art", "fsk"),
+        rating_translate=bool(settings_service.get("display.rating_translate", False)),
         allow_write=config.ALLOW_EMBY_WRITE,
     ))
 

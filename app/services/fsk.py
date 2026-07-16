@@ -8,7 +8,7 @@ import json
 
 import requests
 
-from .. import config
+from .. import config, db
 from . import ratings
 
 VALID_RATINGS = ["DE-0", "DE-6", "DE-12", "DE-16", "DE-18",
@@ -51,6 +51,37 @@ def analyze(item: dict) -> dict:
     item["fsk_suspicious"] = 1 if suspicious else 0
     item["fsk_reason"] = reason
     return item
+
+
+def refresh_locks() -> dict:
+    """Sperr-Status (rating_locked) fuer alle Emby/Jellyfin-Items neu aus der Quelle
+    lesen und die lokale DB aktualisieren. Read-only gegen die Quelle - kein
+    ALLOW_EMBY_WRITE noetig.
+
+    Grund fuer diesen Extra-Schritt: der Sync liest die Item-Liste, und Emby
+    liefert die Sperr-Info (LockedFields/LockData) im Listen-Endpoint nicht mit.
+    Erst der Einzel-Item-Abruf (fetch_rating_locks) kennt den echten Stand.
+    """
+    from . import sources
+    checked = changed = locked = 0
+    for conn in sources.build_connectors():
+        if getattr(conn, "kind", None) not in ("emby", "jellyfin"):
+            continue
+        rows = db.query(
+            "SELECT id, source_id, rating_locked FROM media_items WHERE source_ref=?",
+            (conn.source_ref,),
+        )
+        state = conn.fetch_rating_locks([r["source_id"] for r in rows])
+        for r in rows:
+            new = state.get(r["source_id"])
+            if new is None:  # Item nicht lesbar -> vorhandenen Wert behalten
+                continue
+            checked += 1
+            locked += new
+            if int(r["rating_locked"] or 0) != new:
+                db.execute("UPDATE media_items SET rating_locked=? WHERE id=?", (new, r["id"]))
+                changed += 1
+    return {"checked": checked, "locked": locked, "changed": changed}
 
 
 # Admin-User-Id je Server cachen (base_url -> uid) - bei mehreren Emby-Instanzen

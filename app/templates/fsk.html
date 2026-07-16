@@ -19,7 +19,9 @@
       <option value="locked">{{ t('fskpage.filter.locked') }}</option>
     </select>
     <span class="spacer"></span>
-    <span class="fsk-legend"><span class="xmark">&#9650;</span> {{ t('fskpage.legend_xlated') }}</span>
+    {% if rating_translate %}<span class="fsk-legend"><span class="xmark">&#9650;</span> {{ t('fskpage.legend_xlated') }}</span>{% endif %}
+    <button class="btn" id="fskRefreshLocks" title="{{ t('fskpage.refresh_locks_title') }}">
+      {{ t('fskpage.refresh_locks') }}</button>
     <button class="btn btn-primary" id="fskApply"
       {% if not allow_write %}disabled title="{{ t('fskpage.write_off') }}"{% endif %}>
       {{ t('fskpage.apply') }}</button>
@@ -34,6 +36,7 @@
 <script>
   window.__ITEMS__ = {{ items_json|safe }};
   window.__RATING_ART__ = {{ rating_art|tojson }};
+  window.__RATING_TRANSLATE__ = {{ 'true' if rating_translate else 'false' }};
   window.__ALLOW_WRITE__ = {{ 'true' if allow_write else 'false' }};
 </script>
 <script src="/static/js/fsk.js"></script>

@@ -22,24 +22,33 @@ def _acked_set() -> set:
             for r in db.query("SELECT source_ref, source_id FROM fsk_acks")}
 
 
-def _add_rating_display(item: dict, art: str) -> None:
-    """Freigabe in die bevorzugte Rating-Art uebersetzen (Anzeige, Phase 5c).
-    Setzt rating_disp (Text oder None) + rating_xlated (1 wenn umgerechnet)."""
-    disp, xlated = ratings.translate(item.get("official_rating"), art)
-    item["rating_disp"] = disp
-    item["rating_xlated"] = 1 if xlated else 0
+def _display(raw, art: str, translate: bool):
+    """(text, xlated). Bei ``translate`` in die bevorzugte Rating-Art umrechnen
+    (Phase 5c); sonst den ROHEN Quellwert unveraendert zeigen (Phase 5d, Fix 3).
+    ``xlated`` (Hinweis-Symbol) gibt es nur im uebersetzten Modus."""
+    if not raw:
+        return None, 0
+    if not translate:
+        return str(raw), 0
+    disp, xlated = ratings.translate(raw, art)
+    # Fallback: nicht erkannter Rohwert -> unveraendert zeigen statt zu verschlucken.
+    return (disp if disp is not None else str(raw)), (1 if xlated else 0)
+
+
+def _add_rating_display(item: dict, art: str, translate: bool) -> None:
+    """Anzeige-Felder fuer Quelle/Vorschlag/Drift setzen. Das Alter (fuer die
+    Filter-/Handlungsbedarf-Logik) wird IMMER berechnet, unabhaengig vom
+    Uebersetzen-Schalter."""
+    item["rating_disp"], item["rating_xlated"] = _display(item.get("official_rating"), art, translate)
     item["rating_age"] = ratings.age_of(item.get("official_rating"))
-    sug_disp, sug_xlated = ratings.translate(item.get("fsk_suggested"), art)
-    item["suggested_disp"] = sug_disp
-    item["suggested_xlated"] = 1 if sug_xlated else 0
+    item["suggested_disp"], item["suggested_xlated"] = _display(item.get("fsk_suggested"), art, translate)
     item["suggested_age"] = ratings.age_of(item.get("fsk_suggested"))
     # Drift (5c.5): SelfMediaHub hat mal geschrieben, Emby weicht jetzt ab. Vergleich
     # ueber das ALTER - format-tolerant (Emby gibt den Wert evtl. anders zurueck).
     written = item.get("rating_written")
     item["rating_drift"] = 1 if (written is not None
                                  and ratings.age_of(written) != item["rating_age"]) else 0
-    wdisp, _ = ratings.translate(written, art)
-    item["written_disp"] = wdisp
+    item["written_disp"], _ = _display(written, art, translate)
     item["written_age"] = ratings.age_of(written)
 
 
@@ -48,12 +57,13 @@ def get_items() -> list:
     tagmap = tags_service.tags_for_items()
     acked = _acked_set()
     art = settings_service.get("display.rating_art", ratings.DEFAULT_ART)
+    translate = bool(settings_service.get("display.rating_translate", False))
     items = []
     for row in rows:
         item = _parse(row)
         item["tags"] = tagmap.get(item["id"], [])
         item["fsk_acked"] = 1 if (item["source_ref"], item["source_id"]) in acked else 0
-        _add_rating_display(item, art)
+        _add_rating_display(item, art, translate)
         items.append(item)
     return items
 

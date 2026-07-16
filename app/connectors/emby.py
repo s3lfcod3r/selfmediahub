@@ -3,10 +3,16 @@
 Jellyfin erbt hiervon (fast identische API), siehe jellyfin.py.
 """
 import json
+from concurrent.futures import ThreadPoolExecutor
 
 import requests
 
 from .base import Connector
+
+# Sperr-Status je Item einzeln lesen: der Listen-Endpoint liefert LockedFields/
+# LockData nicht (Emby-Eigenheit) - siehe fetch_rating_locks(). Parallelitaet,
+# damit der On-Demand-Refresh auch bei grossen Bibliotheken zuegig bleibt.
+LOCK_FETCH_WORKERS = 8
 
 TIMEOUT = 60
 IMAGE_MAX_HEIGHT = 450
@@ -16,6 +22,14 @@ ITEM_FIELDS = (
     "RecursiveItemCount,Overview,SortName,ProviderIds,MediaSources,RunTimeTicks,Path,LockedFields"
 )
 LIBRARY_TYPES = ("movies", "tvshows", "mixed")
+
+
+def _rating_locked(it: dict) -> int:
+    """OfficialRating in Emby gesperrt? Ganzes Item (``LockData``) oder feldweise
+    (``OfficialRating`` in ``LockedFields``). ACHTUNG: Beide Felder liefert nur das
+    Einzel-Item-Objekt - im Listen-DTO fehlen sie (Emby serialisiert sie dort nicht)."""
+    return 1 if (it.get("LockData")
+                 or "OfficialRating" in (it.get("LockedFields") or [])) else 0
 
 
 def _dedupe(seq):
@@ -162,9 +176,10 @@ class EmbyConnector(Connector):
             "tmdb_id": ids.get("tmdb"),
             "imdb_id": ids.get("imdb"),
             "external_ids": json.dumps(ids),
-            # Freigabe in Emby gesperrt? (ganzes Item oder Feld OfficialRating)
-            "rating_locked": 1 if (it.get("LockData")
-                                   or "OfficialRating" in (it.get("LockedFields") or [])) else 0,
+            # Freigabe in Emby gesperrt? Im Listen-Sync fast immer 0, weil der
+            # Listen-Endpoint LockedFields/LockData nicht liefert - der echte
+            # Stand kommt ueber fetch_rating_locks() (FSK-Seite: "Sperren pruefen").
+            "rating_locked": _rating_locked(it),
             "runtime_min": round(ticks / TICKS_PER_MINUTE) if ticks else None,
         }
         if is_series:
@@ -208,3 +223,30 @@ class EmbyConnector(Connector):
         episodes.sort(key=lambda e: ((e["season"] if e["season"] is not None else 999),
                                      (e["episode"] if e["episode"] is not None else 999)))
         return episodes
+
+    def fetch_rating_locks(self, source_ids: list) -> dict:
+        """Sperr-Status (rating_locked) je Item frisch aus der Quelle lesen.
+
+        Noetig, weil der Listen-Endpoint ``LockedFields``/``LockData`` NICHT
+        serialisiert (auch nicht via ``Fields``) - nur das Einzel-Item-Objekt
+        ``/Users/{uid}/Items/{id}`` enthaelt sie. Read-only; parallelisiert.
+
+        Rueckgabe ``{source_id: 0|1|None}``. ``None`` = Item nicht lesbar; der
+        Aufrufer soll den vorhandenen DB-Wert dann NICHT ueberschreiben.
+        """
+        if not source_ids:
+            return {}
+        uid = self._admin_user_id()
+        headers = self._headers()
+        base = f"{self.base_url}{self.prefix}/Users/{uid}/Items/"
+
+        def _one(sid):
+            try:
+                resp = requests.get(f"{base}{sid}", headers=headers, timeout=TIMEOUT)
+                resp.raise_for_status()
+                return sid, _rating_locked(resp.json())
+            except (requests.RequestException, ValueError):
+                return sid, None
+
+        with ThreadPoolExecutor(max_workers=LOCK_FETCH_WORKERS) as pool:
+            return dict(pool.map(_one, source_ids))

@@ -159,12 +159,22 @@
           </label>
           <p class="set-desc">{{ t('settings.fsk.enable_desc') }}</p>
         </div>
-        <div class="set-field">
+        <div class="set-field" id="ratingTranslateField">
+          <label class="set-toggle">
+            <input type="checkbox" id="ratingTranslate" {{ 'checked' if settings['display.rating_translate'] }}>
+            <span>{{ t('settings.fsk.translate') }}</span>
+          </label>
+          <p class="set-desc">{{ t('settings.fsk.translate_desc') }}</p>
+        </div>
+        <div class="set-field" id="ratingArtField"{{ '' if settings['display.rating_translate'] else ' hidden' }}>
           <label for="ratingArt">{{ t('settings.fsk.rating_art') }}</label>
           <select class="field" id="ratingArt">
             <option value="fsk" {{ 'selected' if settings['display.rating_art'] == 'fsk' }}>{{ t('settings.fsk.art.fsk') }}</option>
             <option value="usk" {{ 'selected' if settings['display.rating_art'] == 'usk' }}>{{ t('settings.fsk.art.usk') }}</option>
             <option value="pegi" {{ 'selected' if settings['display.rating_art'] == 'pegi' }}>{{ t('settings.fsk.art.pegi') }}</option>
+            <option value="mpaa" {{ 'selected' if settings['display.rating_art'] == 'mpaa' }}>{{ t('settings.fsk.art.mpaa') }}</option>
+            <option value="ustv" {{ 'selected' if settings['display.rating_art'] == 'ustv' }}>{{ t('settings.fsk.art.ustv') }}</option>
+            <option value="bbfc" {{ 'selected' if settings['display.rating_art'] == 'bbfc' }}>{{ t('settings.fsk.art.bbfc') }}</option>
             <option value="age" {{ 'selected' if settings['display.rating_art'] == 'age' }}>{{ t('settings.fsk.art.age') }}</option>
           </select>
           <p class="set-desc">{{ t('settings.fsk.rating_art_desc') }}</p>

@@ -430,6 +430,19 @@
       };
     }
 
+    // Auto-Uebersetzen-Schalter (Phase 5d, Fix 3): steuert, ob Freigaben in die
+    // gewaehlte Rating-Art umgerechnet werden. Bei AUS zeigt die App die rohen
+    // Quellwerte; das Rating-Art-Dropdown ist dann irrelevant und ausgeblendet.
+    var ratingTranslate = $("ratingTranslate");
+    var ratingArtField = $("ratingArtField");
+    if (ratingTranslate) {
+      ratingTranslate.onchange = function () {
+        var on = ratingTranslate.checked;
+        if (ratingArtField) { ratingArtField.hidden = !on; }
+        saveSettings({ "display.rating_translate": on }, T("msg.saved"));
+      };
+    }
+
     var ratingArt = $("ratingArt");
     if (ratingArt) {
       ratingArt.onchange = function () {

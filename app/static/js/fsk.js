@@ -1,16 +1,18 @@
-/* FSK-Bearbeitungs-Seite: Quelle (Emby) vs. Dienst-Vorschlag vs. Gewuenscht.
-   Filter + editierbare "Gewuenscht"-Dropdowns; Anwenden schreibt via write-bulk.
-   Werte werden in der bevorzugten Rating-Art angezeigt, aber als "DE-<Alter>"
-   geschrieben (Konsistenz zum Grid-Editor). */
+/* FSK-Bearbeitungs-Seite: Quelle (alle Datenquellen) vs. Dienst-Vorschlag vs.
+   Gewuenscht. Filter + editierbare "Gewuenscht"-Dropdowns; Anwenden schreibt via
+   write-bulk. Quelle/Vorschlag werden in der bevorzugten Rating-Art angezeigt
+   (bei aktivem Uebersetzen, sonst roh - kommt fertig aus queries). Das
+   Gewuenscht-Dropdown bietet immer die deutschen FSK-Stufen an und schreibt
+   kanonisch "DE-<Alter>" nach Emby - der geschriebene Wert ist bewusst von der
+   Anzeige-Art entkoppelt (Emby-Kontext ist deutsch). Write-back nur fuer Emby. */
 (function () {
   "use strict";
   var T = window.t || function (k) { return k; };
   var $ = function (id) { return document.getElementById(id); };
   var ITEMS = window.__ITEMS__ || [];
-  var ART = window.__RATING_ART__ || "fsk";
   var CAN_WRITE = window.__ALLOW_WRITE__ === true;
-  var SYSTEMS = { fsk: [0, 6, 12, 16, 18], usk: [0, 6, 12, 16, 18], pegi: [3, 7, 12, 16, 18], age: null };
-  var BUCKETS = SYSTEMS[ART] || [0, 6, 12, 16, 18];
+  // Schreib-Stufen = deutsche FSK-Stufen (kanonisch "DE-<Alter>", VALID_RATINGS).
+  var BUCKETS = [0, 6, 12, 16, 18];
   var state = { q: "", filter: "todo" };
 
   function esc(s) {
@@ -21,8 +23,7 @@
 
   function label(age) {
     if (age == null) { return ""; }
-    if (!SYSTEMS[ART]) { return age + "+"; }
-    return ({ fsk: "FSK", usk: "USK", pegi: "PEGI" }[ART] || "") + " " + age;
+    return "FSK " + age;
   }
   function bucketUp(age) {
     if (age == null) { return null; }
@@ -30,6 +31,11 @@
     return BUCKETS[BUCKETS.length - 1];
   }
 
+  var KIND_LABEL = { emby: "Emby", jellyfin: "Jellyfin", plex: "Plex", local: T("sources.kind.local") };
+  function srcKind(i) {
+    var k = KIND_LABEL[i.source_kind] || i.source_kind || "";
+    return k ? '<span class="fsk-srckind">' + esc(k) + "</span>" : "";
+  }
   function isEmby(i) { return i.source_kind === "emby"; }
   function actionable(i) {
     if (i.rating_drift) { return true; }                                // abgewichen
@@ -105,7 +111,7 @@
           esc(T("fskpage.accept_title")) + '">' + esc(T("fskpage.accept")) + "</button>" : "";
       return '<div class="fsk-row" data-id="' + i.id + '">' + img +
         '<span class="fsk-title">' + esc(i.name) + year + "</span>" +
-        '<span class="fsk-col">' + srcBadge(i) + "</span>" +
+        '<span class="fsk-col fsk-src">' + srcKind(i) + srcBadge(i) + "</span>" +
         '<span class="fsk-col">' + suggBadge(i) + "</span>" +
         '<span class="fsk-col fsk-desired"><select class="field fsk-sel" data-id="' + i.id + '"' + dis + ">" +
         optionsHtml(i) + "</select>" + accept + "</span></div>";
@@ -149,10 +155,29 @@
       .catch(function (e) { window.smhToast(T("msg.failed_prefix") + e.message, "err"); btn.disabled = false; });
   }
 
+  function refreshLocks() {
+    var btn = $("fskRefreshLocks");
+    btn.disabled = true;
+    fetch("/api/fsk/refresh-locks", { method: "POST" })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        window.smhToast(
+          T("fskpage.locks_refreshed").replace("{n}", res.locked).replace("{c}", res.changed),
+          "ok"
+        );
+        location.reload();
+      })
+      .catch(function (e) {
+        window.smhToast(T("msg.failed_prefix") + e.message, "err");
+        btn.disabled = false;
+      });
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     $("fskQ").addEventListener("input", function () { state.q = this.value.toLowerCase(); render(); });
     $("fskFilter").addEventListener("change", function () { state.filter = this.value; render(); });
     if (CAN_WRITE) { $("fskApply").addEventListener("click", apply); }
+    $("fskRefreshLocks").addEventListener("click", refreshLocks);
     render();
   });
 })();

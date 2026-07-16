@@ -482,6 +482,17 @@ async def api_fsk_write(request: Request):
         _fail(exc)
 
 
+@router.post("/fsk/refresh-locks")
+def api_fsk_refresh_locks():
+    """Sperr-Status (LockedFields) fuer alle Emby/Jellyfin-Items frisch aus der
+    Quelle lesen. Read-only gegen die Quelle - noetig, weil der Listen-Sync die
+    Sperre nicht mitbekommt (Emby liefert LockedFields nur im Einzel-Item)."""
+    try:
+        return {"ok": True, **fsk.refresh_locks()}
+    except Exception as exc:  # noqa: BLE001
+        _fail(exc)
+
+
 @router.post("/fsk/accept-drift")
 async def api_fsk_accept_drift(request: Request):
     """Externe Aenderung als neue Basis akzeptieren (5c.5): rating_written = aktueller Wert.

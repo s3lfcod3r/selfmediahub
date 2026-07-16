@@ -182,29 +182,27 @@
     }
     var note = d.note ? '<div class="modal-note">' + esc(d.note) + "</div>" : "";
 
-    var fskEditor = "";
-    if (fskOn && i.source_kind === "emby") {
-      var opts = ["DE-0", "DE-6", "DE-12", "DE-16", "DE-18"].map(function (v) {
-        return '<option value="' + v + '"' + (i.official_rating === v ? " selected" : "") + ">" + v + "</option>";
-      }).join("");
-      var dis = d.allow_write ? "" : " disabled";
-      fskEditor =
-        '<div class="fsk-editor"><div class="k">' + esc(T("detail.fsk_set_title")) + "</div>" +
-        '<div class="fsk-row">' +
-          '<select class="field" id="fskSel"' + dis + ">" + opts +
-            '<option value="">' + esc(T("fsk.none_option")) + "</option></select>" +
-          '<button class="btn btn-primary" id="fskSave" data-id="' + i.id + '"' + dis +
-            ">" + esc(T("detail.fsk_save_btn")) + "</button>" +
-        "</div>" +
-        (d.allow_write ? "" : '<div class="modal-note">' + T("detail.fsk_write_note") + "</div>") +
-        "</div>";
-    }
-
-    var ackBox = "";
-    if (fskOn && i.fsk_suspicious && !i.fsk_acked) {
-      ackBox = '<div class="fsk-ack-box"><span>' + esc(T("detail.fsk_implausible")) +
-        (i.fsk_reason ? ": " + esc(i.fsk_reason) : "") + "</span>" +
-        '<button class="btn btn-small" id="ackBtn" data-id="' + i.id + '">' + esc(T("detail.fsk_ack_btn")) + "</button></div>";
+    // FSK wird auf der eigenen FSK-Seite bearbeitet (Phase 5d, Fix 4). Das Detail
+    // zeigt nur noch einen Warnhinweis, wenn etwas auffaellt - mit Link dorthin.
+    var fskWarn = "";
+    if (fskOn) {
+      var warns = [];
+      if (!i.official_rating) { warns.push(T("detail.fsk_warn_none")); }
+      if (i.rating_drift) { warns.push(T("detail.fsk_warn_drift")); }
+      var suspicious = i.fsk_suspicious && !i.fsk_acked;
+      if (suspicious) {
+        warns.push(T("detail.fsk_implausible") + (i.fsk_reason ? ": " + i.fsk_reason : ""));
+      }
+      if (warns.length) {
+        var ackBtn = suspicious
+          ? '<button class="btn btn-small" id="ackBtn" data-id="' + i.id + '">' +
+            esc(T("detail.fsk_ack_btn")) + "</button>" : "";
+        fskWarn = '<div class="fsk-warn-box"><div class="fsk-warn-msgs">' +
+          warns.map(function (w) { return "<div>&#9888; " + esc(w) + "</div>"; }).join("") +
+          '</div><div class="fsk-warn-actions">' +
+            '<a class="btn btn-small" href="/fsk">' + esc(T("detail.fsk_goto_page")) + "</a>" +
+            ackBtn + "</div></div>";
+      }
     }
 
     document.getElementById("modalPanel").innerHTML =
@@ -215,28 +213,11 @@
         '<div class="modal-badges">' + badges.join("") + "</div></div></div>" +
       '<div class="modal-body">' +
         '<div class="meta-grid">' + meta + "</div>" +
-        fskEditor + ackBox +
+        fskWarn +
         (i.path ? '<div class="pathline"><div class="k">' + esc(T("detail.path")) + "</div>" +
                   '<div class="pv mono">' + esc(i.path) + "</div></div>" : "") +
         (i.overview ? '<div class="overview">' + esc(i.overview) + "</div>" : "") +
         note + seasonSummary(d.season_summary, i) + eps + "</div>";
-
-    var saveBtn = document.getElementById("fskSave");
-    if (saveBtn) {
-      saveBtn.onclick = function () {
-        var rating = document.getElementById("fskSel").value;
-        saveBtn.disabled = true;
-        fetch("/api/fsk/write", { method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ item_id: +saveBtn.getAttribute("data-id"), rating: rating }) })
-          .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-          .then(function (res) {
-            if (!res.ok) { throw new Error(res.j.detail || "?"); }
-            window.smhToast(T("detail.fsk_saved").replace("{rating}", res.j.rating), "ok");
-            setTimeout(function () { location.reload(); }, 900);
-          })
-          .catch(function (e) { window.smhToast(T("msg.failed_prefix") + e.message, "err"); saveBtn.disabled = false; });
-      };
-    }
 
     var ackB = document.getElementById("ackBtn");
     if (ackB) {

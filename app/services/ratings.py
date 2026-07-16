@@ -2,21 +2,37 @@
 
 Pivot ist das normalisierte Mindestalter (Zahl): jedes System -> Alter -> Ziel.
 Beim Rendern ins Zielsystem wird bei fehlendem Raster HOCH gerundet
-(Jugendschutz - lieber zu streng als zu lasch). Phase 5c.2.
+(Jugendschutz - lieber zu streng als zu lasch). Phase 5c.2, erweitert Phase 5d
+(Fix 6) um internationale Buchstaben-Systeme (MPAA, US-TV, BBFC).
 """
 import re
 
-# Zielsysteme -> aufsteigende Alters-Stufen. 'age' = "Zahl+Plus" (verlustfrei).
+# Zielsysteme -> aufsteigende Leiter aus (Mindestalter, Anzeige-Label).
+# Die Alters-Stufen entsprechen bewusst den Werten aus ``age_of`` fuer die
+# jeweils nativen Labels, damit ein native Rohwert beim Rendern exakt auf sein
+# eigenes Label faellt (kein faelschliches "uebersetzt"-Symbol). 'age' = Sonderfall
+# "Zahl+Plus" (verlustfrei, jedes Alter). Phase 5d Fix 6.
 SYSTEMS = {
-    "fsk": [0, 6, 12, 16, 18],
-    "usk": [0, 6, 12, 16, 18],
-    "pegi": [3, 7, 12, 16, 18],
-    "age": None,
+    "fsk":  [(0, "FSK 0"), (6, "FSK 6"), (12, "FSK 12"), (16, "FSK 16"), (18, "FSK 18")],
+    "usk":  [(0, "USK 0"), (6, "USK 6"), (12, "USK 12"), (16, "USK 16"), (18, "USK 18")],
+    "pegi": [(3, "PEGI 3"), (7, "PEGI 7"), (12, "PEGI 12"), (16, "PEGI 16"), (18, "PEGI 18")],
+    # US-Kino (MPAA). PG-13 -> 12, R -> 16 (deckt sich mit age_of-Synonymen).
+    "mpaa": [(0, "G"), (6, "PG"), (12, "PG-13"), (16, "R"), (18, "NC-17")],
+    # US-Fernsehen. TV-Y7/TV-G werden erkannt, aber aufs naechste Renderband
+    # (TV-PG) abgebildet; TV-MA ist die hoechste Stufe (deckt 17+ ab).
+    "ustv": [(0, "TV-Y"), (6, "TV-PG"), (12, "TV-14"), (16, "TV-MA")],
+    # UK (BBFC). U/PG/12/15/18 - "15" hat wirklich Alter 15 (kein FSK-Raster).
+    "bbfc": [(0, "U"), (6, "PG"), (12, "12"), (15, "15"), (18, "18")],
+    "age":  None,
 }
 DEFAULT_ART = "fsk"
-_ART_LABEL = {"fsk": "FSK {}", "usk": "USK {}", "pegi": "PEGI {}"}
-# Systeme, deren native Rohwerte NICHT als "uebersetzt" markiert werden.
+
+# Rohwerte, die als nativ (nicht "uebersetzt") gelten. Fuer FSK/USK/PEGI ueber
+# ein Prefix (z.B. "de-16", "fsk 16"); fuer die Buchstaben-Systeme ueber die
+# Label-Menge (siehe _SYS_LABELS). 'age' kann jedes Alter verlustfrei zeigen.
 _NATIVE_PREFIX = {"fsk": ("fsk", "de"), "usk": ("usk",), "pegi": ("pegi",)}
+_SYS_LABELS = {art: {lbl.lower() for _, lbl in buckets}
+               for art, buckets in SYSTEMS.items() if buckets}
 
 # Benannte Ratings + Synonyme -> Alter. Reine Zahlen/+Formen kommen per Regex.
 _NAMED = {
@@ -58,29 +74,36 @@ def resolve(ages) -> int | None:
 
 def render(age, art):
     """(text, rounded). Alter im Zielsystem; bei fehlendem Raster HOCH gerundet.
-    ``rounded`` = True, wenn das exakte Alter kein natives Raster des Systems ist."""
+    ``rounded`` = True, wenn das gewaehlte Band nicht exakt dem Alter entspricht."""
     if age is None:
         return None, False
     buckets = SYSTEMS.get(art)
     if not buckets:  # 'age' -> Zahl+Plus, verlustfrei
         return f"{age}+", False
-    chosen = next((b for b in buckets if b >= age), buckets[-1])
-    return _ART_LABEL.get(art, "{}").format(chosen), chosen != age
+    for bage, label in buckets:
+        if bage >= age:
+            return label, bage != age
+    # Kein Band >= Alter -> hoechste Stufe (System kennt kein hoeheres Band).
+    top_age, top_label = buckets[-1]
+    return top_label, top_age != age
 
 
 def _is_native(rating, art) -> bool:
     if art == "age":
         return True  # "Zahl+Plus" kann jedes Alter verlustfrei zeigen
     s = str(rating).strip().lower()
+    if s in _SYS_LABELS.get(art, ()):   # exaktes System-Label (z.B. "R", "TV-14")
+        return True
     return any(s.startswith(p) for p in _NATIVE_PREFIX.get(art, ()))
 
 
 def translate(rating, art):
     """(text, translated). ``translated`` = True, wenn der Wert nicht nativ im
-    Zielsystem vorlag (aus anderem System abgeleitet oder hochgerundet)."""
+    Zielsystem vorlag (aus anderem System abgeleitet) oder hochgerundet wurde."""
     age = age_of(rating)
     if age is None:
         return None, False
     text, rounded = render(age, art)
-    native = (not rounded) and _is_native(rating, art)
-    return text, not native
+    if _is_native(rating, art) and not rounded:
+        return text, False
+    return text, True
