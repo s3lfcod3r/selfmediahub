@@ -84,6 +84,7 @@
   window.__LASTSYNC__ = {{ (last_sync or "")|tojson }};
   window.__FSK_ENABLED__ = {{ 'true' if settings['fsk.enabled'] else 'false' }};
   window.__PRIMARY_LANG__ = {{ settings['display.primary_language']|tojson }};
+  window.__CARD_LAYOUT__ = {{ settings['display.card_layout']|tojson }};
 </script>
 <script src="/static/js/app.js"></script>
 {% endblock %}

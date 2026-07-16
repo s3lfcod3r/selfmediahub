@@ -1,6 +1,4 @@
 """JSON-API: Sync, Tags, Regeln, FSK-Schreiben, Bild-Proxy."""
-import os
-
 import requests
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
@@ -282,34 +280,6 @@ async def api_provider_set(kind: str, request: Request):
         return {"ok": True}
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
-
-
-# -- Verzeichnis-Browser (fuer lokale Quellen) ------------------------------
-@router.get("/fs")
-def api_fs_list(path: str = "/"):
-    """Ordner unterhalb von ``path`` auflisten - nur-lesend, nur Verzeichnisse,
-    keine Datei-Inhalte. Dient der Pfad-Auswahl lokaler Quellen (im Container
-    sind die Medien per Mount unter ``/`` erreichbar)."""
-    base = os.path.abspath(path or "/")
-    if not os.path.isdir(base):
-        raise HTTPException(status_code=404, detail="Kein Verzeichnis")
-    dirs = []
-    try:
-        with os.scandir(base) as entries:
-            for entry in entries:
-                try:
-                    if entry.is_dir(follow_symlinks=False):
-                        dirs.append({"name": entry.name,
-                                     "path": os.path.join(base, entry.name).replace("\\", "/")})
-                except OSError:
-                    continue
-    except PermissionError:
-        raise HTTPException(status_code=403, detail="Kein Zugriff auf dieses Verzeichnis")
-    dirs.sort(key=lambda d: d["name"].lower())
-    parent = os.path.dirname(base.rstrip("/")) or "/"
-    if base in ("/", parent):
-        parent = None
-    return {"path": base.replace("\\", "/"), "parent": parent, "dirs": dirs}
 
 
 # -- Tags -------------------------------------------------------------------

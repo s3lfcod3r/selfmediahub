@@ -71,7 +71,7 @@ STRINGS = {
     "setup_src.title": "Almost there - connect a source",
     "setup_src.desc": ("SelfMediaHub reads your library read-only and stores everything in its own "
                        "database. Nothing is changed on your media server. Add your first data source "
-                       "now in Settings (Emby, Jellyfin, Plex or local folders) - server address and "
+                       "now in Settings (Emby, Jellyfin or Plex) - server address and "
                        "API key are stored encrypted."),
     "setup_src.button": "Set up data source",
     "setup_src.hint": "Then click “Re-scan” in the top right.",
@@ -90,7 +90,24 @@ STRINGS = {
     "settings.tab.sources": "Data sources & libraries",
     "settings.tab.metadata": "Metadata services",
     "settings.tab.fsk": "Age ratings",
+    "settings.tab.display": "Display",
     "settings.tab.about": "About & updates",
+
+    # -- Settings: display / cover layout (Phase 6) --
+    "settings.display.title": "Cover layout",
+    "settings.display.intro": "Decide which badges appear on the covers and where. Drag a badge from the palette onto the grid; a placed badge can be moved or removed with ×. Badges scale automatically with the cover size.",
+    "settings.display.palette": "Available badges",
+    "settings.display.grid_label": "Cover preview",
+    "settings.display.placed_hint": "placed",
+    "settings.display.save": "Save layout",
+    "settings.display.reset": "Reset to default",
+    "settings.display.reset_confirm": "Really reset the layout to default?",
+    "badge.rating": "Rating",
+    "badge.resolution": "Resolution",
+    "badge.completeness": "Completeness",
+    "badge.audio": "Audio language",
+    "badge.sub": "Subtitles",
+    "msg.layout_saved": "Layout saved",
 
     # -- Settings: general --
     "settings.general.title": "General settings",
@@ -112,7 +129,7 @@ STRINGS = {
 
     # -- Settings: data sources --
     "settings.sources.title": "Data sources & libraries",
-    "settings.sources.intro": "Connect your media servers or local folders. Credentials are stored <strong>encrypted</strong>. {app} only reads - it never writes back (exception: age ratings, enabled separately). You can add several sources per type; per server you choose (when editing) which libraries are monitored (empty = all).",
+    "settings.sources.intro": "Connect your media servers (Emby, Jellyfin, Plex). Credentials are stored <strong>encrypted</strong>. {app} only reads - it never writes back (exception: age ratings, enabled separately). You can add several sources per type; per server you choose (when editing) which libraries are monitored (empty = all).",
     "settings.sources.loading": "Loading sources …",
 
     # -- Settings: metadata --

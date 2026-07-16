@@ -182,49 +182,86 @@
 
   var FSK_STD = ["DE-0", "DE-6", "DE-12", "DE-16", "DE-18"];
 
+  // --- Cover-Overlay-Layout (Phase 6) ---------------------------------
+  // Standard-Layout (bildet die bisherige Anordnung grob nach). col/row 0-basiert
+  // im 4x9-Raster. Wird vom Editor spaeter ueberschrieben (settings.card_layout).
+  var DEFAULT_LAYOUT = [
+    { badge: "rating", col: 0, row: 0 },
+    { badge: "resolution", col: 0, row: 6 },
+    { badge: "completeness", col: 2, row: 6 },
+    { badge: "audio", col: 0, row: 8 },
+    { badge: "sub", col: 2, row: 8 },
+  ];
+  var CARD_LAYOUT = (Array.isArray(window.__CARD_LAYOUT__) && window.__CARD_LAYOUT__.length)
+    ? window.__CARD_LAYOUT__ : DEFAULT_LAYOUT;
+
+  function icon(name) { return (window.smhIcon && window.smhIcon(name)) || ""; }
+
+  // Badge-Renderer: id -> (item) -> {cls, span, html, editable?} oder null (keine
+  // Daten -> Badge wird nicht angezeigt). span = Anzahl belegter Rastersockel.
+  var BADGES = {
+    rating: function (i) {
+      if (!FSK_ON) { return null; }
+      var has = !!i.official_rating;
+      var editable = window.__ALLOW_WRITE__ && i.source_kind === "emby";
+      // Gesperrt = gruene Umrandung (.locked), KEIN Schloss-Symbol mehr (User-Wunsch).
+      var cls = "b-rating" + (has ? "" : " none") + (i.rating_locked ? " locked" : "") +
+        (editable ? " editable" : "");
+      return { cls: cls, span: 2, editable: editable, id: i.id,
+        title: editable ? T("grid.fsk_change_title") : "",
+        html: has ? esc(i.official_rating) : esc(T("grid.no_fsk")) };
+    },
+    resolution: function (i) {
+      if (!i.resolution) { return null; }
+      return { cls: "b-res", span: 2, html: esc(i.resolution) };
+    },
+    completeness: function (i) {
+      if (i.completeness === "complete") { return { cls: "b-comp ok", span: 1, html: "&#10003;" }; }
+      if (i.completeness === "incomplete") {
+        return { cls: "b-comp bad", span: 2, html: "&#9888; " + esc(T("grid.incomplete_badge")) };
+      }
+      return null;
+    },
+    audio: function (i) {
+      var st = covState(i.primary_audio_pct);
+      return { cls: "b-audio" + (st === "none" ? " off" : ""), span: 2,
+        html: icon("audio") + coverFlag(prefLang(), st) };
+    },
+    sub: function (i) {
+      var st = covState(i.primary_sub_pct);
+      return { cls: "b-sub" + (st === "none" ? " off" : ""), span: 2,
+        html: icon("cc") + coverFlag(prefLang(), st) };
+    },
+  };
+
+  function renderOverlay(i) {
+    var cells = CARD_LAYOUT.map(function (p) {
+      var mk = BADGES[p.badge];
+      if (!mk) { return ""; }
+      var b = mk(i);
+      if (!b) { return ""; }
+      var col = (p.col || 0) + 1, row = (p.row || 0) + 1, span = b.span || 1;
+      var style = "grid-column:" + col + "/span " + span + ";grid-row:" + row + ";";
+      var attrs = ' style="' + style + '"' + (b.editable ? ' data-id="' + b.id + '"' : "") +
+        (b.title ? ' title="' + esc(b.title) + '"' : "");
+      return '<span class="ov-badge ' + b.cls + '"' + attrs + ">" + b.html + "</span>";
+    }).join("");
+    return '<div class="card-grid">' + cells + "</div>";
+  }
+
   function renderGrid(rows) {
     $("grid").innerHTML = rows.map(function (i) {
-      var editable = window.__ALLOW_WRITE__ && i.source_kind === "emby";
-      var hasRating = !!i.official_rating;
-      // Cover zeigt den ROHEN Emby-Wert (kein Uebersetzen) - der Ist-Zustand der
-      // Bibliothek. Die Umrechnung in die bevorzugte Rating-Art passiert nur auf
-      // der FSK-Seite. (Phase 5d, Fix 1)
-      var rlabel = i.official_rating;
-      // Ampel: gruen = in Emby gesperrt/erledigt, neutral = Rating unbestaetigt,
-      // .none = keine Freigabe (Warnung). Nur bei aktivem FSK-Feature.
-      var cls = "rating" + (hasRating ? "" : " none") +
-        (i.rating_locked ? " locked" : "") + (editable ? " editable" : "");
-      var did = editable ? ' data-id="' + i.id + '"' : "";
-      var lock = i.rating_locked ? '<span class="rlock" aria-hidden="true">&#128274;</span>' : "";
-      var rating = FSK_ON
-        ? '<span class="' + cls + '"' + did +
-          (editable ? ' title="' + esc(T("grid.fsk_change_title")) + '"' : "") + ">" +
-          lock + (hasRating ? esc(rlabel) : esc(T("grid.no_fsk"))) + "</span>"
-        : "";
-      var res = i.resolution ? '<span class="qbadge res">' + esc(i.resolution) + "</span>" : "";
-      var comp = i.completeness === "incomplete"
-        ? '<span class="qbadge bad">' + esc(T("grid.incomplete_badge")) + "</span>" : "";
       var img = i.image_url
         ? '<img loading="lazy" src="' + esc(i.image_url) + '" alt="" ' +
           'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'">' +
           '<div class="noimg" style="display:none">' + esc(i.name) + "</div>"
         : '<div class="noimg">' + esc(i.name) + "</div>";
-      var pref = prefLang();
-      var pname = esc(langName(pref));
-      var aState = covState(i.primary_audio_pct);
-      var sState = covState(i.primary_sub_pct);
-      var aTitle = T("cover.audio_title").replace("{lang}", pname).replace("{state}", covLabel(aState));
-      var sTitle = T("cover.subtitle_title").replace("{lang}", pname).replace("{state}", covLabel(sState));
-      var langrow = '<div class="langrow">' +
-        '<span class="cbadge cb-lang' + (aState === "none" ? " off" : "") + '" title="' + aTitle + '">' +
-          coverFlag(pref, aState) + "</span>" +
-        '<span class="cbadge cb-ut' + (sState === "none" ? " off" : "") + '" title="' + sTitle + '">' +
-          coverFlag(pref, sState) + " " + esc(T("cover.sub_abbr")) + "</span>" +
-        "</div>";
       var chips = (i.tags || []).slice(0, 3).map(tagChip).join("");
+      // Poster: Bild + Typ-Ecke + datengetriebenes Overlay-Raster (Phase 6).
       return '<article class="card" data-id="' + i.id + '">' +
-        '<div class="poster">' + rating + '<span class="type">' + esc(T("type." + i.item_type)) + "</span>" +
-        '<div class="qrow">' + res + comp + "</div>" + langrow + img + "</div>" +
+        '<div class="poster">' + img +
+          '<span class="type">' + esc(T("type." + i.item_type)) + "</span>" +
+          renderOverlay(i) + "</div>" +
         '<div class="meta"><div class="t">' + esc(i.name) + "</div>" +
         '<div class="y">' + (i.year || "") + "</div>" +
         (chips ? '<div class="chips">' + chips + "</div>" : "") + "</div></article>";
@@ -362,10 +399,7 @@
         if (!res.ok) { throw new Error(res.j.detail || "?"); }
         var item = ALL.filter(function (x) { return String(x.id) === String(id); })[0];
         if (item) { item.official_rating = rating; }
-        if (badge) {
-          badge.className = (rating ? "rating" : "rating none") + " editable";
-          badge.textContent = rating || T("grid.no_fsk");
-        }
+        render();   // Overlay neu aufbauen (Phase 6) - kein fragiles className-Patchen mehr
         window.smhToast(T("msg.fsk_set").replace("{rating}", rating || T("common.removed")), "ok");
       })
       .catch(function (e) { window.smhToast(T("msg.failed_prefix") + e.message, "err"); });
@@ -373,13 +407,13 @@
 
   function wire() {
     $("grid").onclick = function (e) {
-      var badge = e.target.closest(".rating.editable");
+      var badge = e.target.closest(".ov-badge.editable");
       if (badge) { e.stopPropagation(); openFskMenu(badge); return; }
       var c = e.target.closest(".card"); if (c) { window.smhOpenDetail(c.getAttribute("data-id")); }
     };
     document.addEventListener("click", function (e) {
       if (fskMenu && !fskMenu.classList.contains("hidden") &&
-          !e.target.closest(".fsk-menu") && !e.target.closest(".rating.editable")) {
+          !e.target.closest(".fsk-menu") && !e.target.closest(".ov-badge.editable")) {
         hideFskMenu();
       }
     });

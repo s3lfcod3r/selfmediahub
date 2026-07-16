@@ -75,8 +75,8 @@ STRINGS = {
     "setup_src.title": "Fast fertig - noch eine Quelle verbinden",
     "setup_src.desc": ("SelfMediaHub liest deine Mediathek nur lesend und speichert alles in seiner "
                        "eigenen Datenbank. An deinem Medienserver wird nichts veraendert. Lege jetzt "
-                       "in den Einstellungen deine erste Datenquelle an (Emby, Jellyfin, Plex oder "
-                       "lokale Ordner) - Server-Adresse und API-Schluessel werden verschluesselt gespeichert."),
+                       "in den Einstellungen deine erste Datenquelle an (Emby, Jellyfin oder Plex) - "
+                       "Server-Adresse und API-Schluessel werden verschluesselt gespeichert."),
     "setup_src.button": "Datenquelle einrichten",
     "setup_src.hint": "Danach oben rechts „Neu einlesen“ klicken.",
 
@@ -95,7 +95,24 @@ STRINGS = {
     "settings.tab.sources": "Datenquellen & Bibliotheken",
     "settings.tab.metadata": "Metadatendienste",
     "settings.tab.fsk": "FSK & Altersfreigaben",
+    "settings.tab.display": "Anzeige",
     "settings.tab.about": "Über & Updates",
+
+    # -- Einstellungen: Anzeige / Cover-Layout (Phase 6) --
+    "settings.display.title": "Cover-Layout",
+    "settings.display.intro": "Lege fest, welche Badges auf den Covern erscheinen und wo. Ziehe ein Badge aus der Palette auf das Raster; ein platziertes Badge lässt sich verschieben oder mit × entfernen. Die Badges skalieren automatisch mit der Cover-Größe.",
+    "settings.display.palette": "Verfügbare Badges",
+    "settings.display.grid_label": "Cover-Vorschau",
+    "settings.display.placed_hint": "platziert",
+    "settings.display.save": "Layout speichern",
+    "settings.display.reset": "Auf Standard zurücksetzen",
+    "settings.display.reset_confirm": "Layout wirklich auf den Standard zurücksetzen?",
+    "badge.rating": "Freigabe",
+    "badge.resolution": "Auflösung",
+    "badge.completeness": "Vollständigkeit",
+    "badge.audio": "Audiosprache",
+    "badge.sub": "Untertitel",
+    "msg.layout_saved": "Layout gespeichert",
 
     # -- Einstellungen: Allgemein --
     "settings.general.title": "Allgemeine Einstellungen",
@@ -117,7 +134,7 @@ STRINGS = {
 
     # -- Einstellungen: Datenquellen --
     "settings.sources.title": "Datenquellen & Bibliotheken",
-    "settings.sources.intro": "Verbinde deine Medienserver oder lokale Ordner. Zugangsdaten werden <strong>verschlüsselt</strong> gespeichert. {app} liest nur - es schreibt nie zurück (Ausnahme: FSK, separat aktivierbar). Du kannst mehrere Quellen je Typ anlegen; je Server wählst du beim Bearbeiten, welche Bibliotheken überwacht werden (leer = alle).",
+    "settings.sources.intro": "Verbinde deine Medienserver (Emby, Jellyfin, Plex). Zugangsdaten werden <strong>verschlüsselt</strong> gespeichert. {app} liest nur - es schreibt nie zurück (Ausnahme: FSK, separat aktivierbar). Du kannst mehrere Quellen je Typ anlegen; je Server wählst du beim Bearbeiten, welche Bibliotheken überwacht werden (leer = alle).",
     "settings.sources.loading": "Lade Quellen …",
 
     # -- Einstellungen: Metadaten --

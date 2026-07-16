@@ -11,12 +11,13 @@ from datetime import datetime, timezone
 from .. import db
 from ..connectors.emby import EmbyConnector
 from ..connectors.jellyfin import JellyfinConnector
-from ..connectors.local import LocalConnector
 from ..connectors.plex import PlexConnector
 from . import crypto
 
-KINDS = ("emby", "jellyfin", "plex", "local")
-# Typen, die eine URL + ein Secret brauchen (local nicht).
+# Nur Medienserver-Quellen: SMH ist eine Analyse-Schicht ueber einem Medienserver.
+# Lokaler Datei-Scan (identifizieren + ffprobe) waere ein eigener Scanner und wurde
+# bewusst entfernt (Phase 6) - wer nur Dateien hat, nutzt z.B. Jellyfin und verbindet das.
+KINDS = ("emby", "jellyfin", "plex")
 SERVER_KINDS = ("emby", "jellyfin", "plex")
 
 
@@ -117,8 +118,6 @@ def _connector_from_row(row: dict):
         conn = JellyfinConnector(row["base_url"], secret, libraries=libs)
     elif kind == "plex":
         conn = PlexConnector(row["base_url"], secret, libraries=libs)
-    elif kind == "local":
-        conn = LocalConnector(_json_list(row["local_paths"]))
     else:
         return None
     # Konkrete Instanz am Connector vermerken (Multi-Instanz: eindeutig ueber id).

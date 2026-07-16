@@ -31,7 +31,7 @@
     return BUCKETS[BUCKETS.length - 1];
   }
 
-  var KIND_LABEL = { emby: "Emby", jellyfin: "Jellyfin", plex: "Plex", local: T("sources.kind.local") };
+  var KIND_LABEL = { emby: "Emby", jellyfin: "Jellyfin", plex: "Plex" };
   function srcKind(i) {
     var k = KIND_LABEL[i.source_kind] || i.source_kind || "";
     return k ? '<span class="fsk-srckind">' + esc(k) + "</span>" : "";

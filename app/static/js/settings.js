@@ -54,12 +54,11 @@
   }
 
   // ======================================================================
-  //  Datenquellen - Liste + Modal (anlegen/bearbeiten) + Datei-Browser
+  //  Datenquellen - Liste + Modal (anlegen/bearbeiten). Nur Medienserver
+  //  (Emby/Jellyfin/Plex); lokale Quellen wurden entfernt (Phase 6).
   // ======================================================================
-  var KIND_LABEL = { emby: "Emby", jellyfin: "Jellyfin", plex: "Plex", local: T("sources.kind.local") };
-  var SERVER_KINDS = ["emby", "jellyfin", "plex"];
+  var KIND_LABEL = { emby: "Emby", jellyfin: "Jellyfin", plex: "Plex" };
   var srcState = { id: null, src: null, libsLoaded: false };
-  var fsCurrent = "/";
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -67,7 +66,6 @@
     });
   }
 
-  function isServerKind(k) { return SERVER_KINDS.indexOf(k) !== -1; }
   function showModal(id) { $(id).classList.add("open"); }
   function hideModal(id) { $(id).classList.remove("open"); }
 
@@ -90,9 +88,7 @@
       });
   }
 
-  function subLine(s) {
-    return isServerKind(s.kind) ? (s.base_url || "") : (s.local_paths || []).join(", ");
-  }
+  function subLine(s) { return s.base_url || ""; }
 
   function renderList(list, sources) {
     if (!sources.length) {
@@ -123,13 +119,6 @@
     });
   }
 
-  // -- Modal: Felder je Typ ein-/ausblenden -----------------------------
-  function applyKindFields(kind) {
-    var server = isServerKind(kind);
-    $("srcServerFields").hidden = !server;
-    $("srcLocalFields").hidden = server;
-  }
-
   function openAdd() {
     srcState = { id: null, src: null, libsLoaded: false };
     $("srcModalTitle").textContent = T("sources.add_title");
@@ -139,14 +128,12 @@
     $("srcUrl").value = "";
     $("srcSecret").value = "";
     $("srcSecret").placeholder = T("sources.secret_enter");
-    $("srcPath").value = "";
     $("srcEnabled").checked = true;
     $("srcLibsWrap").hidden = true;
     $("srcLibsList").innerHTML = "";
     $("srcTestBtn").hidden = true;
     $("srcLibsBtn").hidden = true;
     $("srcSaveBtn").textContent = T("sources.add");
-    applyKindFields("emby");
     modalStatus("", "");
     showModal("srcModal");
     $("srcName").focus();
@@ -164,15 +151,12 @@
       $("srcUrl").value = src.base_url || "";
       $("srcSecret").value = "";
       $("srcSecret").placeholder = src.has_secret ? T("sources.secret_keep") : T("sources.secret_enter");
-      $("srcPath").value = (src.local_paths || [])[0] || "";
       $("srcEnabled").checked = !!src.enabled;
       $("srcLibsWrap").hidden = true;
       $("srcLibsList").innerHTML = "";
-      var server = isServerKind(src.kind);
-      $("srcTestBtn").hidden = !server;
-      $("srcLibsBtn").hidden = !server;
+      $("srcTestBtn").hidden = false;
+      $("srcLibsBtn").hidden = false;
       $("srcSaveBtn").textContent = T("common.save");
-      applyKindFields(src.kind);
       modalStatus("", "");
       showModal("srcModal");
     });
@@ -180,26 +164,19 @@
 
   function saveModal() {
     var kind = $("srcKind").value;
-    var server = isServerKind(kind);
     var body = { kind: kind, name: $("srcName").value.trim(), enabled: $("srcEnabled").checked };
-    if (server) {
-      body.base_url = $("srcUrl").value.trim();
-      var secret = $("srcSecret").value;
-      if (secret) { body.secret = secret; }
-      if (srcState.libsLoaded) {
-        var ids = [];
-        Array.prototype.forEach.call($("srcLibsList").querySelectorAll(".src-lib-cb"), function (cb) {
-          if (cb.checked) { ids.push(cb.value); }
-        });
-        body.libraries = ids;
-      }
-      if (!body.base_url) { modalStatus(T("sources.err_no_url"), "err"); return; }
-      if (!srcState.id && !secret) { modalStatus(T("sources.err_no_key"), "err"); return; }
-    } else {
-      var p = $("srcPath").value.trim();
-      body.local_paths = p ? [p] : [];
-      if (!body.local_paths.length) { modalStatus(T("sources.err_no_path"), "err"); return; }
+    body.base_url = $("srcUrl").value.trim();
+    var secret = $("srcSecret").value;
+    if (secret) { body.secret = secret; }
+    if (srcState.libsLoaded) {
+      var ids = [];
+      Array.prototype.forEach.call($("srcLibsList").querySelectorAll(".src-lib-cb"), function (cb) {
+        if (cb.checked) { ids.push(cb.value); }
+      });
+      body.libraries = ids;
     }
+    if (!body.base_url) { modalStatus(T("sources.err_no_url"), "err"); return; }
+    if (!srcState.id && !secret) { modalStatus(T("sources.err_no_key"), "err"); return; }
     var btn = $("srcSaveBtn");
     btn.disabled = true;
     modalStatus(T("sources.saving"), "");
@@ -270,69 +247,19 @@
     srcState.libsLoaded = true;
   }
 
-  // -- Datei-Browser (lokale Pfade) -------------------------------------
-  function openBrowser() {
-    fsBrowse($("srcPath").value.trim() || "/");
-    showModal("fsModal");
-  }
-
-  function fsBrowse(path) {
-    fetch("/api/fs?path=" + encodeURIComponent(path))
-      .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
-      .then(function (res) {
-        if (!res.ok) { if (path !== "/") { fsBrowse("/"); } return; }
-        fsCurrent = res.j.path;
-        $("fsCurrent").textContent = res.j.path;
-        renderFs(res.j);
-      })
-      .catch(function () {
-        $("fsList").innerHTML = '<p class="set-desc">' + esc(T("fs.load_failed")) + "</p>";
-      });
-  }
-
-  function renderFs(data) {
-    var html = "";
-    if (data.parent !== null && data.parent !== undefined) {
-      html += '<button class="fs-item fs-up" data-path="' + esc(data.parent) + '">&#8598; ' +
-        esc(T("fs.up")) + "</button>";
-    }
-    html += (data.dirs || []).map(function (d) {
-      return '<button class="fs-item" data-path="' + esc(d.path) + '">&#128193; ' + esc(d.name) + "</button>";
-    }).join("");
-    if (!(data.dirs || []).length) {
-      html += '<p class="set-desc fs-empty">' + esc(T("fs.empty")) + "</p>";
-    }
-    $("fsList").innerHTML = html;
-    Array.prototype.forEach.call($("fsList").querySelectorAll(".fs-item"), function (b) {
-      b.onclick = function () { fsBrowse(b.getAttribute("data-path")); };
-    });
-  }
-
-  function pickFs() {
-    $("srcPath").value = fsCurrent;
-    hideModal("fsModal");
-  }
-
   function initSources() {
     var addBtn = $("srcAddBtn");
     if (!addBtn) { return; }   // nur auf der Einstellungsseite vorhanden
     addBtn.onclick = openAdd;
-    $("srcKind").onchange = function () { applyKindFields($("srcKind").value); };
     $("srcModalClose").onclick = function () { hideModal("srcModal"); };
     $("srcSaveBtn").onclick = saveModal;
     $("srcTestBtn").onclick = testSource;
     $("srcLibsBtn").onclick = loadLibs;
-    $("srcBrowse").onclick = openBrowser;
-    $("fsModalClose").onclick = function () { hideModal("fsModal"); };
-    $("fsPickBtn").onclick = pickFs;
     $("srcModal").addEventListener("click", function (e) {
       if (e.target === $("srcModal")) { hideModal("srcModal"); }
     });
-    $("fsModal").addEventListener("click", function (e) {
-      if (e.target === $("fsModal")) { hideModal("fsModal"); }
-    });
     document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape") { hideModal("fsModal"); hideModal("srcModal"); }
+      if (e.key === "Escape") { hideModal("srcModal"); }
     });
     loadSources();
   }

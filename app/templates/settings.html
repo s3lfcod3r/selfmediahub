@@ -17,6 +17,7 @@
       <button class="set-tab" data-cat="quellen">{{ t('settings.tab.sources') }}</button>
       <button class="set-tab" data-cat="metadaten">{{ t('settings.tab.metadata') }}</button>
       <button class="set-tab" data-cat="fsk">{{ t('settings.tab.fsk') }}</button>
+      <button class="set-tab" data-cat="anzeige">{{ t('settings.tab.display') }}</button>
       <button class="set-tab" data-cat="ueber">{{ t('settings.tab.about') }}</button>
     </nav>
 
@@ -181,6 +182,26 @@
         </div>
       </section>
 
+      <!-- Anzeige / Cover-Layout (Phase 6) -->
+      <section class="set-panel" data-cat="anzeige">
+        <h2 class="card-h">{{ t('settings.display.title') }}</h2>
+        <p class="set-desc">{{ t('settings.display.intro') }}</p>
+        <div class="le-wrap">
+          <div class="le-stage">
+            <div class="le-label">{{ t('settings.display.grid_label') }}</div>
+            <div class="le-grid" id="leGrid"></div>
+          </div>
+          <div class="le-side">
+            <div class="le-label">{{ t('settings.display.palette') }}</div>
+            <div class="le-palette" id="lePalette"></div>
+          </div>
+        </div>
+        <div class="set-actions">
+          <button class="btn btn-primary" id="leSave">{{ t('settings.display.save') }}</button>
+          <button class="btn" id="leReset">{{ t('settings.display.reset') }}</button>
+        </div>
+      </section>
+
       <!-- Über & Updates -->
       <section class="set-panel" data-cat="ueber">
         <h2 class="card-h">{{ t('settings.about.title') }}</h2>
@@ -226,7 +247,6 @@
           <option value="emby">Emby</option>
           <option value="jellyfin">Jellyfin</option>
           <option value="plex">Plex</option>
-          <option value="local">{{ t('sources.kind.local') }}</option>
         </select>
       </div>
 
@@ -250,17 +270,6 @@
         </div>
       </div>
 
-      <div id="srcLocalFields" hidden>
-        <div class="set-field">
-          <label for="srcPath">{{ t('sources.path') }}</label>
-          <div class="path-input">
-            <input class="field" id="srcPath" placeholder="/media/filme">
-            <button class="btn btn-icon" id="srcBrowse" type="button"
-                    title="{{ t('sources.browse') }}" aria-label="{{ t('sources.browse') }}">&#128269;</button>
-          </div>
-        </div>
-      </div>
-
       <label class="set-toggle"><input type="checkbox" id="srcEnabled" checked><span>{{ t('sources.active') }}</span></label>
 
       <p class="src-modal-status set-desc" id="srcModalStatus"></p>
@@ -273,19 +282,14 @@
     </div>
   </div>
 
-  <!-- Verzeichnis-Browser (lokale Pfade) -->
-  <div class="modal" id="fsModal">
-    <div class="modal-panel fs-modal-panel">
-      <button class="modal-close" id="fsModalClose" aria-label="{{ t('modal.close') }}">&times;</button>
-      <h2 class="card-h">{{ t('fs.title') }}</h2>
-      <p class="fs-current mono" id="fsCurrent">/</p>
-      <div class="fs-list" id="fsList"></div>
-      <div class="set-actions">
-        <button class="btn btn-primary" id="fsPickBtn">{{ t('fs.pick') }}</button>
-      </div>
-    </div>
-  </div>
 </main>
 
+<script>
+  window.__CARD_LAYOUT__ = {{ settings['display.card_layout']|tojson }};
+  window.__PRIMARY_LANG__ = {{ settings['display.primary_language']|tojson }};
+</script>
+<script src="/static/js/flags.js"></script>
+<script src="/static/js/icons.js"></script>
+<script src="/static/js/layout-editor.js"></script>
 <script src="/static/js/settings.js"></script>
 {% endblock %}
