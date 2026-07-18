@@ -56,10 +56,13 @@
   --self-radius-sm: 6px;
   --self-glow-teal: 0 0 60px -12px rgba(51, 167, 140, 0.45);
 
-  /* Einheitliche Hoehe aller Cover-Badges (Freigabe, Typ, Qualitaet, Sprache).
-     Die Breite darf variieren, die Hoehe nicht - sonst stehen Badges mit Text
-     und Badges mit Flagge/Icon unterschiedlich hoch nebeneinander. */
+  /* Einheitliche Hoehe aller Cover-Badges (Freigabe, Typ, Qualitaet, Sprache,
+     Staffeln). Die Breite darf variieren, die Hoehe nicht - sonst stehen Badges
+     mit Text und Badges mit Flagge/Icon unterschiedlich hoch nebeneinander. */
   --self-cover-badge-h: 22px;
+  /* Staffel-Badges sind zusaetzlich alle gleich BREIT, damit die Spalten ueber
+     mehrere Reihen fluchten. Platz fuer drei Zeichen ("S10") bei 10px Mono. */
+  --self-season-badge-w: 28px;
 
   /* --- Motion -------------------------------------------- */
   --self-ease: cubic-bezier(0.16, 1, 0.3, 1);

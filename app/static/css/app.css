@@ -233,15 +233,23 @@ select.field {
    Schriftgroesse, Innenabstand und Inhalt (Text, Flagge, SVG-Icon) die Hoehe
    NICHT mehr beeinflussen. Vertikaler Innenabstand entfaellt deshalb bewusst.
    Bewusst auf .poster begrenzt: .qbadge wird auch im Detail-Modal benutzt und
-   soll dort weiter frei mitwachsen. */
-.poster .rating, .poster .type, .poster .qbadge, .poster .cbadge {
+   soll dort weiter frei mitwachsen.
+
+   line-height:1 + padding-top:1px sind die optische Zentrierung: align-items
+   zentriert den ZEILENKASTEN, und der reserviert unten Platz fuer Unterlaengen
+   (g, j, p). Badge-Inhalte sind aber Versalien/Ziffern ohne Unterlaengen - die
+   Schrift sitzt dadurch sichtbar zu hoch. Das eine Pixel oben schiebt sie in
+   die optische Mitte zurueck. Die Einzelregeln unten setzen deshalb nur noch
+   padding-inline, damit die Kurzform padding-top nicht wieder plaettet. */
+.poster .rating, .poster .type, .poster .qbadge, .poster .cbadge, .poster .sbadge {
   height: var(--self-cover-badge-h); box-sizing: border-box;
   display: inline-flex; align-items: center;
+  line-height: 1; padding-top: 1px; padding-bottom: 0;
 }
 .poster .rating {
   position: absolute; top: 8px; left: 8px;
   font-family: var(--self-font-mono); font-size: 11px; font-weight: 600;
-  padding: 0 7px; border-radius: 6px;
+  padding-inline: 7px; border-radius: 6px;
   background: rgba(8, 12, 17, 0.82); color: var(--self-text);
   border: 1px solid var(--self-line-strong);
 }
@@ -252,7 +260,7 @@ select.field {
 .poster .type {
   position: absolute; top: 8px; right: 8px;
   font-family: var(--self-font-mono); font-size: 10px; letter-spacing: 0.08em;
-  padding: 0 6px; border-radius: 6px;
+  padding-inline: 6px; border-radius: 6px;
   background: rgba(8, 12, 17, 0.82); color: var(--self-teal-bright);
   text-transform: uppercase;
   /* transparenter Rahmen: gleicht die 1px-Rahmen der anderen Badges aus, damit
@@ -402,20 +410,26 @@ table.list td.name { font-weight: 600; }
 .stats { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 
 /* --- Staffel-Badges (S0, S1, S2 …) unter der Freigabe -------------------
-   Bewusst kleiner als die vier Haupt-Badges: es sind viele, sie sollen das
-   Cover nicht erschlagen. Volle Breite + flex-wrap, damit lange Serien einfach
-   in die nächste Zeile laufen. Klicks fallen aufs Cover durch (Detail öffnen). */
+   Raster statt flex-wrap: die feste Spaltenbreite sorgt dafür, dass die Badges
+   einer zweiten und dritten Reihe exakt unter denen der ersten stehen. Mit
+   flex-wrap wären sie zwar gleich breit, die Spalten aber nicht garantiert.
+   Klicks fallen aufs Cover durch (Detail öffnen). */
 .srow {
   position: absolute; left: 8px; right: 8px;
   top: calc(8px + var(--self-cover-badge-h) + 4px);
-  display: flex; flex-wrap: wrap; gap: 3px; pointer-events: none;
+  display: grid; gap: 4px; pointer-events: none;
+  grid-template-columns: repeat(auto-fill, var(--self-season-badge-w));
 }
 .srow.no-rating { top: 8px; }   /* FSK-Feature aus -> kein Badge darüber */
+/* Feste Breite (statt inhaltsabhängig): so sind S1 und S10 gleich groß und die
+   Spalten fluchten - auch über verschiedene Serien hinweg. Bemessen nach dem
+   breitesten realistischen Fall "S10". Höhe/Zentrierung kommen aus der
+   gemeinsamen Cover-Badge-Regel weiter oben. */
 .sbadge {
-  height: 16px; box-sizing: border-box;
-  display: inline-flex; align-items: center;
-  font-family: var(--self-font-mono); font-size: 9px; font-weight: 600;
-  padding: 0 4px; border-radius: 4px;
+  width: var(--self-season-badge-w);
+  justify-content: center;
+  font-family: var(--self-font-mono); font-size: 10px; font-weight: 600;
+  padding-inline: 0; border-radius: 4px;
   background: rgba(8, 12, 17, 0.86);
   color: var(--self-text-2); border: 1px solid var(--self-line-strong);
 }
