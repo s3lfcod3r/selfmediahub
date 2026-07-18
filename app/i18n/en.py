@@ -90,24 +90,7 @@ STRINGS = {
     "settings.tab.sources": "Data sources & libraries",
     "settings.tab.metadata": "Metadata services",
     "settings.tab.fsk": "Age ratings",
-    "settings.tab.display": "Display",
     "settings.tab.about": "About & updates",
-
-    # -- Settings: display / cover layout (Phase 6) --
-    "settings.display.title": "Cover layout",
-    "settings.display.intro": "Decide which badges appear on the covers and where. Drag a badge from the palette onto the grid; a placed badge can be moved or removed with ×. Badges scale automatically with the cover size.",
-    "settings.display.palette": "Available badges",
-    "settings.display.grid_label": "Cover preview",
-    "settings.display.placed_hint": "placed",
-    "settings.display.save": "Save layout",
-    "settings.display.reset": "Reset to default",
-    "settings.display.reset_confirm": "Really reset the layout to default?",
-    "badge.rating": "Rating",
-    "badge.resolution": "Resolution",
-    "badge.completeness": "Completeness",
-    "badge.audio": "Audio language",
-    "badge.sub": "Subtitles",
-    "msg.layout_saved": "Layout saved",
 
     # -- Settings: general --
     "settings.general.title": "General settings",

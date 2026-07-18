@@ -95,24 +95,7 @@ STRINGS = {
     "settings.tab.sources": "Datenquellen & Bibliotheken",
     "settings.tab.metadata": "Metadatendienste",
     "settings.tab.fsk": "FSK & Altersfreigaben",
-    "settings.tab.display": "Anzeige",
     "settings.tab.about": "Über & Updates",
-
-    # -- Einstellungen: Anzeige / Cover-Layout (Phase 6) --
-    "settings.display.title": "Cover-Layout",
-    "settings.display.intro": "Lege fest, welche Badges auf den Covern erscheinen und wo. Ziehe ein Badge aus der Palette auf das Raster; ein platziertes Badge lässt sich verschieben oder mit × entfernen. Die Badges skalieren automatisch mit der Cover-Größe.",
-    "settings.display.palette": "Verfügbare Badges",
-    "settings.display.grid_label": "Cover-Vorschau",
-    "settings.display.placed_hint": "platziert",
-    "settings.display.save": "Layout speichern",
-    "settings.display.reset": "Auf Standard zurücksetzen",
-    "settings.display.reset_confirm": "Layout wirklich auf den Standard zurücksetzen?",
-    "badge.rating": "Freigabe",
-    "badge.resolution": "Auflösung",
-    "badge.completeness": "Vollständigkeit",
-    "badge.audio": "Audiosprache",
-    "badge.sub": "Untertitel",
-    "msg.layout_saved": "Layout gespeichert",
 
     # -- Einstellungen: Allgemein --
     "settings.general.title": "Allgemeine Einstellungen",

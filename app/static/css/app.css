@@ -211,7 +211,6 @@ select.field {
 .card { cursor: default; }
 .poster {
   position: relative; aspect-ratio: 2 / 3;
-  container-type: inline-size;   /* Basis fuer cqw: Badges skalieren mit dem Cover (Phase 6) */
   border-radius: var(--self-radius);
   overflow: hidden; background: var(--self-bg-2);
   border: 1px solid var(--self-line);
@@ -230,10 +229,19 @@ select.field {
   color: var(--self-text-3); font-family: var(--self-font-mono);
   font-size: 12px; text-align: center; padding: 12px;
 }
+/* Alle Cover-Badges gleich hoch: feste Hoehe + border-box + inline-flex, damit
+   Schriftgroesse, Innenabstand und Inhalt (Text, Flagge, SVG-Icon) die Hoehe
+   NICHT mehr beeinflussen. Vertikaler Innenabstand entfaellt deshalb bewusst.
+   Bewusst auf .poster begrenzt: .qbadge wird auch im Detail-Modal benutzt und
+   soll dort weiter frei mitwachsen. */
+.poster .rating, .poster .type, .poster .qbadge, .poster .cbadge {
+  height: var(--self-cover-badge-h); box-sizing: border-box;
+  display: inline-flex; align-items: center;
+}
 .poster .rating {
   position: absolute; top: 8px; left: 8px;
   font-family: var(--self-font-mono); font-size: 11px; font-weight: 600;
-  padding: 3px 7px; border-radius: 6px;
+  padding: 0 7px; border-radius: 6px;
   background: rgba(8, 12, 17, 0.82); color: var(--self-text);
   border: 1px solid var(--self-line-strong);
 }
@@ -241,13 +249,15 @@ select.field {
 /* gruen = in Emby gesperrt/erledigt; steht NACH .none, damit leer+gesperrt
    (bewusst keine Freigabe) gruen statt gelb ist. */
 .poster .rating.locked { color: var(--self-green); border-color: var(--self-green); }
-.rating .rlock { font-size: 9px; margin-right: 3px; opacity: 0.9; }
 .poster .type {
   position: absolute; top: 8px; right: 8px;
   font-family: var(--self-font-mono); font-size: 10px; letter-spacing: 0.08em;
-  padding: 3px 6px; border-radius: 6px;
+  padding: 0 6px; border-radius: 6px;
   background: rgba(8, 12, 17, 0.82); color: var(--self-teal-bright);
   text-transform: uppercase;
+  /* transparenter Rahmen: gleicht die 1px-Rahmen der anderen Badges aus, damit
+     der Hintergrundkasten exakt gleich hoch UND gleich eingerueckt sitzt. */
+  border: 1px solid transparent;
 }
 .meta { padding: 10px 2px 0; }
 .meta .t { font-weight: 600; font-size: 14px; line-height: 1.25;
@@ -409,91 +419,21 @@ table.list td.name { font-weight: 600; }
   background: rgba(8, 12, 17, 0.86); color: var(--self-ice-bright);
   border: 1px solid var(--self-line-strong);
 }
-/* --- Cover-Overlay-Raster (Phase 6) ---------------------------------
-   Unsichtbares 4x9-Raster ueber dem Poster; Badges werden per grid-column/row
-   platziert (Layout-Editor). font-size in cqw = 1 Einheit, die mit dem Cover
-   mitskaliert (~10px bei 160px-Cover); alle Badge-Masse in em -> stabil ueber
-   alle Cover-Breiten. pointer-events:none -> Klicks fallen aufs Cover durch
-   (Detail oeffnen); nur editierbare Badges fangen den Klick selbst ab. */
-.card-grid {
-  position: absolute; inset: 0; padding: 8px;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  grid-template-rows: repeat(9, 1fr);
-  gap: 4px; pointer-events: none;
-  font-size: 6.25cqw;
-}
-.ov-badge {
-  align-self: center; justify-self: start;
-  display: inline-flex; align-items: center; gap: 0.3em;
-  max-width: 100%; box-sizing: border-box;
-  font-family: var(--self-font-mono); font-weight: 600; font-size: 1em; line-height: 1;
-  padding: 0.2em 0.5em; border-radius: 0.6em;
-  background: rgba(8, 12, 17, 0.86); color: var(--self-ice-bright);
-  border: 1px solid var(--self-line-strong);
-  white-space: nowrap; overflow: hidden;
-}
-.ov-badge .fl { width: 1.9em; height: 1.4em; border-radius: 0.2em; flex: none; }
-.ov-badge .fl-code { font-size: 1.1em; }
-.ov-ic { width: 1.15em; height: 1.15em; flex: none; }
-.ov-ic-cc { width: 1.65em; }
-.ov-badge.off .fl, .ov-badge.off .fl-code { filter: grayscale(1); opacity: 0.42; }
-.ov-badge.b-rating.none { color: var(--self-yellow); border-color: var(--self-yellow); }
-.ov-badge.b-rating.locked { color: var(--self-green); border-color: var(--self-green); }
-.ov-badge.b-sub { color: var(--self-teal-bright); }
-.ov-badge.b-comp.ok { color: var(--self-green); border-color: var(--self-green); }
-.ov-badge.b-comp.bad { color: var(--self-red); border-color: var(--self-red); }
-.ov-badge.editable { pointer-events: auto; cursor: pointer; }
-.ov-badge.editable:hover { border-color: var(--self-teal-bright); }
-
-/* --- Cover-Layout-Editor (Phase 6, Einstellungen -> Anzeige) --------- */
-.le-wrap { display: flex; gap: 26px; flex-wrap: wrap; align-items: flex-start; margin: 10px 0 20px; }
-.le-stage { flex: 0 0 auto; }
-.le-side { flex: 1; min-width: 220px; }
-.le-label { font-family: var(--self-font-mono); font-size: 10px; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--self-text-3); margin-bottom: 8px; }
-.le-grid {
-  position: relative; width: 224px; aspect-ratio: 2 / 3;
-  container-type: inline-size;   /* Container; die cqw-Groesse steht auf dem Kind .le-placed */
-  background: var(--self-bg-2); border: 1px solid var(--self-line);
-  border-radius: var(--self-radius); overflow: hidden;
-  display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(9, 1fr);
-  gap: 4px; padding: 8px;
-}
-.le-cell { border: 1px dashed color-mix(in oklab, var(--self-line) 70%, transparent);
-  border-radius: 3px; transition: background var(--self-dur-fast) var(--self-ease); }
-.le-grid.dragging .le-cell { border-color: var(--self-line-strong); }
-.le-cell.over { background: rgba(51, 167, 140, 0.22); border-color: var(--self-teal); }
-.le-placed { position: relative; align-self: center; justify-self: start; cursor: grab; z-index: 2;
-  font-size: 6.25cqw; }   /* cqw loest gegen den Container .le-grid auf -> skaliert wie das Cover */
-.le-placed:active { cursor: grabbing; }
-.le-grid.dragging .le-placed { pointer-events: none; }
-.le-del {
-  position: absolute; top: -6px; right: -6px; width: 15px; height: 15px; padding: 0;
-  border: none; border-radius: 50%; background: var(--self-red); color: #fff;
-  font-size: 12px; line-height: 15px; text-align: center; cursor: pointer; z-index: 3;
-}
-.le-palette { display: flex; flex-direction: column; gap: 8px; max-width: 340px; }
-.le-pal-item {
-  display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: grab;
-  font-size: 11px; background: var(--self-bg-1); border: 1px solid var(--self-line);
-  border-radius: var(--self-radius-sm);
-}
-.le-pal-item:hover { border-color: var(--self-line-strong); }
-.le-pal-item.placed { opacity: 0.5; }
-.le-pal-name { flex: 1; font-family: var(--self-font-sans); font-size: 13px; color: var(--self-text); }
-.le-pal-tag { font-family: var(--self-font-mono); font-size: 9px; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--self-text-3); }
-
-/* Cover-Badges Wunschsprache: Flagge (Ton) + UT (Untertitel), unten rechts */
+/* Cover-Badges Wunschsprache, unten rechts: Lautsprecher-Icon + Flagge (Ton),
+   CC-Icon + Flagge (Untertitel). Die Icons kommen als Inline-SVG aus icons.js
+   und erben ueber currentColor die Badge-Farbe. */
 .cbadge {
   font-family: var(--self-font-mono); font-size: 10px; font-weight: 600;
-  padding: 2px 5px; border-radius: 6px;
+  padding: 0 5px; border-radius: 6px;
   background: rgba(8, 12, 17, 0.86); color: var(--self-ice-bright);
   border: 1px solid var(--self-line-strong);
   display: inline-flex; align-items: center; gap: 3px;
 }
 .cbadge.cb-ut { color: var(--self-teal-bright); }
+/* Icon-Masse folgen dem viewBox-Verhaeltnis: audio 16x16 (quadratisch),
+   cc 20x14 (breiter) - sonst werden die SVGs verzerrt. */
+.smh-ic { width: 12px; height: 12px; flex: none; }
+.smh-ic-cc { width: 17px; }
 /* "fehlt": nur die Flagge ausgrauen - Hintergrund, Rahmen und UT-Text bleiben
    normal. grayscale(1) + opacity 0.42 ist die Referenz-Graustufe; die untere
    Haelfte der "teilweise"-Flagge (flags.js) wird auf exakt denselben Wert

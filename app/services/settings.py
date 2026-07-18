@@ -21,9 +21,8 @@ DEFAULTS = {
     # -- Allgemein (Phase 0, funktionsfaehig) --
     "general.instance_name": "",       # optionaler Anzeigename der Instanz (Topbar/Titel)
     "general.ui_language": "de",       # Sprache der Oberflaeche (i18n): de | en
-    # -- Anzeige (Phase 2 / 6) --
+    # -- Anzeige (Phase 2) --
     "display.primary_language": "ger",  # primaere Sprache der Instanz (fuer Sprach-Abdeckung/Flaggen)
-    "display.card_layout": [],          # Cover-Overlay-Layout (Phase 6): Liste {badge,col,row}; leer = Standard
     # -- FSK & Altersfreigaben (Phase 1 / 5c) --
     "fsk.enabled": True,               # FSK-Feature an/aus (nur UI - Daten bleiben gespeichert)
     "display.rating_translate": False,  # Freigaben in die bevorzugte Rating-Art umrechnen? (Phase 5d, Fix 3)
