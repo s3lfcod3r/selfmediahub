@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 from .. import db, i18n
 from . import (
     analysis, completeness, coverage, fsk, metaproviders, notify, rules,
-    settings as settings_service, sources,
+    seasons, settings as settings_service, sources,
 )
 
 # Wieviele TMDb-Abfragen gleichzeitig (TMDb erlaubt reichlich).
@@ -53,10 +53,19 @@ def _already_enriched(prev: dict, is_series: bool) -> bool:
     "fertig"-Signal zählt das Feld, das erst der Abruf setzt - bei Serien die
     Episodenzahl, bei Filmen der Status. Sonst würden unfertige Einträge bei
     jedem Re-Sync übersprungen und blieben für immer leer.
+
+    Bei Serien zählt zusätzlich ``tmdb_season_counts`` (Soll-Folgen je Staffel,
+    für die Staffel-Badges). Das Feld kam später dazu: ohne diese Bedingung
+    gälten alle Bestandsserien als fertig, der Abruf bliebe aus und die Staffel-
+    Badges wären dauerhaft grau. So holt der erste Sync nach dem Update die
+    Zahlen einmalig nach.
     """
     if not prev or not prev.get("tmdb_id"):
         return False
-    return prev.get("tmdb_episodes" if is_series else "status") is not None
+    if is_series:
+        return (prev.get("tmdb_episodes") is not None
+                and prev.get("tmdb_season_counts") is not None)
+    return prev.get("status") is not None
 
 
 def _enrich_one(item: dict, existing: dict, cache: dict) -> None:
@@ -69,6 +78,10 @@ def _enrich_one(item: dict, existing: dict, cache: dict) -> None:
                 item[field] = prev.get(field)
         if not item.get("genres") and prev.get("genres"):
             item["genres"] = json.loads(prev.get("genres") or "[]")
+        # JSON-Spalten kommen als String aus der DB und muessen zurueck in die
+        # Python-Struktur - der Upsert serialisiert sie sonst ein zweites Mal.
+        if not item.get("tmdb_season_counts") and prev.get("tmdb_season_counts"):
+            item["tmdb_season_counts"] = json.loads(prev.get("tmdb_season_counts") or "[]")
     else:
         metaproviders.enrich_item(item, cache)
     fsk.analyze(item)
@@ -154,6 +167,9 @@ def run_sync() -> dict:
     # HABEN-Seite ohne Specials zaehlen (konsistent zu TMDbs number_of_episodes).
     _set(phase=i18n.t("sync.phase.completeness", lang))
     completeness.recompute()
+    # 4c) Ampel je Staffel (Cover-Badges S0/S1/S2 ...) - braucht dieselben
+    # Episodendaten, deshalb direkt im Anschluss.
+    seasons.recompute()
 
     # 5) Abdeckung der primaeren Sprache berechnen -------------------------------
     _set(phase=i18n.t("sync.phase.coverage", lang))

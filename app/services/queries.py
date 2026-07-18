@@ -4,13 +4,16 @@ import json
 from .. import db
 from . import ratings, settings as settings_service, tags as tags_service
 
-_JSON_COLS = ("genres", "audio_codecs", "audio_langs", "subtitle_langs")
+_JSON_COLS = ("genres", "audio_codecs", "audio_langs", "subtitle_langs", "season_status")
 
 
 def _parse(row: dict) -> dict:
     item = dict(row)
     for col in _JSON_COLS:
         item[col] = json.loads(item.get(col) or "[]")
+    # Rohe Soll-Zahlen je Staffel braucht nur seasons.recompute - aus dem an die
+    # Seite eingebetteten JSON raushalten (window.__DATA__ enthaelt ALLE Items).
+    item.pop("tmdb_season_counts", None)
     # Cover ueber den eigenen Bild-Proxy ausliefern (Roh-URL der Quelle bleibt in der DB).
     if item.get("image_url"):
         item["image_url"] = f"/api/image/{item['id']}"

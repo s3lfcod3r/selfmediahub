@@ -332,12 +332,15 @@ STRINGS = {
 
     # -- Cover badges / rating --
     "grid.no_fsk": "no rating",
-    "grid.incomplete_badge": "incompl.",
     "grid.rating_none_short": "none",
     "grid.fsk_change_title": "Change rating",
     "cover.audio_title": "{lang} audio: {state}",
     "cover.subtitle_title": "{lang} subtitles: {state}",
     "cover.sub_abbr": "SUB",
+    # Season badges on the cover (S0, S1, S2 …)
+    "cover.season_title": "Season {n}: {have} of {total} episodes",
+    "cover.season_specials": "Specials: {have} episodes",
+    "cover.season_unknown": "Season {n}: {have} episodes (completeness unknown)",
     "fsk.none_option": "— none —",
     "msg.fsk_set": "Rating {rating} set",
     "common.removed": "(removed)",

@@ -184,6 +184,31 @@
 
   function icon(name) { return (window.smhIcon && window.smhIcon(name)) || ""; }
 
+  // Staffel-Badges unter der Freigabe: S0, S1, S2 ... mit Ampel je Staffel
+  // (gruen vollstaendig, gelb teilweise, rot fehlt, grau unbestimmbar). Die
+  // Daten kommen fertig aus seasons.recompute; hier wird nur gezeichnet.
+  // Staffel 0 (Specials) ist bereits serverseitig weggelassen, wenn keine da
+  // sind - und kennt nur "vorhanden", daher kein Gelb.
+  function seasonTitle(s) {
+    if (s.s === 0) { return T("cover.season_specials").replace("{have}", s.h); }
+    if (s.st === "unknown") {
+      return T("cover.season_unknown").replace("{n}", s.s).replace("{have}", s.h);
+    }
+    return T("cover.season_title").replace("{n}", s.s)
+      .replace("{have}", s.h).replace("{total}", s.t);
+  }
+
+  function seasonRow(i) {
+    var list = i.season_status || [];
+    if (!list.length) { return ""; }
+    var cells = list.map(function (s) {
+      return '<span class="sbadge s-' + esc(s.st) + '" title="' + esc(seasonTitle(s)) + '">' +
+        "S" + esc(s.s) + "</span>";
+    }).join("");
+    // Ohne FSK-Feature gibt es kein Freigabe-Badge darueber -> nach oben ruecken.
+    return '<div class="srow' + (FSK_ON ? "" : " no-rating") + '">' + cells + "</div>";
+  }
+
   function renderGrid(rows) {
     $("grid").innerHTML = rows.map(function (i) {
       var editable = window.__ALLOW_WRITE__ && i.source_kind === "emby";
@@ -203,8 +228,6 @@
           (hasRating ? esc(i.official_rating) : esc(T("grid.no_fsk"))) + "</span>"
         : "";
       var res = i.resolution ? '<span class="qbadge res">' + esc(i.resolution) + "</span>" : "";
-      var comp = i.completeness === "incomplete"
-        ? '<span class="qbadge bad">' + esc(T("grid.incomplete_badge")) + "</span>" : "";
       var img = i.image_url
         ? '<img loading="lazy" src="' + esc(i.image_url) + '" alt="" ' +
           'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'grid\'">' +
@@ -225,9 +248,9 @@
         "</div>";
       var chips = (i.tags || []).slice(0, 3).map(tagChip).join("");
       return '<article class="card" data-id="' + i.id + '">' +
-        '<div class="poster">' + img + rating +
+        '<div class="poster">' + img + rating + seasonRow(i) +
           '<span class="type">' + esc(T("type." + i.item_type)) + "</span>" +
-          '<div class="qrow">' + res + comp + "</div>" + langrow + "</div>" +
+          '<div class="qrow">' + res + "</div>" + langrow + "</div>" +
         '<div class="meta"><div class="t">' + esc(i.name) + "</div>" +
         '<div class="y">' + (i.year || "") + "</div>" +
         (chips ? '<div class="chips">' + chips + "</div>" : "") + "</div></article>";

@@ -337,12 +337,15 @@ STRINGS = {
 
     # -- Cover-Badges / FSK --
     "grid.no_fsk": "o. FSK",
-    "grid.incomplete_badge": "unvollst.",
     "grid.rating_none_short": "ohne",
     "grid.fsk_change_title": "FSK ändern",
     "cover.audio_title": "{lang}-Ton: {state}",
     "cover.subtitle_title": "{lang}-Untertitel: {state}",
     "cover.sub_abbr": "UT",
+    # Staffel-Badges auf dem Cover (S0, S1, S2 …)
+    "cover.season_title": "Staffel {n}: {have} von {total} Folgen",
+    "cover.season_specials": "Specials: {have} Folgen",
+    "cover.season_unknown": "Staffel {n}: {have} Folgen (Vollständigkeit unbekannt)",
     "fsk.none_option": "— keine —",
     "msg.fsk_set": "FSK {rating} gesetzt",
     "common.removed": "(entfernt)",

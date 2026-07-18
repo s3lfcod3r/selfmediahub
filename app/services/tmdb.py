@@ -204,6 +204,17 @@ def enrich(item: dict, cache: dict) -> dict:
                 item["tmdb_seasons"] = data.get("number_of_seasons")
             if item.get("tmdb_episodes") is None:
                 item["tmdb_episodes"] = data.get("number_of_episodes")
+            # Soll-Folgen je Staffel fuer die Staffel-Badges. Steckt bereits in
+            # DIESER Antwort - kein zusaetzlicher Abruf (tv_season_counts holt
+            # denselben Endpunkt nochmal, das brauchen wir hier nicht).
+            # Staffel 0 (Specials) bleibt aussen vor, konsistent zu
+            # number_of_episodes und completeness.py.
+            if not item.get("tmdb_season_counts"):
+                item["tmdb_season_counts"] = [
+                    [s["season_number"], s.get("episode_count") or 0]
+                    for s in data.get("seasons", [])
+                    if s.get("season_number") is not None and s["season_number"] >= 1
+                ]
     except requests.RequestException:
         return item
     return item

@@ -401,6 +401,32 @@ table.list td.name { font-weight: 600; }
 
 .stats { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 
+/* --- Staffel-Badges (S0, S1, S2 …) unter der Freigabe -------------------
+   Bewusst kleiner als die vier Haupt-Badges: es sind viele, sie sollen das
+   Cover nicht erschlagen. Volle Breite + flex-wrap, damit lange Serien einfach
+   in die nächste Zeile laufen. Klicks fallen aufs Cover durch (Detail öffnen). */
+.srow {
+  position: absolute; left: 8px; right: 8px;
+  top: calc(8px + var(--self-cover-badge-h) + 4px);
+  display: flex; flex-wrap: wrap; gap: 3px; pointer-events: none;
+}
+.srow.no-rating { top: 8px; }   /* FSK-Feature aus -> kein Badge darüber */
+.sbadge {
+  height: 16px; box-sizing: border-box;
+  display: inline-flex; align-items: center;
+  font-family: var(--self-font-mono); font-size: 9px; font-weight: 600;
+  padding: 0 4px; border-radius: 4px;
+  background: rgba(8, 12, 17, 0.86);
+  color: var(--self-text-2); border: 1px solid var(--self-line-strong);
+}
+.sbadge.s-full { color: var(--self-green); border-color: var(--self-green); }
+.sbadge.s-partial { color: var(--self-yellow); border-color: var(--self-yellow); }
+.sbadge.s-none { color: var(--self-red); border-color: var(--self-red); }
+/* unbekannt: Staffel existiert, Vollständigkeit nicht bestimmbar (Nummerierung
+   der Quelle passt nicht zu TMDb, z.B. Anime). Neutral grau statt falscher
+   Aussage - siehe services/seasons.py. */
+.sbadge.s-unknown { color: var(--self-text-3); border-color: var(--self-line); }
+
 /* --- Qualitäts-Badges auf Cover ---------------------------- */
 .qrow { position: absolute; bottom: 8px; left: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
 .qbadge {

@@ -11,15 +11,18 @@ ITEM_COLUMNS = [
     "official_rating", "community_rating", "genres", "image_url", "library_name",
     "child_count", "overview", "path", "tmdb_id", "imdb_id", "external_ids", "status",
     "tmdb_seasons", "tmdb_episodes", "have_seasons", "have_episodes",
-    # completeness/missing_episodes sind abgeleitet (completeness.recompute) und
-    # bewusst NICHT hier - sonst würde der Upsert sie bei jedem Sync auf NULL
-    # setzen, bis recompute laeuft (analog zu primary_audio_pct/primary_sub_pct).
+    "tmdb_season_counts",
+    # completeness/missing_episodes/season_status sind abgeleitet (completeness.
+    # recompute bzw. seasons.recompute) und bewusst NICHT hier - sonst würde der
+    # Upsert sie bei jedem Sync auf NULL setzen, bis recompute laeuft (analog zu
+    # primary_audio_pct/primary_sub_pct).
     "video_codec", "width", "height",
     "resolution", "hdr", "audio_codecs", "audio_langs", "subtitle_langs",
     "runtime_min", "size_bytes", "fsk_suggested", "fsk_suspicious", "fsk_reason",
     "rating_locked", "synced_at",
 ]
-JSON_COLUMNS = {"genres", "audio_codecs", "audio_langs", "subtitle_langs"}
+JSON_COLUMNS = {"genres", "audio_codecs", "audio_langs", "subtitle_langs",
+                "tmdb_season_counts"}
 
 # Episoden-Spalten (eigene Tabelle, pro Folge eine Zeile).
 EPISODE_COLUMNS = [
@@ -40,6 +43,7 @@ _ITEM_COLDEF = {
     "tmdb_seasons": "INTEGER", "tmdb_episodes": "INTEGER",
     "have_seasons": "INTEGER", "have_episodes": "INTEGER",
     "completeness": "TEXT", "missing_episodes": "INTEGER",
+    "tmdb_season_counts": "TEXT", "season_status": "TEXT",
     "video_codec": "TEXT", "width": "INTEGER", "height": "INTEGER",
     "resolution": "TEXT", "hdr": "TEXT", "audio_codecs": "TEXT",
     "audio_langs": "TEXT", "subtitle_langs": "TEXT", "runtime_min": "INTEGER",
@@ -68,6 +72,10 @@ CREATE TABLE IF NOT EXISTS media_items (
   tmdb_id TEXT, imdb_id TEXT, external_ids TEXT, status TEXT,
   tmdb_seasons INTEGER, tmdb_episodes INTEGER, have_seasons INTEGER, have_episodes INTEGER,
   completeness TEXT, missing_episodes INTEGER,
+  -- tmdb_season_counts: Soll-Folgen je Staffel als JSON-Paare [[staffel, anzahl], ...],
+  -- aus derselben TMDb-Antwort wie tmdb_seasons (kein zusaetzlicher Abruf).
+  -- season_status: daraus abgeleitete Ampel je Staffel (seasons.recompute).
+  tmdb_season_counts TEXT, season_status TEXT,
   video_codec TEXT, width INTEGER, height INTEGER, resolution TEXT, hdr TEXT,
   audio_codecs TEXT, audio_langs TEXT, subtitle_langs TEXT, runtime_min INTEGER,
   size_bytes INTEGER,
