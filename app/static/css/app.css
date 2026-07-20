@@ -247,7 +247,7 @@ select.field {
   line-height: 1; padding-top: 1px; padding-bottom: 0;
 }
 .poster .rating {
-  position: absolute; top: 8px; left: 8px;
+  position: absolute; top: var(--self-cover-inset); left: var(--self-cover-inset);
   font-family: var(--self-font-mono); font-size: 11px; font-weight: 600;
   padding-inline: 7px; border-radius: 6px;
   background: rgba(8, 12, 17, 0.82); color: var(--self-text);
@@ -258,7 +258,7 @@ select.field {
    (bewusst keine Freigabe) gruen statt gelb ist. */
 .poster .rating.locked { color: var(--self-green); border-color: var(--self-green); }
 .poster .type {
-  position: absolute; top: 8px; right: 8px;
+  position: absolute; top: var(--self-cover-inset); right: var(--self-cover-inset);
   font-family: var(--self-font-mono); font-size: 10px; letter-spacing: 0.08em;
   padding-inline: 6px; border-radius: 6px;
   background: rgba(8, 12, 17, 0.82); color: var(--self-teal-bright);
@@ -415,18 +415,23 @@ table.list td.name { font-weight: 600; }
    flex-wrap wären sie zwar gleich breit, die Spalten aber nicht garantiert.
    Klicks fallen aufs Cover durch (Detail öffnen). */
 .srow {
-  position: absolute; left: 8px; right: 8px;
-  top: calc(8px + var(--self-cover-badge-h) + 4px);
+  position: absolute;
+  left: var(--self-cover-inset); right: var(--self-cover-inset);
+  top: calc(var(--self-cover-inset) + var(--self-cover-badge-h) + 4px);
   display: grid; gap: 4px; pointer-events: none;
-  grid-template-columns: repeat(auto-fill, var(--self-season-badge-w));
+  /* minmax(…, 1fr): auto-fill bestimmt über die Mindestbreite, wie viele Spalten
+     passen (fünf auf dem schmalsten Cover), 1fr dehnt sie anschließend auf die
+     volle Breite. Dadurch schließt die Reihe bei JEDER Coverbreite bündig ab -
+     mit fester Spaltenbreite bliebe rechts ein Rest stehen, sobald die Cover
+     mit dem Fenster mitwachsen. */
+  grid-template-columns: repeat(auto-fill, minmax(var(--self-season-badge-w), 1fr));
 }
-.srow.no-rating { top: 8px; }   /* FSK-Feature aus -> kein Badge darüber */
-/* Feste Breite (statt inhaltsabhängig): so sind S1 und S10 gleich groß und die
-   Spalten fluchten - auch über verschiedene Serien hinweg. Bemessen nach dem
-   breitesten realistischen Fall "S10". Höhe/Zentrierung kommen aus der
-   gemeinsamen Cover-Badge-Regel weiter oben. */
+.srow.no-rating { top: var(--self-cover-inset); }   /* FSK aus -> kein Badge darüber */
+/* Keine eigene Breite: die Rasterspalte gibt sie vor, das Badge füllt sie. So
+   sind alle gleich groß, die Spalten fluchten über mehrere Reihen und die Reihe
+   nutzt die Coverbreite ganz aus. Höhe/Zentrierung kommen aus der gemeinsamen
+   Cover-Badge-Regel weiter oben. */
 .sbadge {
-  width: var(--self-season-badge-w);
   justify-content: center;
   font-family: var(--self-font-mono); font-size: 10px; font-weight: 600;
   padding-inline: 0; border-radius: 4px;
@@ -442,7 +447,10 @@ table.list td.name { font-weight: 600; }
 .sbadge.s-unknown { color: var(--self-text-3); border-color: var(--self-line); }
 
 /* --- Qualitäts-Badges auf Cover ---------------------------- */
-.qrow { position: absolute; bottom: 8px; left: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+.qrow {
+  position: absolute; bottom: var(--self-cover-inset); left: var(--self-cover-inset);
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
 .qbadge {
   font-family: var(--self-font-mono); font-size: 10px; font-weight: 600;
   padding: 3px 6px; border-radius: 6px;
@@ -452,8 +460,10 @@ table.list td.name { font-weight: 600; }
 .qbadge.bad { color: var(--self-red); border-color: var(--self-red); }
 
 /* Sprache / Untertitel unten rechts */
-.langrow { position: absolute; bottom: 8px; right: 8px; display: flex; gap: 4px;
-  flex-wrap: wrap; justify-content: flex-end; max-width: 72%; }
+.langrow {
+  position: absolute; bottom: var(--self-cover-inset); right: var(--self-cover-inset);
+  display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; max-width: 72%;
+}
 .lbadge {
   font-family: var(--self-font-mono); font-size: 10px; padding: 2px 5px; border-radius: 6px;
   background: rgba(8, 12, 17, 0.86); color: var(--self-ice-bright);
