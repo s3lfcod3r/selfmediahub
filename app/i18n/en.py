@@ -341,6 +341,13 @@ STRINGS = {
     "cover.season_title": "Season {n}: {have} of {total} episodes",
     "cover.season_specials": "Specials: {have} episodes",
     "cover.season_unknown": "Season {n}: {have} episodes (completeness unknown)",
+    # Grouped seasons (from 31 badges on, see seasonRow in app.js).
+    # The head is always shown, then only the categories that have hits.
+    "cover.season_group": "Seasons {from}-{to} ({count} seasons)",
+    "cover.season_group_full": "{n} complete",
+    "cover.season_group_partial": "{n} incomplete",
+    "cover.season_group_none": "{n} missing",
+    "cover.season_group_unknown": "{n} unknown",
     "fsk.none_option": "— none —",
     "msg.fsk_set": "Rating {rating} set",
     "common.removed": "(removed)",

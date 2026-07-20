@@ -209,6 +209,11 @@ select.field {
   gap: 20px 18px; padding: 8px 0 60px;
 }
 .card { cursor: default; }
+/* Bezugsrahmen fuer die Badge-Groessen: alles auf dem Cover wird in cqi
+   gerechnet und waechst dadurch mit der Karte mit. Bewusst .grid .card statt
+   .card - die Klasse wird auch fuer Einstellungs-Panels benutzt, die keine
+   Groessen-Containment vertragen. */
+.grid .card { container-type: inline-size; }
 .poster {
   position: relative; aspect-ratio: 2 / 3;
   border-radius: var(--self-radius);
@@ -229,6 +234,34 @@ select.field {
   color: var(--self-text-3); font-family: var(--self-font-mono);
   font-size: 12px; text-align: center; padding: 12px;
 }
+/* Badge-Groessen skalieren mit der Coverbreite. 1cqi = 1% der Kartenbreite, die
+   Faktoren sind die bisherigen Pixelwerte bezogen auf das schmalste Cover
+   (160px): 7px = 4.375cqi, 22px = 13.75cqi, 4px = 2.5cqi, 10px = 6.25cqi,
+   11px = 6.875cqi. Bei 160px kommt also exakt das alte Bild heraus, darueber
+   waechst alles proportional mit.
+
+   Die Obergrenzen deckeln bei rund dem 1,3-fachen, greifen je nach Wert
+   zwischen 204px (Schrift) und 240px (Abstand) Kartenbreite. In der
+   Rasteransicht liegen Cover praktisch bei 160-215px, dort skaliert es also
+   nahezu durchgaengig mit; oberhalb laufen die Werte gestaffelt in den Deckel.
+   Der ist vor allem fuer die Einspaltenansicht auf dem Handy da, wo eine Karte
+   300px und breiter wird - ohne Deckel saessen dort 40px hohe Badges.
+
+   Nur innerhalb von .grid: .qbadge wird auch im Detail-Modal benutzt, dort gibt
+   es keinen Container und die festen Groessen sollen bleiben. */
+.grid .poster {
+  --self-cover-inset: clamp(7px, 4.375cqi, 10px);
+  --self-cover-badge-h: clamp(22px, 13.75cqi, 30px);
+  --self-cover-gap: clamp(4px, 2.5cqi, 6px);
+  --self-cover-font: clamp(10px, 6.25cqi, 13px);
+  --self-cover-font-lg: clamp(11px, 6.875cqi, 14px);
+}
+.grid .poster .rating { font-size: var(--self-cover-font-lg); }
+.grid .poster .type,
+.grid .poster .qbadge,
+.grid .poster .cbadge,
+.grid .poster .sbadge { font-size: var(--self-cover-font); }
+
 /* Alle Cover-Badges gleich hoch: feste Hoehe + border-box + inline-flex, damit
    Schriftgroesse, Innenabstand und Inhalt (Text, Flagge, SVG-Icon) die Hoehe
    NICHT mehr beeinflussen. Vertikaler Innenabstand entfaellt deshalb bewusst.
@@ -410,23 +443,37 @@ table.list td.name { font-weight: 600; }
 .stats { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
 
 /* --- Staffel-Badges (S0, S1, S2 …) unter der Freigabe -------------------
-   Raster statt flex-wrap: die feste Spaltenbreite sorgt dafür, dass die Badges
-   einer zweiten und dritten Reihe exakt unter denen der ersten stehen. Mit
-   flex-wrap wären sie zwar gleich breit, die Spalten aber nicht garantiert.
-   Klicks fallen aufs Cover durch (Detail öffnen). */
-.srow {
+   Raster statt flex-wrap: die Spalten sorgen dafür, dass die Badges einer
+   zweiten und dritten Reihe exakt unter denen der ersten stehen. Mit flex-wrap
+   wären sie zwar gleich breit, die Spalten aber nicht garantiert.
+   Klicks fallen aufs Cover durch (Detail öffnen).
+
+   Positioniert wird nur der Stapel, nicht die einzelne Reihe. Nötig, weil lange
+   Serien gemischte Reihen bekommen (Specials einzeln, dann Zehnerblöcke, dann
+   wieder einzeln) und sich das in EINEM Raster nicht abbilden lässt. */
+.sstack {
   position: absolute;
   left: var(--self-cover-inset); right: var(--self-cover-inset);
-  top: calc(var(--self-cover-inset) + var(--self-cover-badge-h) + 4px);
-  display: grid; gap: 4px; pointer-events: none;
-  /* minmax(…, 1fr): auto-fill bestimmt über die Mindestbreite, wie viele Spalten
-     passen (fünf auf dem schmalsten Cover), 1fr dehnt sie anschließend auf die
-     volle Breite. Dadurch schließt die Reihe bei JEDER Coverbreite bündig ab -
-     mit fester Spaltenbreite bliebe rechts ein Rest stehen, sobald die Cover
-     mit dem Fenster mitwachsen. */
-  grid-template-columns: repeat(auto-fill, minmax(var(--self-season-badge-w), 1fr));
+  top: calc(var(--self-cover-inset) + var(--self-cover-badge-h) + var(--self-cover-gap, 4px));
+  display: flex; flex-direction: column; gap: var(--self-cover-gap, 4px);
+  pointer-events: none;
 }
-.srow.no-rating { top: var(--self-cover-inset); }   /* FSK aus -> kein Badge darüber */
+.sstack.no-rating { top: var(--self-cover-inset); }  /* FSK aus -> kein Badge darüber */
+/* Feste fünf Spalten statt auto-fill: die Badges wachsen mit dem Cover mit
+   (siehe container-type auf .grid .card), also passen IMMER fünf in eine Reihe -
+   bei 160px genauso wie bei 220px. Damit ist die Kapazität eine Konstante
+   (5 × 6 Reihen = 30 Badges), auf die sich die Gruppierung in app.js verlassen
+   kann. Mit auto-fill hinge sie von der Fensterbreite ab.
+   minmax(0, 1fr) statt 1fr: sonst ist die Spalte mindestens so breit wie ihr
+   Inhalt und ein langes Label würde die Reihe sprengen. */
+.srow {
+  display: grid; gap: var(--self-cover-gap, 4px);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+/* Zusammengefasste Staffeln: zwei je Reihe. Zwei gleiche Spalten ergeben genau
+   2,5 Badge-Breiten je Badge ((146 - 4) / 2 = 71px = 2,5 × 26 + 2,5 × 4 - 4),
+   dadurch fluchten die Ränder mit den einzelnen Reihen darüber und darunter. */
+.srow-group { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 /* Keine eigene Breite: die Rasterspalte gibt sie vor, das Badge füllt sie. So
    sind alle gleich groß, die Spalten fluchten über mehrere Reihen und die Reihe
    nutzt die Coverbreite ganz aus. Höhe/Zentrierung kommen aus der gemeinsamen

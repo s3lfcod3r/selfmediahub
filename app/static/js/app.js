@@ -198,15 +198,110 @@
       .replace("{have}", s.h).replace("{total}", s.t);
   }
 
+  function seasonBadge(s) {
+    return '<span class="sbadge s-' + esc(s.st) + '" title="' + esc(seasonTitle(s)) + '">' +
+      "S" + esc(s.s) + "</span>";
+  }
+
+  // --- Zusammenfassen langer Serien ------------------------------------
+  // Aufs Cover passen fuenf Badges je Reihe (feste Rasterspalten, siehe .srow
+  // in app.css) und sechs Reihen zwischen Freigabe oben und Qualitaet/Sprache
+  // unten - ein 2:3-Poster gibt nicht mehr her. Ab dem 31. Badge werden die
+  // Zaehlstaffeln deshalb in Zehnerbloecken zusammengefasst, statt sie
+  // stillschweigend abzuschneiden. Zwei Gruppen-Badges je Reihe, jedes 2,5
+  // Spalten breit - so fluchten sie mit den einzelnen Badges.
+  var SEASON_COLS = 5;
+  var SEASON_ROWS = 6;
+  var SEASON_MAX = SEASON_COLS * SEASON_ROWS;   // 30 Badges ohne Gruppierung
+  var GROUP_SIZE = 10;                          // Staffeln je Gruppen-Badge
+  var GROUP_PER_ROW = 2;
+  var GROUP_LAST = 60;                          // Standard: 1-60 gruppieren
+
+  function groupTitle(from, to, n, count) {
+    // Kopf plus die Kategorien, die ueberhaupt vorkommen - eine Zeile mit
+    // "0 fehlen" waere nur Rauschen.
+    var parts = [];
+    ["full", "partial", "none", "unknown"].forEach(function (k) {
+      if (n[k]) { parts.push(T("cover.season_group_" + k).replace("{n}", n[k])); }
+    });
+    return T("cover.season_group")
+      .replace("{from}", from).replace("{to}", to).replace("{count}", count) +
+      (parts.length ? ": " + parts.join(", ") : "");
+  }
+
+  function groupBadge(from, to, members) {
+    // Luecke in der Nummerierung: gar keine Staffel im Block -> kein Badge.
+    if (!members.length) { return ""; }
+    var n = { full: 0, partial: 0, none: 0, unknown: 0 };
+    members.forEach(function (s) { n[s.st] = (n[s.st] || 0) + 1; });
+    // Farbe konservativ: gruen nur, wenn ALLE Staffeln des Blocks vollstaendig
+    // sind, rot nur, wenn keine einzige Folge da ist - alles dazwischen gelb.
+    // Die genaue Verteilung steht im Tooltip; aufs Badge passt sie nicht.
+    var st = "partial";
+    if (n.full === members.length) { st = "full"; }
+    else if (n.unknown === members.length) { st = "unknown"; }
+    else if (n.none === members.length) { st = "none"; }
+    return '<span class="sbadge s-' + esc(st) + '" title="' +
+      esc(groupTitle(from, to, n, members.length)) + '">' +
+      "S" + esc(from) + "-" + esc(to) + "</span>";
+  }
+
+  // Bis zu welcher Staffel muss gruppiert werden, damit alles in die freien
+  // Reihen passt? Standard sind 1-60 (sechs Gruppen = drei Reihen), der Rest
+  // bleibt einzeln. Reicht das nicht, wird weiter gruppiert statt abgeschnitten.
+  // (Jenseits von ~100 Staffeln geht die Rechnung nicht mehr auf - dann wachsen
+  // die Reihen ueber das Cover hinaus, statt Staffeln zu verschlucken.)
+  function groupBoundary(maxS, rowsLeft) {
+    var g = Math.min(GROUP_LAST, Math.ceil(maxS / GROUP_SIZE) * GROUP_SIZE);
+    while (g < maxS && !groupsFit(g, maxS, rowsLeft)) { g += GROUP_SIZE; }
+    return g;
+  }
+
+  function groupsFit(g, maxS, rowsLeft) {
+    var groupRows = Math.ceil(Math.ceil(g / GROUP_SIZE) / GROUP_PER_ROW);
+    var tailRows = Math.ceil((maxS - g) / SEASON_COLS);
+    return groupRows + tailRows <= rowsLeft;
+  }
+
+  function groupedRows(list) {
+    var specials = list.filter(function (s) { return s.s === 0; });
+    var seasons = list.filter(function (s) { return s.s > 0; });
+    var maxS = seasons.reduce(function (m, s) { return Math.max(m, s.s); }, 0);
+    var out = "";
+    var rowsLeft = SEASON_ROWS;
+
+    // Specials bekommen eine eigene Reihe in Normalgroesse - sie zaehlen nicht
+    // mit und sollen sich nicht mit den Zehnerbloecken vermischen.
+    if (specials.length) {
+      out += '<div class="srow">' + specials.map(seasonBadge).join("") + "</div>";
+      rowsLeft -= 1;
+    }
+
+    var groupTo = groupBoundary(maxS, rowsLeft);
+    var groups = "";
+    for (var from = 1; from <= groupTo; from += GROUP_SIZE) {
+      // Letzter Block wird auf die hoechste vorhandene Staffel gekuerzt, damit
+      // bei 35 Staffeln "S31-35" steht und nicht das erfundene "S31-40".
+      var to = Math.min(from + GROUP_SIZE - 1, maxS);
+      groups += groupBadge(from, to, seasons.filter(function (s) {
+        return s.s >= from && s.s <= to;
+      }));
+    }
+    if (groups) { out += '<div class="srow srow-group">' + groups + "</div>"; }
+
+    var tail = seasons.filter(function (s) { return s.s > groupTo; });
+    if (tail.length) { out += '<div class="srow">' + tail.map(seasonBadge).join("") + "</div>"; }
+    return out;
+  }
+
   function seasonRow(i) {
     var list = i.season_status || [];
     if (!list.length) { return ""; }
-    var cells = list.map(function (s) {
-      return '<span class="sbadge s-' + esc(s.st) + '" title="' + esc(seasonTitle(s)) + '">' +
-        "S" + esc(s.s) + "</span>";
-    }).join("");
+    var rows = list.length <= SEASON_MAX
+      ? '<div class="srow">' + list.map(seasonBadge).join("") + "</div>"
+      : groupedRows(list);
     // Ohne FSK-Feature gibt es kein Freigabe-Badge darueber -> nach oben ruecken.
-    return '<div class="srow' + (FSK_ON ? "" : " no-rating") + '">' + cells + "</div>";
+    return '<div class="sstack' + (FSK_ON ? "" : " no-rating") + '">' + rows + "</div>";
   }
 
   function renderGrid(rows) {

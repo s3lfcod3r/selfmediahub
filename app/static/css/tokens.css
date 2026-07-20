@@ -60,14 +60,11 @@
      Staffeln). Die Breite darf variieren, die Hoehe nicht - sonst stehen Badges
      mit Text und Badges mit Flagge/Icon unterschiedlich hoch nebeneinander. */
   --self-cover-badge-h: 22px;
-  /* MINDESTbreite der Staffel-Badges: bestimmt, wie viele pro Reihe passen.
-     26px = Platz fuer drei Zeichen ("S10", 18px bei 10px Mono) plus Rahmen.
-     Die tatsaechliche Breite dehnt sich auf die Coverbreite (1fr), damit die
-     Reihe links und rechts buendig abschliesst. */
-  --self-season-badge-w: 26px;
-  /* Abstand aller Cover-Badges zum Poster-Rand. Bei 26px Mindestbreite passen
-     damit auch auf dem schmalsten Cover (160px) fuenf Badges in eine Reihe:
-     5*26 + 4*4 Abstand = 146px = 160 - 2*7. */
+  /* Abstand aller Cover-Badges zum Poster-Rand. Auf dem schmalsten Cover
+     (160px) gehen damit fuenf Staffel-Badges in eine Reihe auf:
+     5*26 + 4*4 Abstand = 146px = 160 - 2*7. Die Spaltenzahl ist inzwischen
+     fest verdrahtet (.srow in app.css), 26px sind also nur noch die
+     Bezugsgroesse dieser Rechnung, keine Mindestbreite mehr. */
   --self-cover-inset: 7px;
 
   /* --- Motion -------------------------------------------- */

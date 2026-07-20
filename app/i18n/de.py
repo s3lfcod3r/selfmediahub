@@ -346,6 +346,13 @@ STRINGS = {
     "cover.season_title": "Staffel {n}: {have} von {total} Folgen",
     "cover.season_specials": "Specials: {have} Folgen",
     "cover.season_unknown": "Staffel {n}: {have} Folgen (Vollständigkeit unbekannt)",
+    # Zusammengefasste Staffeln (ab 31 Badges, siehe seasonRow in app.js).
+    # Der Kopf steht immer, danach nur die Kategorien mit Treffern.
+    "cover.season_group": "Staffel {from}-{to} ({count} Staffeln)",
+    "cover.season_group_full": "{n} vollständig",
+    "cover.season_group_partial": "{n} unvollständig",
+    "cover.season_group_none": "{n} fehlen",
+    "cover.season_group_unknown": "{n} unbestimmt",
     "fsk.none_option": "— keine —",
     "msg.fsk_set": "FSK {rating} gesetzt",
     "common.removed": "(entfernt)",
