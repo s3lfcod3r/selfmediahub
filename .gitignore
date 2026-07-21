@@ -5,3 +5,5 @@ data/
 *.db
 .venv/
 venv/
+.claude/
+REMOTE-CONTROL.md

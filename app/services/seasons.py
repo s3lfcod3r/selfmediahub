@@ -17,6 +17,7 @@ Läuft nach dem Episoden-Sync, da erst dann die Einzelfolgen in der DB liegen.
 import json
 
 from .. import db
+from . import episode_order
 
 # Status-Werte; das Frontend leitet daraus die CSS-Klasse ab (app.js: seasonRow).
 FULL, PARTIAL, NONE, UNKNOWN = "full", "partial", "none", "unknown"
@@ -77,10 +78,11 @@ def recompute() -> int:
     have_map = _have_by_item()
     updates = []
     for row in db.query(
-        "SELECT id, tmdb_season_counts FROM media_items WHERE item_type='Serie'"
+        "SELECT id, tmdb_season_counts, tvdb_orders, episode_order_resolved "
+        "FROM media_items WHERE item_type='Serie'"
     ):
-        pairs = json.loads(row["tmdb_season_counts"] or "[]")
-        tmdb = {int(s): int(n) for s, n in pairs}
+        # Soll-Struktur aus der aufgeloesten Reihenfolge (Aired/DVD/Absolut).
+        tmdb, _total = episode_order.effective_structure(row)
         rows = _status_for(have_map.get(row["id"], {}), tmdb)
         updates.append((json.dumps(rows) if rows else None, row["id"]))
 

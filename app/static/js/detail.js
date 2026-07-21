@@ -121,6 +121,19 @@
       esc(T("detail.ss_foot_unreliable").replace("{hs}", hs).replace("{ts}", ts)) + "</div></div>";
   }
 
+  function orderControl(d) {
+    var o = d.order;
+    if (!o || !o.options || o.options.length < 2) { return ""; }
+    var labels = { aired: T("detail.order_aired"), dvd: T("detail.order_dvd"), absolute: T("detail.order_absolute") };
+    var opts = '<option value="auto"' + (o.pref === "auto" ? " selected" : "") + ">" +
+      esc(T("detail.order_auto")) + (o.pref === "auto" ? " (" + esc(labels[o.resolved] || o.resolved) + ")" : "") + "</option>";
+    o.options.forEach(function (k) {
+      opts += '<option value="' + esc(k) + '"' + (o.pref === k ? " selected" : "") + ">" + esc(labels[k] || k) + "</option>";
+    });
+    return '<div class="set-field order-ctrl"><label for="orderSel">' + esc(T("detail.order_label")) + "</label>" +
+      '<select class="field" id="orderSel" data-id="' + d.item.id + '">' + opts + "</select></div>";
+  }
+
   function renderDetail(d) {
     var i = d.item;
     var fskOn = window.__FSK_ENABLED__ !== false;   // FSK-Feature (nur UI); Standard an
@@ -213,6 +226,7 @@
         '<div class="modal-badges">' + badges.join("") + "</div></div></div>" +
       '<div class="modal-body">' +
         '<div class="meta-grid">' + meta + "</div>" +
+        orderControl(d) +
         fskWarn +
         (i.path ? '<div class="pathline"><div class="k">' + esc(T("detail.path")) + "</div>" +
                   '<div class="pv mono">' + esc(i.path) + "</div></div>" : "") +
@@ -231,6 +245,25 @@
             var box = ackB.closest(".fsk-ack-box"); if (box) { box.remove(); }
           })
           .catch(function () { window.smhToast(T("common.failed"), "err"); ackB.disabled = false; });
+      };
+    }
+
+    var os = document.getElementById("orderSel");
+    if (os) {
+      os.onchange = function () {
+        os.disabled = true;
+        fetch("/api/items/" + os.getAttribute("data-id") + "/order", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ order: os.value })
+        }).then(function (r) { return r.json(); })
+          .then(function () {
+            if (window.smhToast) { window.smhToast(T("detail.order_saved"), "ok"); }
+            openDetail(+os.getAttribute("data-id"));
+          })
+          .catch(function () {
+            if (window.smhToast) { window.smhToast(T("common.failed"), "err"); }
+            os.disabled = false;
+          });
       };
     }
 

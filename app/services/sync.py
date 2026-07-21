@@ -9,8 +9,8 @@ from datetime import datetime, timezone
 
 from .. import db, i18n
 from . import (
-    analysis, completeness, coverage, fsk, metaproviders, notify, rules,
-    seasons, settings as settings_service, sources,
+    analysis, completeness, coverage, episode_order, fsk, metaproviders, notify,
+    providers, rules, seasons, settings as settings_service, sources,
 )
 
 # Wieviele TMDb-Abfragen gleichzeitig (TMDb erlaubt reichlich).
@@ -45,7 +45,7 @@ def connector_for(kind: str):
     return sources.connector_for(kind)
 
 
-def _already_enriched(prev: dict, is_series: bool) -> bool:
+def _already_enriched(prev: dict, is_series: bool, tvdb_on: bool) -> bool:
     """Ist eine Serie/ein Film wirklich schon bei TMDb angereichert?
 
     NICHT an ``tmdb_id`` festmachen: die liefert Emby gratis mit (ProviderIds),
@@ -63,15 +63,21 @@ def _already_enriched(prev: dict, is_series: bool) -> bool:
     if not prev or not prev.get("tmdb_id"):
         return False
     if is_series:
-        return (prev.get("tmdb_episodes") is not None
-                and prev.get("tmdb_season_counts") is not None)
+        if (prev.get("tmdb_episodes") is None
+                or prev.get("tmdb_season_counts") is None):
+            return False
+        # Bestandsserien einmalig nachladen, damit die Reihenfolgen (tvdb_orders)
+        # fuer die Aired/DVD-Erkennung vorliegen - nur wenn TheTVDB aktiv ist.
+        if tvdb_on and prev.get("tvdb_orders") is None:
+            return False
+        return True
     return prev.get("status") is not None
 
 
-def _enrich_one(item: dict, existing: dict, cache: dict) -> None:
+def _enrich_one(item: dict, existing: dict, cache: dict, tvdb_on: bool) -> None:
     analysis.enrich(item)
     prev = existing.get(item["source_id"])
-    if _already_enriched(prev, item.get("item_type") == "Serie"):
+    if _already_enriched(prev, item.get("item_type") == "Serie", tvdb_on):
         # Bereits vollständig abgeglichen -> TMDb-Daten übernehmen, kein Netzabruf.
         for field in _CARRY:
             if item.get(field) is None:
@@ -82,6 +88,8 @@ def _enrich_one(item: dict, existing: dict, cache: dict) -> None:
         # Python-Struktur - der Upsert serialisiert sie sonst ein zweites Mal.
         if not item.get("tmdb_season_counts") and prev.get("tmdb_season_counts"):
             item["tmdb_season_counts"] = json.loads(prev.get("tmdb_season_counts") or "[]")
+        if not item.get("tvdb_orders") and prev.get("tvdb_orders"):
+            item["tvdb_orders"] = json.loads(prev.get("tvdb_orders") or "null")
     else:
         metaproviders.enrich_item(item, cache)
     fsk.analyze(item)
@@ -135,9 +143,10 @@ def run_sync() -> dict:
 
     # 2) Anreichern (parallel) ---------------------------------------------
     processed = 0
+    tvdb_on = bool(providers.api_key_for("tvdb"))
     with ThreadPoolExecutor(max_workers=TMDB_WORKERS) as pool:
         futures = [
-            pool.submit(_enrich_one, it, existing, cache)
+            pool.submit(_enrich_one, it, existing, cache, tvdb_on)
             for _conn, items, existing in groups for it in items
         ]
         for fut in as_completed(futures):
@@ -165,6 +174,10 @@ def run_sync() -> dict:
     # 4b) Vollstaendigkeit je Serie (Staffel 0 zaehlt nicht mit) -----------------
     # Erst jetzt moeglich: die Einzelfolgen liegen in der DB, so laesst sich die
     # HABEN-Seite ohne Specials zaehlen (konsistent zu TMDbs number_of_episodes).
+    # 4b0) Episoden-Reihenfolge je Serie bestimmen (Aired/DVD/Absolut) - MUSS vor
+    # completeness/seasons laufen, da diese die aufgeloeste Struktur nutzen.
+    _set(phase=i18n.t("sync.phase.order", lang))
+    episode_order.recompute()
     _set(phase=i18n.t("sync.phase.completeness", lang))
     completeness.recompute()
     # 4c) Ampel je Staffel (Cover-Badges S0/S1/S2 ...) - braucht dieselben

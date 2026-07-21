@@ -11,7 +11,7 @@ ITEM_COLUMNS = [
     "official_rating", "community_rating", "genres", "image_url", "library_name",
     "child_count", "overview", "path", "tmdb_id", "imdb_id", "external_ids", "status",
     "tmdb_seasons", "tmdb_episodes", "have_seasons", "have_episodes",
-    "tmdb_season_counts",
+    "tmdb_season_counts", "tvdb_orders",
     # completeness/missing_episodes/season_status sind abgeleitet (completeness.
     # recompute bzw. seasons.recompute) und bewusst NICHT hier - sonst würde der
     # Upsert sie bei jedem Sync auf NULL setzen, bis recompute laeuft (analog zu
@@ -22,7 +22,7 @@ ITEM_COLUMNS = [
     "rating_locked", "synced_at",
 ]
 JSON_COLUMNS = {"genres", "audio_codecs", "audio_langs", "subtitle_langs",
-                "tmdb_season_counts"}
+                "tmdb_season_counts", "tvdb_orders"}
 
 # Episoden-Spalten (eigene Tabelle, pro Folge eine Zeile).
 EPISODE_COLUMNS = [
@@ -44,6 +44,11 @@ _ITEM_COLDEF = {
     "have_seasons": "INTEGER", "have_episodes": "INTEGER",
     "completeness": "TEXT", "missing_episodes": "INTEGER",
     "tmdb_season_counts": "TEXT", "season_status": "TEXT",
+    # Episoden-Reihenfolge (Aired/DVD/Absolut): episode_order = Nutzerwahl
+    # ('auto'|'aired'|'dvd'|'absolute', NULL=auto), episode_order_resolved = per
+    # Laufzeit ermittelte effektive Reihenfolge, tvdb_orders = JSON je verfuegbarer
+    # Reihenfolge {season_counts, episodes, seasons, runtime} von TheTVDB.
+    "episode_order": "TEXT", "episode_order_resolved": "TEXT", "tvdb_orders": "TEXT",
     "video_codec": "TEXT", "width": "INTEGER", "height": "INTEGER",
     "resolution": "TEXT", "hdr": "TEXT", "audio_codecs": "TEXT",
     "audio_langs": "TEXT", "subtitle_langs": "TEXT", "runtime_min": "INTEGER",
@@ -76,6 +81,10 @@ CREATE TABLE IF NOT EXISTS media_items (
   -- aus derselben TMDb-Antwort wie tmdb_seasons (kein zusaetzlicher Abruf).
   -- season_status: daraus abgeleitete Ampel je Staffel (seasons.recompute).
   tmdb_season_counts TEXT, season_status TEXT,
+  -- episode_order: Nutzerwahl der Episoden-Reihenfolge (NULL=auto). tvdb_orders:
+  -- je Reihenfolge (aired/dvd/absolute) Soll-Struktur + Median-Laufzeit von TheTVDB.
+  -- episode_order_resolved: daraus (bzw. per Laufzeit) ermittelte effektive Reihenfolge.
+  episode_order TEXT, episode_order_resolved TEXT, tvdb_orders TEXT,
   video_codec TEXT, width INTEGER, height INTEGER, resolution TEXT, hdr TEXT,
   audio_codecs TEXT, audio_langs TEXT, subtitle_langs TEXT, runtime_min INTEGER,
   size_bytes INTEGER,
