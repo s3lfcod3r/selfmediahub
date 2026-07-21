@@ -6,6 +6,7 @@ zurueck (i.d.R. TMDb). Felder werden nur gesetzt, wenn sie noch leer sind
 (fill-if-absent) - so gewinnt der hoechstpriorisierte Dienst je Feld.
 """
 import json
+import statistics
 import threading
 import time
 
@@ -16,6 +17,10 @@ from . import providers
 BASE = "https://api4.thetvdb.com/v4"
 TIMEOUT = 8
 _MAX_EPISODE_PAGES = 20  # Sicherheitskappe gegen Endlos-Pagination
+
+# Unsere Reihenfolgen-Keys -> TheTVDB-season-type-Endpunkt.
+# 'default' = Aired-Reihenfolge, 'dvd'/'absolute' analog.
+_SEASONTYPE = {"aired": "default", "dvd": "dvd", "absolute": "absolute"}
 
 # Login-Token cachen (TheTVDB-Token gilt ~1 Monat); konservativ 20 Tage.
 _lock = threading.Lock()
@@ -76,28 +81,60 @@ def _remember_id(item: dict, series_id) -> None:
         item["external_ids"] = json.dumps(ids)
 
 
-def _count_episodes(series_id, token: str, cache: dict) -> int:
-    """Regulaere Episoden (Staffel >= 1) zaehlen - paginiert, gekappt."""
-    ck = ("tvdb_eps", str(series_id))
+def _available_orders(ext: dict) -> list:
+    """Verfuegbare Reihenfolgen laut TheTVDB-Staffeltypen. 'aired' immer dabei;
+    'dvd'/'absolute' nur, wenn TheTVDB fuer die Serie so eine Nummerierung kennt."""
+    types = {(s.get("type") or {}).get("type") for s in (ext.get("seasons") or [])}
+    orders = ["aired"]
+    if "dvd" in types:
+        orders.append("dvd")
+    if "absolute" in types:
+        orders.append("absolute")
+    return orders
+
+
+def _fetch_order(series_id, token: str, order: str, cache: dict):
+    """Eine Reihenfolge abrufen -> {season_counts, episodes, seasons, runtime} oder
+    None. Zaehlt nur regulaere Staffeln (>= 1); runtime = Median der Folgen-Laufzeit
+    (Entscheidungsgrundlage fuer die Aired/DVD-Vorwahl)."""
+    ck = ("tvdb_order", str(series_id), order)
     if ck in cache:
         return cache[ck]
-    total, page, pages = 0, 0, 0
+    counts: dict = {}
+    runtimes: list = []
+    page, pages = 0, 0
     while pages < _MAX_EPISODE_PAGES:
-        j = _get(f"/series/{series_id}/episodes/default", token, {"page": page})
+        try:
+            j = _get(f"/series/{series_id}/episodes/{_SEASONTYPE[order]}", token, {"page": page})
+        except requests.RequestException:
+            break
         data = j.get("data") or {}
         eps = data.get("episodes") or []
         if not eps:
             break
         for ep in eps:
             sn = ep.get("seasonNumber")
-            if sn is not None and sn >= 1:  # Staffel 0 (Specials) zaehlt nicht
-                total += 1
+            if sn is None or sn < 1:  # Staffel 0 (Specials) zaehlt nicht
+                continue
+            counts[sn] = counts.get(sn, 0) + 1
+            rt = ep.get("runtime")
+            if rt:
+                runtimes.append(rt)
         pages += 1
         if not (j.get("links") or {}).get("next"):
             break
         page += 1
-    cache[ck] = total
-    return total
+    if not counts:
+        cache[ck] = None
+        return None
+    result = {
+        "season_counts": sorted([s, c] for s, c in counts.items()),
+        "episodes": sum(counts.values()),
+        "seasons": len(counts),
+        "runtime": round(statistics.median(runtimes)) if runtimes else None,
+    }
+    cache[ck] = result
+    return result
 
 
 def enrich(item: dict, cache: dict) -> dict:
@@ -127,19 +164,22 @@ def enrich(item: dict, cache: dict) -> dict:
             if status:
                 item["status"] = status
 
-        if item.get("tmdb_seasons") is None:
-            seasons = {
-                s.get("number") for s in (ext.get("seasons") or [])
-                if (s.get("type") or {}).get("type") == "official"
-                and (s.get("number") or 0) >= 1
-            }
-            if seasons:
-                item["tmdb_seasons"] = len(seasons)
-
-        if item.get("tmdb_episodes") is None:
-            count = _count_episodes(series_id, token, cache)
-            if count:
-                item["tmdb_episodes"] = count
+        # Alle bei TheTVDB vorhandenen Reihenfolgen abrufen (Aired immer, DVD/
+        # Absolut wenn vorhanden). episode_order.recompute() waehlt spaeter anhand
+        # der tatsaechlichen Folgen-Laufzeit die passende aus.
+        orders_out = {}
+        for order in _available_orders(ext):
+            res = _fetch_order(series_id, token, order, cache)
+            if res:
+                orders_out[order] = res
+        if orders_out:
+            item["tvdb_orders"] = orders_out
+            aired = orders_out.get("aired")
+            if aired:  # Aired bleibt die Basis fuer tmdb_seasons/tmdb_episodes.
+                if item.get("tmdb_seasons") is None:
+                    item["tmdb_seasons"] = aired["seasons"]
+                if item.get("tmdb_episodes") is None:
+                    item["tmdb_episodes"] = aired["episodes"]
 
         _remember_id(item, series_id)
     except requests.RequestException:

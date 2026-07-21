@@ -14,6 +14,7 @@ def _parse(row: dict) -> dict:
     # Rohe Soll-Zahlen je Staffel braucht nur seasons.recompute - aus dem an die
     # Seite eingebetteten JSON raushalten (window.__DATA__ enthaelt ALLE Items).
     item.pop("tmdb_season_counts", None)
+    item.pop("tvdb_orders", None)  # nur fuer die Detail-Order-Logik, nicht in die Liste
     # Cover ueber den eigenen Bild-Proxy ausliefern (Roh-URL der Quelle bleibt in der DB).
     if item.get("image_url"):
         item["image_url"] = f"/api/image/{item['id']}"

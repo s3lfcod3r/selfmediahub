@@ -8,6 +8,7 @@ unvollständige Serien würden fälschlich als "vollständig" gelten.
 Wird nach dem Episoden-Sync aufgerufen (die Einzelfolgen liegen dann in der DB).
 """
 from .. import db
+from . import episode_order
 
 
 def recompute() -> int:
@@ -28,14 +29,16 @@ def recompute() -> int:
 
     updates = []
     for row in db.query(
-        "SELECT id, tmdb_episodes, have_episodes FROM media_items WHERE item_type='Serie'"
+        "SELECT id, tmdb_episodes, have_episodes, tmdb_season_counts, tvdb_orders, "
+        "episode_order_resolved FROM media_items WHERE item_type='Serie'"
     ):
         if row["id"] in has_episodes:
             have = have_regular.get(row["id"], 0)  # 0 wenn nur Specials vorhanden
         else:
             have = row["have_episodes"]  # noch keine Episoden gespeichert
 
-        total = row["tmdb_episodes"]
+        # Soll-Gesamtzahl aus der aufgeloesten Reihenfolge (Aired/DVD/Absolut).
+        _sc, total = episode_order.effective_structure(row)
         if total and have is not None:
             missing = max(0, total - have)
             completeness = "complete" if missing == 0 else "incomplete"

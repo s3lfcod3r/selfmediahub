@@ -5,8 +5,9 @@ from fastapi.responses import Response
 
 from .. import config, db
 from ..services import (
-    auth, coverage, fsk, providers as providers_service, queries, rules,
-    settings as settings_service, sources as sources_service,
+    auth, completeness, coverage, episode_order, fsk,
+    providers as providers_service, queries, rules,
+    seasons, settings as settings_service, sources as sources_service,
     sync as sync_service, tags, tmdb, updatecheck,
 )
 
@@ -67,21 +68,32 @@ def api_item_detail(item_id: int):
         raise HTTPException(status_code=404, detail="Eintrag nicht gefunden")
     item["tags"] = tags.tags_for_items().get(item_id, [])
 
-    episodes, note, missing, season_summary = [], None, [], None
+    episodes, note, missing, season_summary, order_meta = [], None, [], None, None
     if item["item_type"] == "Serie":
         episodes = db.get_episodes(item_id)
         if not episodes:
             note = "Noch keine Episoden gespeichert - bitte einmal neu einlesen."
 
-        # Konkret fehlende Episoden über TMDb bestimmen
-        if episodes and item.get("tmdb_id"):
-            # Staffel 0 (Specials) fliesst nicht in die Fehlt-/Vollstaendigkeits-
-            # Rechnung ein - konsistent zu TMDb (number_of_episodes ohne Specials).
-            # Die Specials bleiben in der angezeigten Episodenliste erhalten.
+        # Soll-Struktur aus der aufgeloesten Reihenfolge (Aired/DVD/Absolut) - nicht
+        # mehr fest gegen TMDb-Aired, sondern gegen die je Serie gewaehlte Nummerierung.
+        struct = db.query(
+            "SELECT tmdb_season_counts, tvdb_orders, episode_order, "
+            "episode_order_resolved, tmdb_episodes FROM media_items WHERE id=?",
+            (item_id,),
+        )[0]
+        sc, _total = episode_order.effective_structure(struct)
+        order_opts = [o for o in ("aired", "dvd", "absolute")
+                      if o in episode_order._orders_of(struct)]
+        order_meta = {"options": order_opts,
+                      "pref": struct["episode_order"] or "auto",
+                      "resolved": struct["episode_order_resolved"] or "aired"}
+
+        # Konkret fehlende Episoden bestimmen. Staffel 0 (Specials) bleibt aussen vor
+        # (konsistent zur Vollstaendigkeit), bleibt aber in der Episodenliste sichtbar.
+        if episodes and sc:
             present = [(e["season"], e["episode"]) for e in episodes
                        if (e.get("season") or 0) >= 1 and e.get("episode") is not None]
-            seasons = tmdb.tv_season_counts(item["tmdb_id"])
-            missing = tmdb.compute_missing(seasons, present)
+            missing = tmdb.compute_missing(sc, present)
             for m in missing:
                 episodes.append({"season": m["season"], "episode": m["episode"],
                                  "name": "", "missing": True})
@@ -90,24 +102,40 @@ def api_item_detail(item_id: int):
             # Einzelfolgen nicht sicher zuzuordnen -> wenigstens Zahlen zeigen:
             # verlaesslich = Pro-Staffel-Summen, sonst wenigstens die Gesamtzahl.
             if not missing and item.get("completeness") == "incomplete":
-                summ = tmdb.season_summary(seasons, present)
+                summ = tmdb.season_summary(sc, present)
                 if summ["total_tmdb"] > 0:
                     season_summary = summ
                 elif not note:
                     note = ("Fehlende Folgen lassen sich hier nicht sicher bestimmen - "
-                            "die Staffelnummerierung in Emby weicht von TMDb ab.")
-        elif episodes and not item.get("tmdb_id") and item.get("completeness") == "incomplete":
-            # Ohne TMDb-ID (z.B. Anime nur ueber TheTVDB angereichert) gibt es keine
-            # Pro-Staffel-Aufschluesselung - wenigstens die Gesamtzahl nennen.
+                            "die Staffelnummerierung in Emby weicht ab.")
+        elif episodes and not sc and item.get("completeness") == "incomplete":
+            # Keine Soll-Struktur (kein TMDb/TheTVDB-Abgleich) - wenigstens Gesamtzahl.
             miss = item.get("missing_episodes")
             note = note or (
                 "Fehlende Folgen werden für diesen Titel nicht einzeln aufgeschlüsselt "
-                "(kein TMDb-Abgleich)"
+                "(kein Metadaten-Abgleich)"
                 + (f" - es fehlen laut Anbieter {miss} Folgen." if miss else "."))
 
     return {"item": item, "episodes": episodes, "note": note,
-            "season_summary": season_summary,
+            "season_summary": season_summary, "order": order_meta,
             "missing_count": len(missing), "allow_write": config.ALLOW_EMBY_WRITE}
+
+
+# -- Episoden-Reihenfolge je Serie (Aired/DVD/Absolut) ----------------------
+@router.post("/items/{item_id}/order")
+async def api_item_order(item_id: int, request: Request):
+    """Reihenfolge fuer eine Serie festlegen ('auto' = Laufzeit-Vorwahl) und die
+    abgeleiteten Werte (Vollstaendigkeit, Staffel-Ampeln) sofort neu rechnen."""
+    d = await request.json()
+    order = (d.get("order") or "auto").strip().lower()
+    if order not in ("auto", "aired", "dvd", "absolute"):
+        raise HTTPException(status_code=400, detail="Ungültige Reihenfolge")
+    db.execute("UPDATE media_items SET episode_order=? WHERE id=?",
+               (None if order == "auto" else order, item_id))
+    episode_order.recompute()
+    completeness.recompute()
+    seasons.recompute()
+    return {"ok": True}
 
 
 # -- Metadaten für den Regel-Builder --------------------------------------
