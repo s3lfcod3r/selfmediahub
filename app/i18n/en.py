@@ -133,8 +133,6 @@ STRINGS = {
     "providers.mt.anime": "Anime",
     "providers.active": "active",
     "providers.role.tmdb": "Movies + ratings",
-    "providers.role.tvdb": "Series/anime episodes",
-    "providers.tvdb_builtin": "TheTVDB is built into SelfMediaHub - no API key required. For TMDb (movies, ratings) you can optionally add your own key.",
     "providers.enabled_on": "Service enabled",
     "providers.enabled_off": "Service disabled",
     "providers.empty": "No metadata service yet. Start via „+ Add service“ in the top right.",
