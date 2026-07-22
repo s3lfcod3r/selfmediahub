@@ -139,6 +139,7 @@ STRINGS = {
     "providers.active": "aktiv",
     "providers.role.tmdb": "Filme + Freigaben",
     "providers.role.tvdb": "Serien-/Anime-Episoden",
+    "providers.tvdb_builtin": "TheTVDB ist fest in SelfMediaHub integriert - du brauchst keinen eigenen API-Key. Für TMDb (Filme, Freigaben) kann optional ein eigener Key hinterlegt werden.",
     "providers.enabled_on": "Dienst aktiviert",
     "providers.enabled_off": "Dienst deaktiviert",
     "providers.empty": "Noch kein Metadaten-Dienst angelegt. Oben rechts über „+ Dienst hinzufügen“ starten.",

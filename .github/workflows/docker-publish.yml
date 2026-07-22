@@ -30,6 +30,12 @@ jobs:
             type=raw,value=latest
             type=sha
 
+      # TheTVDB-Projekt-Key nur im CI in die (gitignorierte) Key-Datei schreiben,
+      # bevor das Image gebaut wird. Der Key landet dadurch NICHT im Repo, nicht
+      # in docker history und nicht als ENV - nur als Konstante im Image.
+      - name: TheTVDB-Projekt-Key einbetten
+        run: printf 'BUILTIN_TVDB_KEY = "%s"\n' "${{ secrets.TVDB_PROJECT_KEY }}" > app/config_buildkey.py
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:

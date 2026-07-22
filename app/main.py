@@ -9,7 +9,7 @@ from starlette.responses import JSONResponse, RedirectResponse
 
 from . import config, db
 from .routes import api, auth as auth_routes, health, pages
-from .services import auth, providers, scheduler, updatecheck
+from .services import auth, providers, scheduler, tvdb, updatecheck
 
 # Immer erreichbar (auch ohne Anmeldung): statische Dateien + Health-Check.
 _OPEN_PREFIXES = ("/static", "/api/health")
@@ -19,9 +19,28 @@ _OPEN_PREFIXES = ("/static", "/api/health")
 async def lifespan(_app: FastAPI):
     db.init_db()
     providers.ensure_fixed_providers()  # feste Dienste TMDb/TheTVDB sicherstellen
+    _log_tvdb_key()
     scheduler.start()
     updatecheck.start()
     yield
+
+
+def _log_tvdb_key() -> None:
+    """Beim Start protokollieren, ob ein TheTVDB-Projekt-Key vorhanden ist und ob
+    er noch funktioniert (Rotations-Kontrolle). Der Key selbst wird NICHT geloggt
+    - nur die letzten 4 Zeichen zur Wiedererkennung."""
+    key = providers.api_key_for("tvdb")
+    if not key:
+        print("[SelfMediaHub] Kein TheTVDB-Projekt-Key gefunden - "
+              "TheTVDB-Anreicherung ist deaktiviert.", flush=True)
+        return
+    try:
+        ok, msg = tvdb.key_ok()
+    except Exception as exc:  # noqa: BLE001 - Start darf nie am Key-Test scheitern
+        ok, msg = False, str(exc)
+    status = "OK" if ok else f"FEHLER ({msg}) - Key evtl. rotieren"
+    print(f"[SelfMediaHub] TheTVDB-Projekt-Key geladen (…{key[-4:]}) - Test: {status}",
+          flush=True)
 
 
 app = FastAPI(title=config.APP_NAME, version=config.VERSION, lifespan=lifespan)

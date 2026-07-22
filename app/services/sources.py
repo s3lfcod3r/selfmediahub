@@ -30,14 +30,24 @@ def _json_list(raw) -> list:
 
 
 # -- Lesen ------------------------------------------------------------------
+def _mask_secret(plain: str) -> str:
+    """Secret maskiert: acht Sternchen + letzte 4 Zeichen - Kontrolle, welches
+    Secret gesetzt ist, ohne es preiszugeben. Leer -> ''."""
+    plain = plain or ""
+    if len(plain) <= 4:
+        return "*" * len(plain)
+    return "*" * 8 + plain[-4:]
+
+
 def _public(row: dict) -> dict:
-    """Quelle fuer die UI - ohne Klartext-Secret, nur mit has_secret-Flag."""
+    """Quelle fuer die UI - ohne Klartext-Secret, aber mit maskiertem Hinweis."""
     return {
         "id": row["id"],
         "kind": row["kind"],
         "name": row["name"],
         "base_url": row["base_url"] or "",
         "has_secret": bool(row["secret"]),
+        "secret_hint": _mask_secret(crypto.decrypt(row["secret"] or "")) if row["secret"] else "",
         "local_paths": _json_list(row["local_paths"]),
         "libraries": _json_list(row["libraries"]),
         "enabled": bool(row["enabled"]),

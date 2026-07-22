@@ -5,5 +5,7 @@ data/
 *.db
 .venv/
 venv/
+# Eingebetteter TheTVDB-Projekt-Key: nur im CI erzeugt, niemals einchecken
+app/config_buildkey.py
 .claude/
 REMOTE-CONTROL.md

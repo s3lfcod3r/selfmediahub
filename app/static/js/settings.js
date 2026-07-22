@@ -150,7 +150,7 @@
       $("srcName").value = src.name || "";
       $("srcUrl").value = src.base_url || "";
       $("srcSecret").value = "";
-      $("srcSecret").placeholder = src.has_secret ? T("sources.secret_keep") : T("sources.secret_enter");
+      $("srcSecret").placeholder = src.has_secret ? (src.secret_hint || T("sources.secret_keep")) : T("sources.secret_enter");
       $("srcEnabled").checked = !!src.enabled;
       $("srcLibsWrap").hidden = true;
       $("srcLibsList").innerHTML = "";
@@ -269,7 +269,7 @@
   // ======================================================================
   var MP_FIELDS = {
     tmdb: { toggle: "mpTmdbEnabled", key: "mpTmdbKey", save: "mpTmdbSave" },
-    tvdb: { toggle: "mpTvdbEnabled", key: "mpTvdbKey", save: "mpTvdbSave" },
+    // TheTVDB ist fest integriert (Projekt-Key) - kein UI-Eintrag mehr.
   };
 
   function mpStatus(msg, type) {
@@ -289,7 +289,7 @@
           if (!f) { return; }
           $(f.toggle).checked = !!p.enabled;
           $(f.key).value = "";
-          $(f.key).placeholder = p.has_key ? T("providers.key_keep") : T("providers.key_enter");
+          $(f.key).placeholder = p.has_key ? (p.key_hint || T("providers.key_keep")) : T("providers.key_enter");
         });
       })
       .catch(function () { mpStatus(T("providers.load_failed"), "err"); });

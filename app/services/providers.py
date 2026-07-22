@@ -19,14 +19,28 @@ FIXED_ORDER = {
     "anime": ("tvdb", "tmdb"),
 }
 
+# Eingebaute Projekt-Keys aus der Umgebung (via CI-Secret ins Image gebacken).
+# Gelten als Rueckfall, wenn der Nutzer keinen eigenen Key im UI hinterlegt hat.
+_ENV_KEYS = {"tmdb": config.TMDB_API_KEY, "tvdb": config.TVDB_API_KEY}
+
 
 # -- Lesen ------------------------------------------------------------------
+def _mask_key(plain: str) -> str:
+    """Key maskiert: acht Sternchen + letzte 4 Zeichen - so laesst sich pruefen,
+    WELCHER Key gesetzt ist, ohne ihn preiszugeben. Leer -> ''."""
+    plain = plain or ""
+    if len(plain) <= 4:
+        return "*" * len(plain)
+    return "*" * 8 + plain[-4:]
+
+
 def _public(row: dict) -> dict:
-    """Dienst fuer die UI - ohne Klartext-Key, nur mit has_key-Flag."""
+    """Dienst fuer die UI - ohne Klartext-Key, aber mit maskiertem Hinweis."""
     return {
         "kind": row["kind"],
         "name": row["name"],
         "has_key": bool(row["api_key"]),
+        "key_hint": _mask_key(crypto.decrypt(row["api_key"] or "")) if row["api_key"] else "",
         "enabled": bool(row["enabled"]),
     }
 
@@ -49,11 +63,14 @@ def list_providers() -> list:
 
 
 def api_key_for(kind: str) -> str:
-    """Entschluesselter Key des Dienstes - '' wenn aus oder kein Key."""
+    """Effektiver Key des Dienstes: der eigene (aktivierte) Key des Nutzers hat
+    Vorrang, sonst der eingebaute Projekt-Key (ENV). '' wenn beides fehlt."""
     row = get_by_kind(kind)
-    if not row or not row["enabled"]:
-        return ""
-    return crypto.decrypt(row["api_key"] or "")
+    if row and row["enabled"]:
+        key = crypto.decrypt(row["api_key"] or "")
+        if key:
+            return key
+    return _ENV_KEYS.get(kind) or ""
 
 
 def chain_kinds(media_type: str) -> list:
@@ -62,6 +79,9 @@ def chain_kinds(media_type: str) -> list:
     enabled = {
         r["kind"] for r in db.query("SELECT kind FROM metadata_providers WHERE enabled=1")
     }
+    # Eingebaute Projekt-Keys (ENV) zaehlen ebenfalls als aktiv, damit die
+    # Anreicherung ohne UI-Konfiguration funktioniert.
+    enabled |= {k for k, v in _ENV_KEYS.items() if v}
     return [k for k in order if k in enabled]
 
 
