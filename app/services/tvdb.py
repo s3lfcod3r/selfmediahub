@@ -34,6 +34,19 @@ def _login(api_key: str) -> str:
     return (resp.json().get("data") or {}).get("token") or ""
 
 
+def key_ok() -> tuple:
+    """Testabfrage fuer die Rotations-Kontrolle: prueft per Login, ob der
+    effektive TheTVDB-Key noch gueltig ist. Gibt (ok, meldung) zurueck."""
+    key = providers.api_key_for("tvdb")
+    if not key:
+        return False, "kein Key"
+    try:
+        token = _login(key)
+        return (bool(token), "ok" if token else "kein Token")
+    except requests.RequestException as exc:
+        return False, str(exc)
+
+
 def _get_token(api_key: str) -> str:
     now = time.time()
     with _lock:

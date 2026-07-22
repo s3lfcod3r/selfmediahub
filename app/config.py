@@ -23,6 +23,16 @@ PORT = int(os.environ.get("PORT", "8092"))
 
 # --- Externe Metadaten -------------------------------------------------
 TMDB_API_KEY = os.environ.get("TMDB_API_KEY", "").strip()
+# Eingebauter TheTVDB-Projekt-Key. Wird beim CI-Build in app/config_buildkey.py
+# geschrieben (nie im Repo, gitignored) und hier importiert; fehlt die Datei
+# (lokaler Bau), bleibt der Key leer. Eine ENV-Variable TVDB_API_KEY kann ihn
+# zusaetzlich ueberschreiben (z.B. fuer Tests).
+try:
+    from .config_buildkey import BUILTIN_TVDB_KEY as _BUILTIN_TVDB_KEY
+except ImportError:
+    _BUILTIN_TVDB_KEY = ""
+TVDB_API_KEY = (os.environ.get("TVDB_API_KEY", "").strip()
+                or (_BUILTIN_TVDB_KEY or "").strip())
 
 # --- Automatik & Benachrichtigung --------------------------------------
 # Hintergrund-Scan alle N Stunden (0 = aus).

@@ -135,16 +135,8 @@
         <div class="mp-card">
           <div class="mp-card-head">
             <span class="mp-card-name">TheTVDB <span class="mp-card-role">{{ t('providers.role.tvdb') }}</span></span>
-            <label class="switch" title="{{ t('providers.active') }}">
-              <input type="checkbox" id="mpTvdbEnabled"><span class="switch-slider"></span></label>
           </div>
-          <div class="set-field">
-            <label for="mpTvdbKey">{{ t('providers.api_key') }}</label>
-            <div class="mp-key-row">
-              <input class="field" id="mpTvdbKey" type="password" autocomplete="new-password">
-              <button class="btn" id="mpTvdbSave">{{ t('common.save') }}</button>
-            </div>
-          </div>
+          <p class="set-desc">{{ t('providers.tvdb_builtin') }}</p>
         </div>
         <p class="src-modal-status set-desc" id="mpStatus"></p>
       </section>
