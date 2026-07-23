@@ -40,11 +40,18 @@ def _orders_of(row) -> dict:
 
 def effective_structure(row):
     """(season_counts {staffel: anzahl}, gesamt_episoden) fuer die aufgeloeste
-    Reihenfolge. Fallback: TMDb-Aired-Struktur (tmdb_season_counts/tmdb_episodes)."""
-    resolved = _rv(row, "episode_order_resolved")
+    Reihenfolge.
+
+    Fuer Serien ist TheTVDB die primaere Quelle (tvdb_orders) - auch fuer die
+    Aired-Reihenfolge. Das entspricht der Provider-Prioritaet (Serie: TheTVDB
+    zuerst) und verhindert, dass bei fehlendem TMDb-Key die Staffelstruktur
+    verloren geht. TMDb (tmdb_season_counts/tmdb_episodes) dient nur als Rueckfall,
+    wenn TheTVDB fuer die Serie keine Struktur geliefert hat."""
+    resolved = _rv(row, "episode_order_resolved") or "aired"
     orders = _orders_of(row)
-    if resolved and resolved != "aired" and resolved in orders:
-        o = orders[resolved]
+    chosen = resolved if resolved in orders else ("aired" if "aired" in orders else None)
+    if chosen:
+        o = orders[chosen]
         sc = {int(s): int(n) for s, n in o.get("season_counts", [])}
         return sc, o.get("episodes")
     raw = _rv(row, "tmdb_season_counts")
