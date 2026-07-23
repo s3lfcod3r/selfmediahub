@@ -252,7 +252,12 @@
   // (Jenseits von ~100 Staffeln geht die Rechnung nicht mehr auf - dann wachsen
   // die Reihen ueber das Cover hinaus, statt Staffeln zu verschlucken.)
   function groupBoundary(maxS, rowsLeft) {
-    var g = Math.min(GROUP_LAST, Math.ceil(maxS / GROUP_SIZE) * GROUP_SIZE);
+    // Nur VOLLE Zehnerbloecke gruppieren (floor statt ceil): ein angebrochener
+    // Rest - z.B. S31-38 bei 38 Staffeln - wird NICHT zu "S31-40" gruppiert,
+    // sondern faellt in den Tail und wird einzeln gezeigt. Passt der Rest nicht
+    // mehr aufs Cover, waechst die Grenze blockweise (Notfall bei sehr vielen
+    // Staffeln), dann wird auch der Rest gruppiert.
+    var g = Math.min(GROUP_LAST, Math.floor(maxS / GROUP_SIZE) * GROUP_SIZE);
     while (g < maxS && !groupsFit(g, maxS, rowsLeft)) { g += GROUP_SIZE; }
     return g;
   }
