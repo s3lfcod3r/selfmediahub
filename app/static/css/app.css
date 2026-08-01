@@ -484,6 +484,10 @@ table.list td.name { font-weight: 600; }
   padding-inline: 0; border-radius: 4px;
   background: rgba(8, 12, 17, 0.86);
   color: var(--self-text-2); border: 1px solid var(--self-line-strong);
+  /* .sstack ist pointer-events:none (laesst Leerraum zum Cover durch); die Badges
+     selbst aber wieder aktiv, damit der title-Tooltip beim Hover erscheint (wie
+     Ton/UT). Klicks blubbern weiter zur Karte -> Detail oeffnet trotzdem. */
+  pointer-events: auto;
 }
 .sbadge.s-full { color: var(--self-green); border-color: var(--self-green); }
 .sbadge.s-partial { color: var(--self-yellow); border-color: var(--self-yellow); }
