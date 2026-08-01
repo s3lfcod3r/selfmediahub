@@ -1,5 +1,7 @@
 """SelfMediaHub - FastAPI-Anwendung. Startpunkt für Container und lokal."""
+import logging
 import os
+import sys
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -10,6 +12,25 @@ from starlette.responses import JSONResponse, RedirectResponse
 from . import config, db
 from .routes import api, auth as auth_routes, health, pages
 from .services import auth, providers, scheduler, tvdb, updatecheck
+
+
+def _configure_logging() -> None:
+    """Zentrale Logging-Config: eine Zeile je Ereignis nach stdout (docker logs),
+    Stufe aus config.LOG_LEVEL. Laeuft beim Import, damit sie auch greift, wenn die
+    App von einem externen ASGI-Server geladen wird (nicht nur ueber main())."""
+    logging.basicConfig(
+        level=getattr(logging, config.LOG_LEVEL, logging.INFO),
+        format="%(asctime)s %(levelname)-7s %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+        stream=sys.stdout,
+    )
+
+
+_configure_logging()
+logger = logging.getLogger("selfmediahub")
+
+# Gueltige uvicorn-Log-Level; ungueltiges LOG_LEVEL faellt auf "info" zurueck.
+_UVICORN_LEVELS = {"critical", "error", "warning", "info", "debug", "trace"}
 
 # Immer erreichbar (auch ohne Anmeldung): statische Dateien + Health-Check.
 _OPEN_PREFIXES = ("/static", "/api/health")
@@ -31,16 +52,17 @@ def _log_tvdb_key() -> None:
     - nur die letzten 4 Zeichen zur Wiedererkennung."""
     key = providers.api_key_for("tvdb")
     if not key:
-        print("[SelfMediaHub] Kein TheTVDB-Projekt-Key gefunden - "
-              "TheTVDB-Anreicherung ist deaktiviert.", flush=True)
+        logger.warning("Kein TheTVDB-Projekt-Key gefunden - TheTVDB-Anreicherung ist deaktiviert.")
         return
     try:
         ok, msg = tvdb.key_ok()
     except Exception as exc:  # noqa: BLE001 - Start darf nie am Key-Test scheitern
         ok, msg = False, str(exc)
-    status = "OK" if ok else f"FEHLER ({msg}) - Key evtl. rotieren"
-    print(f"[SelfMediaHub] TheTVDB-Projekt-Key geladen (…{key[-4:]}) - Test: {status}",
-          flush=True)
+    if ok:
+        logger.info("TheTVDB-Projekt-Key geladen (…%s) - Test: OK", key[-4:])
+    else:
+        logger.error("TheTVDB-Projekt-Key geladen (…%s) - Test fehlgeschlagen (%s) - "
+                     "Key evtl. rotieren", key[-4:], msg)
 
 
 app = FastAPI(title=config.APP_NAME, version=config.VERSION, lifespan=lifespan)
@@ -90,8 +112,10 @@ app.include_router(pages.router)
 def main() -> None:
     import uvicorn
 
-    print(f"{config.APP_NAME} läuft auf http://0.0.0.0:{config.PORT}", flush=True)
-    uvicorn.run(app, host="0.0.0.0", port=config.PORT)
+    logger.info("%s läuft auf http://0.0.0.0:%s", config.APP_NAME, config.PORT)
+    level = config.LOG_LEVEL.lower()
+    uvicorn.run(app, host="0.0.0.0", port=config.PORT,
+                log_level=level if level in _UVICORN_LEVELS else "info")
 
 
 if __name__ == "__main__":

@@ -7,6 +7,7 @@ zurueck (i.d.R. TMDb). Felder werden nur gesetzt, wenn sie noch leer sind
 """
 import datetime
 import json
+import logging
 import statistics
 import threading
 import time
@@ -14,6 +15,8 @@ import time
 import requests
 
 from . import providers
+
+logger = logging.getLogger("selfmediahub.tvdb")
 
 BASE = "https://api4.thetvdb.com/v4"
 TIMEOUT = 8
@@ -197,6 +200,7 @@ def enrich(item: dict, cache: dict) -> dict:
             return item
         series_id = _resolve_series_id(item, token)
         if not series_id:
+            logger.debug("Keine TheTVDB-Serie fuer %r gefunden", item.get("name"))
             return item
         ext = _get(f"/series/{series_id}/extended", token).get("data") or {}
 
@@ -230,6 +234,7 @@ def enrich(item: dict, cache: dict) -> dict:
                     item["tmdb_episodes"] = aired["episodes"]
 
         _remember_id(item, series_id)
-    except requests.RequestException:
+    except requests.RequestException as exc:
+        logger.warning("TheTVDB-Anreicherung fehlgeschlagen fuer %r: %s", item.get("name"), exc)
         return item
     return item

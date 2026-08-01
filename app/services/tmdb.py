@@ -2,10 +2,14 @@
 
 Alles read-only und best-effort: Fehler brechen den Sync nicht ab.
 """
+import logging
+
 import requests
 
 from .. import config
 from . import providers, ratings
+
+logger = logging.getLogger("selfmediahub.tmdb")
 
 BASE = "https://api.themoviedb.org/3"
 TIMEOUT = 8
@@ -215,6 +219,7 @@ def enrich(item: dict, cache: dict) -> dict:
                     for s in data.get("seasons", [])
                     if s.get("season_number") is not None and s["season_number"] >= 1
                 ]
-    except requests.RequestException:
+    except requests.RequestException as exc:
+        logger.warning("TMDb-Anreicherung fehlgeschlagen fuer %r: %s", item.get("name"), exc)
         return item
     return item
