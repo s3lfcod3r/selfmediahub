@@ -79,6 +79,20 @@ def _already_enriched(prev: dict, is_series: bool, tvdb_on: bool) -> bool:
             if (not orders_raw or orders_raw in ("[]", "null")
                     or '"upcoming"' not in orders_raw):
                 return False
+            # Serien mit geplanten/noch nicht (voll) veroeffentlichten Folgen erneut
+            # holen: deren Release-Status aendert sich mit der Zeit (aus Zukunft wird
+            # Gegenwart). Sonst bliebe eine beim ersten Sync komplett kommende Serie
+            # dauerhaft mit leerer Staffelstruktur haengen (Cover grau), auch wenn
+            # laengst Folgen ausgestrahlt sind.
+            try:
+                orders = json.loads(orders_raw)
+            except (TypeError, ValueError):
+                return False
+            if isinstance(orders, dict):
+                for o in orders.values():
+                    o = o or {}
+                    if not o.get("season_counts") or o.get("upcoming"):
+                        return False
         return True
     return prev.get("status") is not None
 
