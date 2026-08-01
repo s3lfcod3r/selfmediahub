@@ -190,6 +190,9 @@
   // Staffel 0 (Specials) ist bereits serverseitig weggelassen, wenn keine da
   // sind - und kennt nur "vorhanden", daher kein Gelb.
   function seasonTitle(s) {
+    if (s.overall) {
+      return T("cover.series_overall").replace("{state}", T("cover.overall_" + s.st));
+    }
     if (s.s === 0) { return T("cover.season_specials").replace("{have}", s.h); }
     if (s.st === "unknown") {
       return T("cover.season_unknown").replace("{n}", s.s).replace("{have}", s.h);
@@ -199,6 +202,11 @@
   }
 
   function seasonBadge(s) {
+    // Gesamt-Badge (unsichere Nummerierung): Wort-Label statt "S<n>".
+    if (s.overall) {
+      return '<span class="sbadge sb-overall s-' + esc(s.st) + '" title="' + esc(seasonTitle(s)) +
+        '">' + esc(T("cover.overall_" + s.st)) + "</span>";
+    }
     return '<span class="sbadge s-' + esc(s.st) + '" title="' + esc(seasonTitle(s)) + '">' +
       "S" + esc(s.s) + "</span>";
   }
@@ -302,9 +310,19 @@
   function seasonRow(i) {
     var list = i.season_status || [];
     if (!list.length) { return ""; }
-    var rows = list.length <= SEASON_MAX
-      ? '<div class="srow">' + list.map(seasonBadge).join("") + "</div>"
-      : groupedRows(list);
+    var rows;
+    var overall = list.filter(function (s) { return s.overall; });
+    if (overall.length) {
+      // Unsichere Nummerierung: Specials (falls vorhanden) + ein Gesamt-Badge in
+      // eigener Reihe - kein Zehnerblock-Raster.
+      var specials = list.filter(function (s) { return s.s === 0; });
+      rows = (specials.length ? '<div class="srow">' + specials.map(seasonBadge).join("") + "</div>" : "") +
+        '<div class="srow srow-overall">' + overall.map(seasonBadge).join("") + "</div>";
+    } else {
+      rows = list.length <= SEASON_MAX
+        ? '<div class="srow">' + list.map(seasonBadge).join("") + "</div>"
+        : groupedRows(list);
+    }
     // Ohne FSK-Feature gibt es kein Freigabe-Badge darueber -> nach oben ruecken.
     return '<div class="sstack' + (FSK_ON ? "" : " no-rating") + '">' + rows + "</div>";
   }

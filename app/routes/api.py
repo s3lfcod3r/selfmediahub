@@ -69,6 +69,7 @@ def api_item_detail(item_id: int):
     item["tags"] = tags.tags_for_items().get(item_id, [])
 
     episodes, note, missing, season_summary, order_meta = [], None, [], None, None
+    release_meta = None
     if item["item_type"] == "Serie":
         episodes = db.get_episodes(item_id)
         if not episodes:
@@ -87,6 +88,12 @@ def api_item_detail(item_id: int):
         order_meta = {"options": order_opts,
                       "pref": struct["episode_order"] or "auto",
                       "resolved": struct["episode_order_resolved"] or "aired"}
+
+        # Noch nicht veroeffentlichte Staffeln (aus den Badges genommen) -> hier als
+        # "geplant"/"Veroeffentlichung am ..." zeigen.
+        upcoming = episode_order.upcoming_of(struct)
+        if upcoming:
+            release_meta = {"upcoming": upcoming}
 
         # Konkret fehlende Episoden bestimmen. Staffel 0 (Specials) bleibt aussen vor
         # (konsistent zur Vollstaendigkeit), bleibt aber in der Episodenliste sichtbar.
@@ -118,6 +125,7 @@ def api_item_detail(item_id: int):
 
     return {"item": item, "episodes": episodes, "note": note,
             "season_summary": season_summary, "order": order_meta,
+            "release": release_meta,
             "missing_count": len(missing), "allow_write": config.ALLOW_EMBY_WRITE}
 
 

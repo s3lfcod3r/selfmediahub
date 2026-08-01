@@ -68,8 +68,15 @@ def _already_enriched(prev: dict, is_series: bool, tvdb_on: bool) -> bool:
             return False
         # Bestandsserien einmalig nachladen, damit die Reihenfolgen (tvdb_orders)
         # fuer die Aired/DVD-Erkennung vorliegen - nur wenn TheTVDB aktiv ist.
-        if tvdb_on and prev.get("tvdb_orders") is None:
-            return False
+        if tvdb_on:
+            orders_raw = prev.get("tvdb_orders")
+            if orders_raw is None:
+                return False
+            # Alte tvdb_orders-Struktur ohne Release-Infos ("upcoming") einmalig
+            # nachladen; leere "[]"/"null" (TheTVDB fand nichts) NICHT dauernd neu
+            # abrufen, da bleibt ohnehin nichts zu holen.
+            if orders_raw not in ("[]", "null", "") and '"upcoming"' not in orders_raw:
+                return False
         return True
     return prev.get("status") is not None
 
