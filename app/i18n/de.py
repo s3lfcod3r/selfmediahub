@@ -352,13 +352,6 @@ STRINGS = {
     "cover.season_group_partial": "{n} unvollständig",
     "cover.season_group_none": "{n} fehlen",
     "cover.season_group_unknown": "{n} unbestimmt",
-    # Gesamt-Badge, wenn die Staffelnummerierung der Quelle nicht zur Metadaten-
-    # Struktur passt (Staffeln lassen sich nicht einzeln bewerten).
-    "cover.series_overall": "Serie gesamt: {state} — Staffeln nicht einzeln bestimmbar (Nummerierung weicht ab)",
-    "cover.overall_full": "komplett",
-    "cover.overall_partial": "unvollständig",
-    "cover.overall_none": "fehlt",
-    "cover.overall_unknown": "unbekannt",
     "fsk.none_option": "— keine —",
     "msg.fsk_set": "FSK {rating} gesetzt",
     "common.removed": "(entfernt)",
