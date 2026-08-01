@@ -492,6 +492,12 @@ table.list td.name { font-weight: 600; }
    der Quelle passt nicht zu TMDb, z.B. Anime). Neutral grau statt falscher
    Aussage - siehe services/seasons.py. */
 .sbadge.s-unknown { color: var(--self-text-3); border-color: var(--self-line); }
+/* Gesamt-Badge bei unsicherer Nummerierung: eigene Flex-Reihe (nicht ans
+   5-Spalten-Raster gebunden), damit das Wort-Label ("komplett"/"unvollständig"
+   /"unbekannt") seine natürliche Breite bekommt. Farbe kommt aus s-full/-partial
+   /-unknown wie bei den Staffel-Badges. */
+.srow-overall { display: flex; }
+.sbadge.sb-overall { padding-inline: 8px; letter-spacing: .02em; }
 
 /* --- Qualitäts-Badges auf Cover ---------------------------- */
 .qrow {

@@ -134,6 +134,28 @@
       '<select class="field" id="orderSel" data-id="' + d.item.id + '">' + opts + "</select></div>";
   }
 
+  function fmtDay(iso) {
+    try {
+      var d = new Date(iso);
+      if (isNaN(d.getTime())) { return iso; }
+      var loc = window.__LANG__ === "en" ? "en-GB" : "de-DE";
+      return d.toLocaleDateString(loc, { day: "2-digit", month: "2-digit", year: "numeric" });
+    } catch (e) { return iso; }
+  }
+
+  // Noch nicht veroeffentlichte Staffeln (aus den Cover-Badges genommen) hier als
+  // "geplant" bzw. "Veroeffentlichung am <Datum>" zeigen.
+  function releaseBlock(d) {
+    var up = d.release && d.release.upcoming;
+    if (!up || !up.length) { return ""; }
+    var rows = up.map(function (u) {
+      var when = u[1] ? T("detail.rel_on").replace("{date}", fmtDay(u[1])) : T("detail.rel_planned");
+      return '<div class="ssum-row miss"><span class="ssum-s">' + esc(T("detail.season")) + " " + esc(u[0]) +
+        '</span><span class="ssum-b">' + esc(when) + "</span></div>";
+    }).join("");
+    return '<div class="ssum"><div class="ssum-h">' + esc(T("detail.rel_head")) + "</div>" + rows + "</div>";
+  }
+
   function renderDetail(d) {
     var i = d.item;
     var fskOn = window.__FSK_ENABLED__ !== false;   // FSK-Feature (nur UI); Standard an
@@ -231,7 +253,7 @@
         (i.path ? '<div class="pathline"><div class="k">' + esc(T("detail.path")) + "</div>" +
                   '<div class="pv mono">' + esc(i.path) + "</div></div>" : "") +
         (i.overview ? '<div class="overview">' + esc(i.overview) + "</div>" : "") +
-        note + seasonSummary(d.season_summary, i) + eps + "</div>";
+        note + releaseBlock(d) + seasonSummary(d.season_summary, i) + eps + "</div>";
 
     var ackB = document.getElementById("ackBtn");
     if (ackB) {

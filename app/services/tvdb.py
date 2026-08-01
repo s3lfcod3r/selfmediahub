@@ -5,6 +5,7 @@ Alles best-effort: jeder Fehler faellt still auf den naechsten Provider der Kett
 zurueck (i.d.R. TMDb). Felder werden nur gesetzt, wenn sie noch leer sind
 (fill-if-absent) - so gewinnt der hoechstpriorisierte Dienst je Feld.
 """
+import datetime
 import json
 import statistics
 import threading
@@ -106,15 +107,30 @@ def _available_orders(ext: dict) -> list:
     return orders
 
 
+def _today() -> str:
+    """Heutiges Datum als ISO-String (YYYY-MM-DD) - lexikografisch mit TheTVDBs
+    ``aired`` vergleichbar, ohne Parsing."""
+    return datetime.date.today().isoformat()
+
+
 def _fetch_order(series_id, token: str, order: str, cache: dict):
-    """Eine Reihenfolge abrufen -> {season_counts, episodes, seasons, runtime} oder
-    None. Zaehlt nur regulaere Staffeln (>= 1); runtime = Median der Folgen-Laufzeit
-    (Entscheidungsgrundlage fuer die Aired/DVD-Vorwahl)."""
+    """Eine Reihenfolge abrufen -> {season_counts, episodes, seasons, runtime,
+    upcoming} oder None.
+
+    Es zaehlen nur regulaere Staffeln (>= 1) und nur **bereits veroeffentlichte**
+    Folgen: eine Folge mit ``aired`` in der Zukunft wird nicht mitgezaehlt (Folgen
+    ohne Datum gelten als veroeffentlicht - sonst wuerde vorhandenes Material
+    versteckt). Staffeln, die noch gar nicht angelaufen sind (keine veroeffentlichte
+    Folge), fallen komplett aus der Soll-Struktur und landen in ``upcoming``
+    ([[staffel, fruehestes_datum], ...]) fuer die Detailseite. So markieren
+    kommende Staffeln die Serie nicht faelschlich als unvollstaendig."""
     ck = ("tvdb_order", str(series_id), order)
     if ck in cache:
         return cache[ck]
-    counts: dict = {}
+    today = _today()
+    counts: dict = {}          # Staffel -> Anzahl veroeffentlichter Folgen
     runtimes: list = []
+    future: dict = {}          # Staffel -> fruehestes Zukunfts-Datum
     page, pages = 0, 0
     while pages < _MAX_EPISODE_PAGES:
         try:
@@ -129,6 +145,11 @@ def _fetch_order(series_id, token: str, order: str, cache: dict):
             sn = ep.get("seasonNumber")
             if sn is None or sn < 1:  # Staffel 0 (Specials) zaehlt nicht
                 continue
+            aired = (ep.get("aired") or "").strip()
+            if aired and aired > today:  # noch nicht veroeffentlicht
+                if sn not in future or aired < future[sn]:
+                    future[sn] = aired
+                continue
             counts[sn] = counts.get(sn, 0) + 1
             rt = ep.get("runtime")
             if rt:
@@ -137,14 +158,21 @@ def _fetch_order(series_id, token: str, order: str, cache: dict):
         if not (j.get("links") or {}).get("next"):
             break
         page += 1
+    # Nur Staffeln OHNE veroeffentlichte Folge sind wirklich "kommend".
+    upcoming = sorted([sn, future[sn]] for sn in future if sn not in counts)
     if not counts:
-        cache[ck] = None
-        return None
+        # Keine veroeffentlichte Folge: keine Soll-Struktur, aber evtl. geplant.
+        result = {"season_counts": [], "episodes": None, "seasons": 0,
+                  "runtime": round(statistics.median(runtimes)) if runtimes else None,
+                  "upcoming": upcoming}
+        cache[ck] = result
+        return result if upcoming else None
     result = {
         "season_counts": sorted([s, c] for s, c in counts.items()),
         "episodes": sum(counts.values()),
         "seasons": len(counts),
         "runtime": round(statistics.median(runtimes)) if runtimes else None,
+        "upcoming": upcoming,
     }
     cache[ck] = result
     return result
@@ -189,9 +217,11 @@ def enrich(item: dict, cache: dict) -> dict:
             item["tvdb_orders"] = orders_out
             aired = orders_out.get("aired")
             if aired:  # Aired bleibt die Basis fuer tmdb_seasons/tmdb_episodes.
-                if item.get("tmdb_seasons") is None:
+                # Nur echte Werte uebernehmen: eine rein geplante Serie liefert
+                # seasons=0/episodes=None - die wuerden nur falsche Nullen setzen.
+                if item.get("tmdb_seasons") is None and aired.get("seasons"):
                     item["tmdb_seasons"] = aired["seasons"]
-                if item.get("tmdb_episodes") is None:
+                if item.get("tmdb_episodes") is None and aired.get("episodes"):
                     item["tmdb_episodes"] = aired["episodes"]
 
         _remember_id(item, series_id)

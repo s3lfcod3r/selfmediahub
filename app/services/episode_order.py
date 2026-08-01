@@ -46,21 +46,47 @@ def effective_structure(row):
     Aired-Reihenfolge. Das entspricht der Provider-Prioritaet (Serie: TheTVDB
     zuerst) und verhindert, dass bei fehlendem TMDb-Key die Staffelstruktur
     verloren geht. TMDb (tmdb_season_counts/tmdb_episodes) dient nur als Rueckfall,
-    wenn TheTVDB fuer die Serie keine Struktur geliefert hat."""
+    wenn TheTVDB fuer die Serie keine Struktur geliefert hat.
+
+    Ohne Staffelstruktur (leeres ``season_counts``) wird die Gesamtzahl bewusst
+    als ``None`` gemeldet, auch wenn ein blankes ``tmdb_episodes`` aus einem
+    frueheren Sync herumliegt: sonst wuerde completeness aus einer nicht
+    aufschluesselbaren Zahl "komplett" behaupten, waehrend das Cover mangels
+    Struktur alle Staffeln ausgraut - genau der Widerspruch, den es zu vermeiden
+    gilt."""
     resolved = _rv(row, "episode_order_resolved") or "aired"
     orders = _orders_of(row)
     chosen = resolved if resolved in orders else ("aired" if "aired" in orders else None)
     if chosen:
         o = orders[chosen]
         sc = {int(s): int(n) for s, n in o.get("season_counts", [])}
-        return sc, o.get("episodes")
+        return sc, (o.get("episodes") if sc else None)
     raw = _rv(row, "tmdb_season_counts")
     try:
         pairs = json.loads(raw) if raw else []
     except (TypeError, ValueError):
         pairs = []
     sc = {int(s): int(n) for s, n in pairs}
-    return sc, _rv(row, "tmdb_episodes")
+    return sc, (_rv(row, "tmdb_episodes") if sc else None)
+
+
+def upcoming_of(row) -> list:
+    """[[staffel, 'YYYY-MM-DD'], ...] der noch nicht veroeffentlichten Staffeln der
+    aufgeloesten Reihenfolge. Leer, wenn keine geplant sind oder keine TheTVDB-
+    Struktur vorliegt (TMDb-Rueckfall kennt diese Info nicht)."""
+    resolved = _rv(row, "episode_order_resolved") or "aired"
+    orders = _orders_of(row)
+    chosen = resolved if resolved in orders else ("aired" if "aired" in orders else None)
+    if not chosen:
+        return []
+    up = orders[chosen].get("upcoming") or []
+    out = []
+    for pair in up:
+        try:
+            out.append([int(pair[0]), pair[1]])
+        except (TypeError, ValueError, IndexError):
+            continue
+    return out
 
 
 def _auto_pick(lib_runtime, orders: dict) -> str:
