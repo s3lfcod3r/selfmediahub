@@ -8,7 +8,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app/ app/
 
 ENV PORT=8092 \
-    DATA_DIR=/data
+    DATA_DIR=/data \
+    PYTHONUNBUFFERED=1
 
 EXPOSE 8092
 VOLUME ["/data"]
