@@ -46,19 +46,14 @@ def _is_reliable(regular_have: dict, tmdb: dict) -> bool:
     return all(s in tmdb and regular_have[s] <= tmdb[s] for s in regular_have)
 
 
-# completeness-Wert -> Status des Gesamt-Badges (unsichere Nummerierung).
-_OVERALL_ST = {"complete": FULL, "incomplete": PARTIAL}
+def _status_for(have: dict, tmdb: dict) -> list:
+    """Staffelliste [{s, st, h, t}] für eine Serie (s = Staffelnummer).
 
-
-def _status_for(have: dict, tmdb: dict, completeness=None) -> list:
-    """Staffelliste für eine Serie.
-
-    Bei verlaesslicher Zuordnung eine Ampel je Staffel [{s, st, h, t}]. Passt die
-    Nummerierung der Quelle nicht zur Metadaten-Struktur (oder fehlt sie ganz),
-    wird KEINE irrefuehrende Staffel-fuer-Staffel-Ampel gezeigt - die faerbte jede
-    Staffel grau und widerspraeche dem Gesamt-"komplett" im Detail. Stattdessen ein
-    einzelnes Gesamt-Badge ({overall: True}), das den Vollstaendigkeits-Status der
-    ganzen Serie spiegelt. Specials bleiben in beiden Faellen ihr eigenes Badge.
+    Passt die Nummerierung der Quelle nicht zur Metadaten-Struktur (oder fehlt sie
+    ganz), sind alle regulaeren Staffeln "unbekannt" (grau) - lieber keine Aussage
+    als eine falsche. Die Vollstaendigkeit im Detail nutzt dieselbe Pruefung
+    (completeness.recompute) und meldet dann ebenfalls "unbekannt", sodass Cover
+    und Detail uebereinstimmen.
     """
     regular_have = {s: n for s, n in have.items() if s >= 1}
     reliable = _is_reliable(regular_have, tmdb)
@@ -68,29 +63,20 @@ def _status_for(have: dict, tmdb: dict, completeness=None) -> list:
     if have.get(0):
         rows.append({"s": 0, "st": FULL, "h": have[0], "t": None})
 
-    if reliable:
-        # Vereinigung aus "kennt der Dienst" und "haben wir": so bekommt auch eine
-        # komplett fehlende Staffel ihr rotes Badge.
-        for s in sorted(set(tmdb) | set(regular_have)):
-            h = regular_have.get(s, 0)
-            t = tmdb.get(s)
-            if not t:
-                st = UNKNOWN
-            elif h == 0:
-                st = NONE
-            elif h >= t:
-                st = FULL
-            else:
-                st = PARTIAL
-            rows.append({"s": s, "st": st, "h": h, "t": t})
-        return rows
-
-    # Unsichere/fehlende Zuordnung: ein Gesamt-Badge statt grauer Einzel-Badges.
-    if regular_have or tmdb:
-        rows.append({"s": -1, "overall": True,
-                     "st": _OVERALL_ST.get(completeness, UNKNOWN),
-                     "h": sum(regular_have.values()),
-                     "t": sum(tmdb.values()) if tmdb else None})
+    # Vereinigung aus "kennt der Dienst" und "haben wir": so bekommt auch eine
+    # komplett fehlende Staffel ihr rotes Badge.
+    for s in sorted(set(tmdb) | set(regular_have)):
+        h = regular_have.get(s, 0)
+        t = tmdb.get(s)
+        if not reliable or not t:
+            st = UNKNOWN
+        elif h == 0:
+            st = NONE
+        elif h >= t:
+            st = FULL
+        else:
+            st = PARTIAL
+        rows.append({"s": s, "st": st, "h": h, "t": t})
     return rows
 
 
@@ -99,15 +85,12 @@ def recompute() -> int:
     have_map = _have_by_item()
     updates = []
     for row in db.query(
-        "SELECT id, tmdb_season_counts, tvdb_orders, episode_order_resolved, completeness "
+        "SELECT id, tmdb_season_counts, tvdb_orders, episode_order_resolved "
         "FROM media_items WHERE item_type='Serie'"
     ):
         # Soll-Struktur aus der aufgeloesten Reihenfolge (Aired/DVD/Absolut).
-        # completeness ist hier bereits frisch (completeness.recompute laeuft im
-        # Sync und in der Order-API VOR seasons.recompute) und speist das
-        # Gesamt-Badge bei unsicherer Nummerierung.
         tmdb, _total = episode_order.effective_structure(row)
-        rows = _status_for(have_map.get(row["id"], {}), tmdb, row["completeness"])
+        rows = _status_for(have_map.get(row["id"], {}), tmdb)
         updates.append((json.dumps(rows) if rows else None, row["id"]))
 
     with db.get_conn() as conn:
