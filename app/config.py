@@ -17,6 +17,9 @@ DB_PATH = os.environ.get("DB_PATH", os.path.join(DATA_DIR, "selfmediahub.db"))
 
 PORT = int(os.environ.get("PORT", "8092"))
 
+# Log-Stufe (DEBUG/INFO/WARNING/ERROR/CRITICAL). Steuert eigene Logs UND uvicorn.
+LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").strip().upper()
+
 # --- Datenquellen (Emby/Jellyfin/Plex/lokal) ---------------------------
 # Ab Phase 4a werden Quellen im UI angelegt und in der DB gespeichert
 # (verschluesselt), nicht mehr ueber ENV-Variablen. Siehe services/sources.py.

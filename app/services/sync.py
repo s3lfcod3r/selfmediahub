@@ -3,11 +3,14 @@
 Läuft im Hintergrund mit Fortschritts-State, damit die UI nicht blockiert.
 """
 import json
+import logging
 import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 
 from .. import db, i18n
+
+logger = logging.getLogger("selfmediahub.sync")
 from . import (
     analysis, completeness, coverage, episode_order, fsk, metaproviders, notify,
     providers, rules, seasons, settings as settings_service, sources,
@@ -132,8 +135,9 @@ def _sync_episodes(connectors: list, lang: str) -> None:
             _set(phase=i18n.t("sync.phase.episodes", lang).format(kind=conn.kind, idx=idx, total=total))
             try:
                 db.replace_episodes(s["id"], conn.fetch_episodes(s["source_id"]))
-            except Exception:  # noqa: BLE001 - eine kaputte Serie stoppt den Rest nicht
-                pass
+            except Exception as exc:  # noqa: BLE001 - eine kaputte Serie stoppt den Rest nicht
+                logger.warning("Episoden-Abruf fehlgeschlagen (%s, series_id=%s): %s",
+                               conn.kind, s["id"], exc)
 
 
 def run_sync() -> dict:
@@ -141,6 +145,7 @@ def run_sync() -> dict:
     connectors = build_connectors()
     if not connectors:
         raise RuntimeError("Keine Medienquelle konfiguriert.")
+    logger.info("Sync gestartet (%d Quelle(n))", len(connectors))
 
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     lang = settings_service.get("general.ui_language")
@@ -158,6 +163,8 @@ def run_sync() -> dict:
             }
             groups.append((conn, items, existing))
         except Exception as exc:  # noqa: BLE001 - kaputte Quelle stoppt Rest nicht
+            logger.warning("Quelle konnte nicht gelesen werden (%s, %s): %s",
+                           conn.kind, conn.source_name, exc)
             sources.append({"kind": conn.kind, "name": conn.source_name,
                             "ok": False, "error": str(exc)})
 
@@ -175,8 +182,8 @@ def run_sync() -> dict:
         for fut in as_completed(futures):
             try:
                 fut.result()
-            except Exception:  # noqa: BLE001 - einzelnes Item darf nicht alles kippen
-                pass
+            except Exception as exc:  # noqa: BLE001 - einzelnes Item darf nicht alles kippen
+                logger.warning("Anreicherung eines Eintrags fehlgeschlagen: %s", exc)
             processed += 1
             if processed % 20 == 0 or processed == total:
                 _set(processed=processed)
@@ -219,6 +226,7 @@ def run_sync() -> dict:
     if total_new:
         notify.send("new_items", f"{total_new} neue Einträge in der Mediathek", {"count": total_new})
 
+    logger.info("Sync fertig: %d Eintraege gesehen, %d neu", total_seen, total_new)
     return {"count": total_seen, "new": total_new, "at": now,
             "sources": sources, "rules": rule_res}
 
@@ -230,6 +238,7 @@ def _run_guarded() -> None:
         _set(result=result, error=None, phase="Fertig",
              at=datetime.now(timezone.utc).isoformat(timespec="seconds"))
     except Exception as exc:  # noqa: BLE001
+        logger.exception("Sync abgebrochen: %s", exc)
         _set(error=str(exc), phase="Fehler")
     finally:
         _set(running=False)

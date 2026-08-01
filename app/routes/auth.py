@@ -1,4 +1,5 @@
 """Login-, Logout- und Ersteinrichtungs-Seiten (Ein-Konto-Auth)."""
+import logging
 import os
 from urllib.parse import parse_qs
 
@@ -10,6 +11,16 @@ from .. import config, i18n
 from ..services import auth, settings as settings_service
 
 router = APIRouter()
+logger = logging.getLogger("selfmediahub.auth")
+
+
+def _client_ip(request: Request) -> str:
+    """Client-IP fuer Auth-Logs. Hinter Reverse-Proxy zaehlt der erste
+    X-Forwarded-For-Eintrag, sonst die direkte Peer-Adresse."""
+    fwd = request.headers.get("x-forwarded-for")
+    if fwd:
+        return fwd.split(",")[0].strip()
+    return request.client.host if request.client else "?"
 
 _TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templates")
 templates = Jinja2Templates(directory=_TEMPLATE_DIR)
@@ -69,6 +80,7 @@ async def setup_submit(request: Request):
 
     auth.create_account(username, pw, email)
     settings_service.save("general.ui_language", lang)
+    logger.info("Konto angelegt: user=%s ip=%s", username, _client_ip(request))
     resp = RedirectResponse("/", status_code=303)
     _set_session(resp, username)
     return resp
@@ -87,10 +99,14 @@ async def login_submit(request: Request):
     form = await _form(request)
     username = (form.get("username") or "").strip()
     pw = form.get("password") or ""
+    ip = _client_ip(request)
     if auth.verify_login(username, pw):
+        logger.info("Login erfolgreich: user=%s ip=%s", username, ip)
         resp = RedirectResponse("/", status_code=303)
         _set_session(resp, username)
         return resp
+    # Sicherheitsrelevant: fehlgeschlagene Versuche als WARNING (Passwort NIE loggen).
+    logger.warning("Login fehlgeschlagen: user=%s ip=%s", username or "(leer)", ip)
     lang = settings_service.get("general.ui_language")
     return templates.TemplateResponse(
         request, "login.html",
@@ -98,7 +114,8 @@ async def login_submit(request: Request):
 
 
 @router.get("/logout")
-def logout():
+def logout(request: Request):
+    logger.info("Logout: ip=%s", _client_ip(request))
     resp = RedirectResponse("/login", status_code=303)
     resp.delete_cookie(auth.SESSION_COOKIE, path="/")
     return resp
