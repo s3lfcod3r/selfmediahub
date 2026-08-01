@@ -108,9 +108,14 @@ def _available_orders(ext: dict) -> list:
 
 
 def _today() -> str:
-    """Heutiges Datum als ISO-String (YYYY-MM-DD) - lexikografisch mit TheTVDBs
-    ``aired`` vergleichbar, ohne Parsing."""
-    return datetime.date.today().isoformat()
+    """Heutiges Datum (UTC) als ISO-String (YYYY-MM-DD) - lexikografisch mit
+    TheTVDBs ``aired`` vergleichbar, ohne Parsing.
+
+    Bewusst UTC statt lokaler Zeit: das Basis-Image (python:3.12-slim) bringt kein
+    tzdata mit, eine gesetzte TZ wuerde also ohnehin ignoriert. UTC macht den
+    Release-Schnitt deterministisch - unabhaengig davon, wie der Host konfiguriert
+    ist. Der Tagesgenauigkeit schadet die (max. wenige Stunden) Abweichung nicht."""
+    return datetime.datetime.now(datetime.timezone.utc).date().isoformat()
 
 
 def _fetch_order(series_id, token: str, order: str, cache: dict):
