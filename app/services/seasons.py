@@ -49,29 +49,35 @@ def _is_reliable(regular_have: dict, tmdb: dict) -> bool:
 def _status_for(have: dict, tmdb: dict) -> list:
     """Staffelliste [{s, st, h, t}] für eine Serie (s = Staffelnummer).
 
-    Passt die Nummerierung der Quelle nicht zur Metadaten-Struktur (oder fehlt sie
-    ganz), sind alle regulaeren Staffeln "unbekannt" (grau) - lieber keine Aussage
-    als eine falsche. Die Vollstaendigkeit im Detail nutzt dieselbe Pruefung
-    (completeness.recompute) und meldet dann ebenfalls "unbekannt", sodass Cover
-    und Detail uebereinstimmen.
+    Bewertung je Staffel EINZELN - eine abweichende Staffel graut nur sich selbst
+    aus, nicht die ganze Serie:
+
+    * Staffel kennt der Dienst nicht / wir haben mehr Folgen als er kennt
+      -> "unbekannt" (Nummerierung dieser Staffel passt nicht).
+    * sonst: vollstaendig (>= Soll), teilweise (1..Soll-1) oder fehlt (0).
+
+    ``strict`` (= passt die GESAMT-Nummerierung, gleiche Pruefung wie
+    completeness.recompute) steuert nur eines: ob eine Staffel ohne eine einzige
+    Folge als "fehlt" (rot) behauptet werden darf. Ist die Nummerierung insgesamt
+    fraglich (z.B. Quelle nutzt Absolut-Nummerierung, alles in Staffel 1), zeigen
+    leere Staffeln "unbekannt" statt eines falschen "fehlt".
     """
     regular_have = {s: n for s, n in have.items() if s >= 1}
-    reliable = _is_reliable(regular_have, tmdb)
+    strict = _is_reliable(regular_have, tmdb)
 
     rows = []
     # Specials nur bei tatsächlich vorhandenen Folgen - und ohne "teilweise".
     if have.get(0):
         rows.append({"s": 0, "st": FULL, "h": have[0], "t": None})
 
-    # Vereinigung aus "kennt der Dienst" und "haben wir": so bekommt auch eine
-    # komplett fehlende Staffel ihr rotes Badge.
+    # Vereinigung aus "kennt der Dienst" und "haben wir".
     for s in sorted(set(tmdb) | set(regular_have)):
         h = regular_have.get(s, 0)
         t = tmdb.get(s)
-        if not reliable or not t:
+        if not t or h > t:
             st = UNKNOWN
         elif h == 0:
-            st = NONE
+            st = NONE if strict else UNKNOWN
         elif h >= t:
             st = FULL
         else:
