@@ -89,16 +89,48 @@ def upcoming_of(row) -> list:
     return out
 
 
-def _auto_pick(lib_runtime, orders: dict) -> str:
-    """Reihenfolge waehlen, deren Median-Laufzeit der Bibliothek am naechsten
-    kommt. Ohne verwertbares Signal -> 'aired'. Bei Gleichstand 'aired' bevorzugt."""
-    cands = [(k, o.get("runtime")) for k, o in orders.items() if o.get("runtime")]
-    if not cands:
+def _conflict(have: dict, order: dict) -> int:
+    """Wie viele Folgen passen NICHT in die Staffelstruktur dieser Reihenfolge?
+
+    Gezaehlt wird nur, was der Struktur widerspricht:
+
+    * Folgen in einer Staffel, die diese Reihenfolge gar nicht kennt (z.B. die
+      DVD-Nummerierung der Simpsons endet bei Staffel 32, die Bibliothek hat 37).
+    * Folgen ueber der Soll-Zahl einer Staffel (Absolut-Nummerierung: 203 Folgen
+      in Staffel 1, wo die Aired-Reihenfolge 35 erwartet).
+
+    FEHLENDE Folgen (weniger als Soll) zaehlen bewusst nicht: das sind echte
+    Luecken und kein Hinweis auf die falsche Nummerierung. Wuerde man sie
+    mitzaehlen, gewaenne immer die Reihenfolge mit den wenigsten Folgen.
+    """
+    sc = {int(s): int(n) for s, n in (order.get("season_counts") or [])}
+    total = 0
+    for season, h in have.items():
+        if h <= 0:
+            continue
+        t = sc.get(season)
+        total += h if not t else max(0, h - t)
+    return total
+
+
+def _auto_pick(lib_runtime, orders: dict, have: dict = None) -> str:
+    """Passende Reihenfolge waehlen.
+
+    Erstes Kriterium ist die tatsaechliche Staffelaufteilung der Bibliothek
+    (``_conflict``) - sie entscheidet, ob sich Vollstaendigkeit spaeter je Staffel
+    bestimmen laesst oder nur noch grob ueber die Gesamtzahl. Erst bei Gleichstand
+    zaehlt wie bisher die Median-Laufzeit (DVD-Folgen sind oft doppelt so lang wie
+    Aired-Folgen), zuletzt hat 'aired' Vorrang. Ohne gespeicherte Folgen bleibt es
+    beim reinen Laufzeit-Vergleich.
+    """
+    if not orders:
         return "aired"
-    if lib_runtime is None:
-        return "aired" if "aired" in orders else cands[0][0]
-    cands.sort(key=lambda kv: (abs(kv[1] - lib_runtime), 0 if kv[0] == "aired" else 1))
-    return cands[0][0]
+    def sort_key(k):
+        conflict = _conflict(have, orders[k]) if have else 0
+        rt = orders[k].get("runtime")
+        rt_diff = abs(rt - lib_runtime) if (rt and lib_runtime is not None) else 10 ** 6
+        return (conflict, rt_diff, 0 if k == "aired" else 1, k)
+    return sorted(orders, key=sort_key)[0]
 
 
 def _lib_runtimes() -> dict:
@@ -112,10 +144,22 @@ def _lib_runtimes() -> dict:
     return out
 
 
+def _have_by_season() -> dict:
+    """{item_id: {staffel: anzahl}} regulaerer Folgen - Basis fuer _conflict."""
+    out: dict = {}
+    for e in db.query(
+        "SELECT item_id, season, COUNT(*) AS n FROM episodes "
+        "WHERE season >= 1 GROUP BY item_id, season"
+    ):
+        out.setdefault(e["item_id"], {})[e["season"]] = e["n"]
+    return out
+
+
 def recompute() -> int:
     """episode_order_resolved je Serie neu bestimmen (Nutzerwahl schlaegt Auto).
     Gibt die Anzahl aktualisierter Serien zurueck."""
     runtimes = _lib_runtimes()
+    have_map = _have_by_season()
     updates = []
     for row in db.query(
         "SELECT id, tvdb_orders, episode_order FROM media_items WHERE item_type='Serie'"
@@ -127,7 +171,7 @@ def recompute() -> int:
         elif orders:
             rts = runtimes.get(row["id"]) or []
             lib_rt = statistics.median(rts) if rts else None
-            resolved = _auto_pick(lib_rt, orders)
+            resolved = _auto_pick(lib_rt, orders, have_map.get(row["id"]))
         else:
             resolved = "aired"
         updates.append((resolved, row["id"]))
