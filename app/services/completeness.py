@@ -11,46 +11,44 @@ from .. import db
 from . import episode_order, seasons
 
 
-# Wieviele Folgen darf eine Staffel MEHR haben, als der Dienst kennt, ohne dass
-# die Zuordnung als kaputt gilt? 1-2 sind der Normalfall: ein Zweiteiler zaehlt
-# beim Dienst als EINE Folge, liegt in der Mediathek aber als zwei Dateien. Alles
-# darueber heisst, dass die Staffeln anders geschnitten sind (Absolut-Nummerierung,
-# eigene Aufteilung) - dann ist jede Lueckenzahl geraten.
-MAX_EXTRA_PER_SEASON = 2
+def _judge(per_season: dict, sc: dict, total):
+    """(completeness, missing) - zweistufig, damit immer eine Aussage herauskommt,
+    aber nie eine erfundene Zahl.
 
+    **Stufe 1 (genau), wenn sich die Aufteilung abbilden laesst:** Bewertung je
+    Staffel aus denselben Ampeln, die auf dem Cover stehen. Das ist noetig, weil
+    die Gesamtzahl Luecken mit Ueberschuss verrechnet - bei Lost hob die Extra-Folge
+    in S1 die fehlende in S6 auf, die Serie galt faelschlich als vollstaendig. Eine
+    Staffel, von der wir nichts haben und deren Soll-Zahl fehlt, bleibt ein blinder
+    Fleck -> Stufe 2.
 
-def _judge(per_season: dict, sc: dict):
-    """(completeness, missing) aus den Staffel-Ampeln - genau denen, die auch auf
-    dem Cover stehen (``seasons._status_for``).
+    **Stufe 2 (grob), wenn die Aufteilung nicht passt:** Dann liegen die Folgen nur
+    anders einsortiert (Naruto: 220 Folgen in 2 Ordnern statt 5 Staffeln) - je
+    Staffel waere jede Zahl geraten. Verglichen wird die Gesamtzahl der gewaehlten
+    Reihenfolge: so viele Folgen kennt der Dienst, so viele sind da. Fuer Naruto
+    ergibt das 220 von 220 = vollstaendig, statt frueher "unbekannt" oder gar einer
+    Lueckenmeldung. Das Detail-Fenster weist auf die abweichende Nummerierung hin.
 
-    Bewusst je Staffel statt aus der Gesamtzahl. Frueher genuegte EINE Staffel mit
-    abweichender Nummerierung, damit die ganze Serie "unbekannt" wurde - auch wenn
-    die uebrigen 36 Staffeln sauber zuzuordnen waren und das Cover laengst konkrete
-    Luecken zeigte (Emby fuehrt in Simpsons S20 eine Folge mehr, als TheTVDB kennt).
-    Umgekehrt verrechnete die Gesamtzahl Luecken mit Ueberschuss: bei Lost hob die
-    Extra-Folge in S1 die fehlende in S6 auf -> faelschlich "vollstaendig". Regeln:
-
-    * Staffel mit deutlich mehr Folgen als erwartet (> ``MAX_EXTRA_PER_SEASON``)
-      -> "unbekannt". Die Aufteilung passt nicht, jede Lueckenzahl waere geraten.
-    * Nachweisbare Luecken (Staffeln gelb/rot) -> "unvollstaendig", ``missing`` =
-      Summe genau dieser Luecken.
-    * Blinder Fleck = Staffel, von der wir KEINE Folge haben und deren Soll-Zahl
-      der Dienst nicht kennt -> "unbekannt", dort koennte etwas fehlen.
-    * Sonst, mit mindestens einer bewertbaren Staffel -> "vollstaendig".
+    "unbekannt" bleibt damit dem einzigen Fall vorbehalten, in dem wirklich nichts
+    bekannt ist: keine Soll-Struktur vom Metadatendienst.
     """
     if not sc:
         return "unknown", None
-    regular = [r for r in seasons._status_for(per_season, sc) if r["s"] >= 1]
-    if any(r["t"] and r["h"] - r["t"] > MAX_EXTRA_PER_SEASON for r in regular):
+    regular_have = {s: n for s, n in per_season.items() if s >= 1}
+    if seasons.layout_matches(regular_have, sc):
+        regular = [r for r in seasons._status_for(per_season, sc) if r["s"] >= 1]
+        gaps = sum(max(0, (r["t"] or 0) - r["h"])
+                   for r in regular if r["st"] in (seasons.PARTIAL, seasons.NONE))
+        if gaps:
+            return "incomplete", gaps
+        blind = any(r["st"] == seasons.UNKNOWN and r["h"] == 0 for r in regular)
+        if not blind and any(r["st"] == seasons.FULL for r in regular):
+            return "complete", 0
+    # Stufe 2: nur noch die Gesamtzahl ist belastbar.
+    if not total:
         return "unknown", None
-    gaps = sum(max(0, (r["t"] or 0) - r["h"])
-               for r in regular if r["st"] in (seasons.PARTIAL, seasons.NONE))
-    if gaps:
-        return "incomplete", gaps
-    blind = any(r["st"] == seasons.UNKNOWN and r["h"] == 0 for r in regular)
-    if blind or not any(r["st"] == seasons.FULL for r in regular):
-        return "unknown", None
-    return "complete", 0
+    missing = max(0, total - sum(regular_have.values()))
+    return ("incomplete", missing) if missing else ("complete", 0)
 
 
 def recompute() -> int:
@@ -89,7 +87,7 @@ def recompute() -> int:
 
         if row["id"] in has_episodes:
             have = sum(n for s, n in per_season.items() if s >= 1)  # ohne Specials
-            completeness, missing = _judge(per_season, sc)
+            completeness, missing = _judge(per_season, sc, total)
         else:
             # Noch keine Einzelfolgen gespeichert -> es gibt nichts, was sich je
             # Staffel pruefen liesse. Dann wie bisher grob gegen die Gesamtzahl.

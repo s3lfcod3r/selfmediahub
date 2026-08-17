@@ -35,6 +35,12 @@ def _have_by_item() -> dict:
     return out
 
 
+# Wieviele Folgen darf eine Staffel MEHR haben, als der Dienst kennt, ohne dass
+# die Aufteilung als abweichend gilt? 1-2 sind der Normalfall: ein Zweiteiler
+# zaehlt beim Dienst als EINE Folge, liegt in der Mediathek aber als zwei Dateien.
+MAX_EXTRA_PER_SEASON = 2
+
+
 def _is_reliable(regular_have: dict, tmdb: dict) -> bool:
     """Passt die Staffel-Zuordnung zwischen Quelle und TMDb zusammen?
 
@@ -44,6 +50,27 @@ def _is_reliable(regular_have: dict, tmdb: dict) -> bool:
     if not tmdb:
         return False
     return all(s in tmdb and regular_have[s] <= tmdb[s] for s in regular_have)
+
+
+def layout_matches(regular_have: dict, tmdb: dict) -> bool:
+    """Laesst sich die Aufteilung der Quelle auf die des Dienstes abbilden?
+
+    Toleranter als ``_is_reliable``: ein kleiner Ueberschuss (getrennt abgelegte
+    Doppelfolge) ist erlaubt, ebenso Staffeln, von denen noch gar nichts da ist.
+    Nicht abbildbar ist es, wenn eine Staffel deutlich mehr Folgen hat als bekannt
+    oder wenn wir Folgen in einer Staffel haben, die der Dienst gar nicht kennt -
+    dann liegen die Folgen schlicht anders einsortiert (Absolut-Nummerierung,
+    eigener Schnitt) und Aussagen JE STAFFEL waeren geraten.
+    """
+    if not tmdb:
+        return False
+    for s, h in regular_have.items():
+        if h <= 0:
+            continue
+        t = tmdb.get(s)
+        if not t or h - t > MAX_EXTRA_PER_SEASON:
+            return False
+    return True
 
 
 def _status_for(have: dict, tmdb: dict) -> list:
@@ -64,6 +91,11 @@ def _status_for(have: dict, tmdb: dict) -> list:
     """
     regular_have = {s: n for s, n in have.items() if s >= 1}
     strict = _is_reliable(regular_have, tmdb)
+    # Liegen die Folgen ueberhaupt so, wie der Dienst die Staffeln schneidet? Wenn
+    # nicht (z.B. Naruto: 220 Folgen in 2 Ordnern statt 5 Staffeln), waere jede
+    # Ampel geraten - dann ist die ganze Reihe grau. Die Serie bekommt ihr Urteil
+    # in dem Fall aus dem Gesamtvergleich (completeness._judge).
+    mapped = layout_matches(regular_have, tmdb)
 
     rows = []
     # Specials nur bei tatsächlich vorhandenen Folgen - und ohne "teilweise".
@@ -74,7 +106,7 @@ def _status_for(have: dict, tmdb: dict) -> list:
     for s in sorted(set(tmdb) | set(regular_have)):
         h = regular_have.get(s, 0)
         t = tmdb.get(s)
-        if not t or h > t:
+        if not mapped or not t or h > t:
             st = UNKNOWN
         elif h == 0:
             st = NONE if strict else UNKNOWN
