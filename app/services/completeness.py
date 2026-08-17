@@ -11,6 +11,38 @@ from .. import db
 from . import episode_order, seasons
 
 
+def _judge(per_season: dict, sc: dict):
+    """(completeness, missing) aus den Staffel-Ampeln - genau denen, die auch auf
+    dem Cover stehen (``seasons._status_for``).
+
+    Bewusst je Staffel statt aus der Gesamtzahl: frueher genuegte EINE Staffel mit
+    abweichender Nummerierung, damit die ganze Serie "unbekannt" wurde - auch wenn
+    die uebrigen 36 Staffeln sauber zuzuordnen waren und das Cover laengst konkrete
+    Luecken zeigte (Beispiel: Emby fuehrt in Simpsons S20 eine Folge mehr, als
+    TheTVDB kennt). Regeln:
+
+    * Nachweisbare Luecken (Staffeln gelb/rot) -> "unvollstaendig", ``missing`` =
+      Summe dieser Luecken.
+    * Kein blinder Fleck und mindestens eine bewertbare Staffel -> "vollstaendig".
+    * Blinder Fleck = Staffel, von der wir KEINE Folge haben und deren Soll-Zahl
+      der Dienst nicht kennt. Dort koennte etwas fehlen -> "unbekannt".
+
+    Eine Staffel mit MEHR Folgen als erwartet macht die Serie nicht blind:
+    Ueberschuss ist kein Hinweis auf Fehlendes.
+    """
+    if not sc:
+        return "unknown", None
+    regular = [r for r in seasons._status_for(per_season, sc) if r["s"] >= 1]
+    gaps = sum(max(0, (r["t"] or 0) - r["h"])
+               for r in regular if r["st"] in (seasons.PARTIAL, seasons.NONE))
+    if gaps:
+        return "incomplete", gaps
+    blind = any(r["st"] == seasons.UNKNOWN and r["h"] == 0 for r in regular)
+    if blind or not any(r["st"] == seasons.FULL for r in regular):
+        return "unknown", None
+    return "complete", 0
+
+
 def recompute() -> int:
     """completeness ('complete'|'incomplete'|'unknown') + missing_episodes je Serie.
 
@@ -25,16 +57,16 @@ def recompute() -> int:
     einer nicht zuordenbaren Gesamtzahl "komplett" zu behaupten. Fuer Serien ist
     TheTVDB die Soll-Quelle; ein abweichendes ``tmdb_episodes`` bleibt aussen vor.
     """
-    # Alle Episoden einmal laden (kein N+1): je Serie die regulaeren Folgen
-    # (season >= 1) je Staffel zaehlen und merken, welche Serien Episoden haben.
+    # Alle Episoden einmal laden (kein N+1): je Serie die Folgen je Staffel
+    # zaehlen (inkl. Staffel 0, die _status_for selbst aussortiert) und merken,
+    # welche Serien ueberhaupt Episoden haben.
     have_by_season: dict = {}
     has_episodes: set = set()
     for e in db.query("SELECT item_id, season FROM episodes"):
         has_episodes.add(e["item_id"])
         s = e["season"] or 0
-        if s >= 1:  # Staffel 0 (Specials) zaehlt nicht mit
-            have_by_season.setdefault(e["item_id"], {})[s] = \
-                have_by_season.get(e["item_id"], {}).get(s, 0) + 1
+        have_by_season.setdefault(e["item_id"], {})[s] = \
+            have_by_season.get(e["item_id"], {}).get(s, 0) + 1
 
     updates = []
     for row in db.query(
@@ -42,22 +74,21 @@ def recompute() -> int:
         "episode_order_resolved FROM media_items WHERE item_type='Serie'"
     ):
         per_season = have_by_season.get(row["id"], {})
-        if row["id"] in has_episodes:
-            have = sum(per_season.values())  # 0 wenn nur Specials vorhanden
-        else:
-            have = row["have_episodes"]  # noch keine Episoden gespeichert
-
         # Soll-Struktur + Gesamtzahl aus der aufgeloesten Reihenfolge.
         sc, total = episode_order.effective_structure(row)
-        # Nur werten, wenn die Nummerierung zuordenbar ist (identisch zum Cover).
-        # Ohne gespeicherte Einzelfolgen kann nicht geprueft werden -> Struktur
-        # vorhanden = best effort wie bisher.
-        reliable = seasons._is_reliable(per_season, sc) if per_season else bool(sc)
-        if total and have is not None and reliable:
-            missing = max(0, total - have)
-            completeness = "complete" if missing == 0 else "incomplete"
+
+        if row["id"] in has_episodes:
+            have = sum(n for s, n in per_season.items() if s >= 1)  # ohne Specials
+            completeness, missing = _judge(per_season, sc)
         else:
-            missing, completeness = None, "unknown"
+            # Noch keine Einzelfolgen gespeichert -> es gibt nichts, was sich je
+            # Staffel pruefen liesse. Dann wie bisher grob gegen die Gesamtzahl.
+            have = row["have_episodes"]
+            if total and have is not None:
+                missing = max(0, total - have)
+                completeness = "complete" if missing == 0 else "incomplete"
+            else:
+                missing, completeness = None, "unknown"
         updates.append((completeness, missing, have, row["id"]))
 
     with db.get_conn() as conn:
