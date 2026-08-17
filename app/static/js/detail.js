@@ -50,6 +50,15 @@
     var p = shortLang(pref);
     return (list || []).some(function (l) { return shortLang(l) === p; });
   }
+  // Serien-Objekte haben selbst keine Tonspuren/Untertitel (die haengen an den
+  // Folgen). Statt "keine" zu behaupten, zeigt der Kopf die ueber alle Folgen
+  // berechnete Abdeckung der primaeren Sprache (coverage.py). Ohne Wert: Zeile weg.
+  function covMeta(pct) {
+    if (pct == null) { return null; }
+    var state = pct >= 100 ? "full" : (pct > 0 ? "partial" : "none");
+    var txt = esc(langName(prefLang())) + " &middot; " + esc(T("cov." + state));
+    return state === "partial" ? txt + " (" + Math.round(pct) + " %)" : txt;
+  }
   function epTech(e) {
     var pref = prefLang();
     var svg = (window.smhFlag && window.smhFlag(pref)) || null;
@@ -181,14 +190,23 @@
     meta += metaItem(T("detail.resolution"), (i.width && i.height) ? (i.width + " × " + i.height) :
                      (i.resolution ? esc(i.resolution) : null));
     meta += metaItem(T("detail.video_codec"), i.video_codec ? esc(i.video_codec) : null);
-    meta += metaItem(T("detail.audio_langs"), langList(i.audio_langs) || null);
-    meta += metaItem(T("detail.subtitles"), (i.subtitle_langs || []).length ? esc(langList(i.subtitle_langs)) : T("detail.none_f"));
+    if (i.item_type === "Serie") {
+      meta += metaItem(T("detail.audio_langs"), covMeta(i.primary_audio_pct));
+      meta += metaItem(T("detail.subtitles"), covMeta(i.primary_sub_pct));
+    } else {
+      meta += metaItem(T("detail.audio_langs"), langList(i.audio_langs) || null);
+      meta += metaItem(T("detail.subtitles"), (i.subtitle_langs || []).length ? esc(langList(i.subtitle_langs)) : T("detail.none_f"));
+    }
     meta += metaItem(T("detail.genres"), (i.genres || []).length ? esc(i.genres.join(", ")) : null);
     meta += metaItem(T("detail.library"), i.library_name ? esc(i.library_name) : null);
     meta += metaItem(T("detail.score"), i.community_rating != null ? Number(i.community_rating).toFixed(1) : null);
     if (i.item_type === "Serie") {
-      meta += metaItem(T("detail.seasons"), (i.have_seasons != null ? i.have_seasons : "?") + (i.tmdb_seasons ? " / " + i.tmdb_seasons : ""));
-      meta += metaItem(T("detail.episodes"), (i.have_episodes != null ? i.have_episodes : "?") + (i.tmdb_episodes ? " / " + i.tmdb_episodes : ""));
+      // Nenner = Soll der aufgeloesten Reihenfolge (Aired/DVD/Absolut), damit die
+      // Zahlen beim Umschalten mitgehen. Fehlt die Struktur, bleibt der Nenner leer.
+      var tgtS = d.order ? d.order.target_seasons : null;
+      var tgtE = d.order ? d.order.target_episodes : null;
+      meta += metaItem(T("detail.seasons"), (i.have_seasons != null ? i.have_seasons : "?") + (tgtS ? " / " + tgtS : ""));
+      meta += metaItem(T("detail.episodes"), (i.have_episodes != null ? i.have_episodes : "?") + (tgtE ? " / " + tgtE : ""));
       meta += metaItem(T("detail.status"), i.status ? esc(i.status) : null);
     }
     if (fskOn) { meta += metaItem(T("detail.fsk_suggestion"), i.fsk_suggested ? esc(i.fsk_suggested) : null); }

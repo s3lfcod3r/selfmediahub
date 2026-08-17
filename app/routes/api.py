@@ -82,12 +82,19 @@ def api_item_detail(item_id: int):
             "episode_order_resolved, tmdb_episodes FROM media_items WHERE id=?",
             (item_id,),
         )[0]
-        sc, _total = episode_order.effective_structure(struct)
+        sc, total = episode_order.effective_structure(struct)
         order_opts = [o for o in ("aired", "dvd", "absolute")
                       if o in episode_order._orders_of(struct)]
+        # Soll-Zahlen der GEWAEHLTEN Reihenfolge mitgeben. Ohne sie musste das
+        # Detail-Fenster auf tmdb_seasons/tmdb_episodes zurueckfallen - die zeigen
+        # aber immer die TMDb-Aired-Zahlen und aendern sich beim Umschalten auf
+        # DVD/Absolut nicht. Ist die Struktur unbekannt (total None), bleibt der
+        # Nenner bewusst leer, statt eine nicht passende Zahl zu behaupten.
         order_meta = {"options": order_opts,
                       "pref": struct["episode_order"] or "auto",
-                      "resolved": struct["episode_order_resolved"] or "aired"}
+                      "resolved": struct["episode_order_resolved"] or "aired",
+                      "target_seasons": len(sc) or None,
+                      "target_episodes": total}
 
         # Noch nicht veroeffentlichte Staffeln (aus den Badges genommen) -> hier als
         # "geplant"/"Veroeffentlichung am ..." zeigen.
