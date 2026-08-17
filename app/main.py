@@ -11,7 +11,10 @@ from starlette.responses import JSONResponse, RedirectResponse
 
 from . import config, db
 from .routes import api, auth as auth_routes, health, pages
-from .services import auth, providers, scheduler, tvdb, updatecheck
+from .services import (
+    auth, completeness, episode_order, providers, scheduler, seasons, tvdb,
+    updatecheck,
+)
 
 
 def _configure_logging() -> None:
@@ -41,9 +44,27 @@ async def lifespan(_app: FastAPI):
     db.init_db()
     providers.ensure_fixed_providers()  # feste Dienste TMDb/TheTVDB sicherstellen
     _log_tvdb_key()
+    _recompute_derived()
     scheduler.start()
     updatecheck.start()
     yield
+
+
+def _recompute_derived() -> None:
+    """Abgeleitete Werte (Reihenfolge, Vollstaendigkeit, Staffel-Ampeln) beim Start
+    einmal neu rechnen.
+
+    Sie stehen in der DB, stammen aber aus Code: aendert ein Update die Bewertung,
+    wuerden bis zum naechsten vollen Einlesen die ALTEN Urteile angezeigt. Der Lauf
+    geht nur ueber die DB (keine Netzabfragen) und dauert auch bei ein paar tausend
+    Titeln nur Sekundenbruchteile."""
+    try:
+        episode_order.recompute()
+        completeness.recompute()
+        n = seasons.recompute()
+        logger.info("Abgeleitete Werte neu berechnet (%s Serien).", n)
+    except Exception:  # noqa: BLE001 - Start darf daran nie scheitern
+        logger.exception("Neuberechnung der abgeleiteten Werte fehlgeschlagen.")
 
 
 def _log_tvdb_key() -> None:
