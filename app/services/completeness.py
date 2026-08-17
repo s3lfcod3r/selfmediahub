@@ -11,28 +11,38 @@ from .. import db
 from . import episode_order, seasons
 
 
+# Wieviele Folgen darf eine Staffel MEHR haben, als der Dienst kennt, ohne dass
+# die Zuordnung als kaputt gilt? 1-2 sind der Normalfall: ein Zweiteiler zaehlt
+# beim Dienst als EINE Folge, liegt in der Mediathek aber als zwei Dateien. Alles
+# darueber heisst, dass die Staffeln anders geschnitten sind (Absolut-Nummerierung,
+# eigene Aufteilung) - dann ist jede Lueckenzahl geraten.
+MAX_EXTRA_PER_SEASON = 2
+
+
 def _judge(per_season: dict, sc: dict):
     """(completeness, missing) aus den Staffel-Ampeln - genau denen, die auch auf
     dem Cover stehen (``seasons._status_for``).
 
-    Bewusst je Staffel statt aus der Gesamtzahl: frueher genuegte EINE Staffel mit
+    Bewusst je Staffel statt aus der Gesamtzahl. Frueher genuegte EINE Staffel mit
     abweichender Nummerierung, damit die ganze Serie "unbekannt" wurde - auch wenn
     die uebrigen 36 Staffeln sauber zuzuordnen waren und das Cover laengst konkrete
-    Luecken zeigte (Beispiel: Emby fuehrt in Simpsons S20 eine Folge mehr, als
-    TheTVDB kennt). Regeln:
+    Luecken zeigte (Emby fuehrt in Simpsons S20 eine Folge mehr, als TheTVDB kennt).
+    Umgekehrt verrechnete die Gesamtzahl Luecken mit Ueberschuss: bei Lost hob die
+    Extra-Folge in S1 die fehlende in S6 auf -> faelschlich "vollstaendig". Regeln:
 
+    * Staffel mit deutlich mehr Folgen als erwartet (> ``MAX_EXTRA_PER_SEASON``)
+      -> "unbekannt". Die Aufteilung passt nicht, jede Lueckenzahl waere geraten.
     * Nachweisbare Luecken (Staffeln gelb/rot) -> "unvollstaendig", ``missing`` =
-      Summe dieser Luecken.
-    * Kein blinder Fleck und mindestens eine bewertbare Staffel -> "vollstaendig".
+      Summe genau dieser Luecken.
     * Blinder Fleck = Staffel, von der wir KEINE Folge haben und deren Soll-Zahl
-      der Dienst nicht kennt. Dort koennte etwas fehlen -> "unbekannt".
-
-    Eine Staffel mit MEHR Folgen als erwartet macht die Serie nicht blind:
-    Ueberschuss ist kein Hinweis auf Fehlendes.
+      der Dienst nicht kennt -> "unbekannt", dort koennte etwas fehlen.
+    * Sonst, mit mindestens einer bewertbaren Staffel -> "vollstaendig".
     """
     if not sc:
         return "unknown", None
     regular = [r for r in seasons._status_for(per_season, sc) if r["s"] >= 1]
+    if any(r["t"] and r["h"] - r["t"] > MAX_EXTRA_PER_SEASON for r in regular):
+        return "unknown", None
     gaps = sum(max(0, (r["t"] or 0) - r["h"])
                for r in regular if r["st"] in (seasons.PARTIAL, seasons.NONE))
     if gaps:
