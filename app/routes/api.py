@@ -102,9 +102,21 @@ def api_item_detail(item_id: int):
         if upcoming:
             release_meta = {"upcoming": upcoming}
 
+        # Einzelne Folgen nur dann als "fehlt" markieren, wenn sich die Aufteilung
+        # der Quelle auf die des Dienstes abbilden laesst. Sonst (Folgen liegen
+        # anders einsortiert, z.B. 220 Stueck in 2 Ordnern statt 5 Staffeln) stuende
+        # in der Liste eine voellig andere Zahl als im Kopf, der dann aus der
+        # Gesamtzahl urteilt - der Hinweis weiter unten erklaert es stattdessen.
+        have_by_season: dict = {}
+        for e in episodes:
+            s = e.get("season") or 0
+            if s >= 1:
+                have_by_season[s] = have_by_season.get(s, 0) + 1
+        mapped = seasons.layout_matches(have_by_season, sc)
+
         # Konkret fehlende Episoden bestimmen. Staffel 0 (Specials) bleibt aussen vor
         # (konsistent zur Vollstaendigkeit), bleibt aber in der Episodenliste sichtbar.
-        if episodes and sc:
+        if episodes and sc and mapped:
             present = [(e["season"], e["episode"]) for e in episodes
                        if (e.get("season") or 0) >= 1 and e.get("episode") is not None]
             missing = tmdb.compute_missing(sc, present)
@@ -122,6 +134,16 @@ def api_item_detail(item_id: int):
                 elif not note:
                     note = ("Fehlende Folgen lassen sich hier nicht sicher bestimmen - "
                             "die Staffelnummerierung in Emby weicht ab.")
+        elif episodes and sc and not mapped:
+            # Aufteilung passt nicht -> der Kopf urteilt aus der Gesamtzahl. Das hier
+            # ehrlich benennen, statt Folgen zu markieren, die es evtl. gar nicht gibt.
+            miss = item.get("missing_episodes")
+            note = note or (
+                "Die Staffelaufteilung weicht von der gewählten Reihenfolge ab - "
+                f"deshalb keine Angabe je Folge. Insgesamt sind {sum(have_by_season.values())} "
+                f"von {total} Folgen vorhanden"
+                + (f", es fehlen also {miss}." if miss else " - es fehlt nichts.")
+                + " Über die Reihenfolge oben lässt sich eine andere Nummerierung wählen.")
         elif episodes and not sc and item.get("completeness") == "incomplete":
             # Keine Soll-Struktur (kein TMDb/TheTVDB-Abgleich) - wenigstens Gesamtzahl.
             miss = item.get("missing_episodes")
