@@ -167,6 +167,11 @@ a:hover { text-decoration: underline; }
   font-size: 14px; padding: 10px 0;
 }
 .search svg { color: var(--self-text-3); flex: none; }
+/* Alle Bedienelemente einer Werkzeugleiste auf dieselbe Hoehe. Ohne das stehen
+   Suchfeld (36,8), Auswahl (38) und Knopf (36,4) unterschiedlich hoch
+   nebeneinander - in einer Zeile faellt jeder Pixel auf. */
+.toolbar .search, .toolbar .field, .toolbar .btn, .toolbar .viewtoggle { min-height: 38px; }
+.toolbar .btn { display: inline-flex; align-items: center; justify-content: center; }
 
 /* Einheitliches Eingabefeld (Text/Passwort/Textarea) im Look des Suchfelds.
    Bewusst OHNE width -> die Breite steuert der jeweilige Kontext
