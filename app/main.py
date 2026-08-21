@@ -135,8 +135,18 @@ def main() -> None:
 
     logger.info("%s läuft auf http://0.0.0.0:%s", config.APP_NAME, config.PORT)
     level = config.LOG_LEVEL.lower()
+    # Proxy-Header (X-Forwarded-For/-Proto) NUR auswerten, wenn ein Reverse Proxy
+    # ausdruecklich hinterlegt ist. uvicorn wuerde sie sonst von jeder lokalen
+    # Gegenstelle glauben und request.client.host damit ueberschreiben - die
+    # Anmelde-Bremse zaehlte dann auf eine Adresse, die der Aufrufer selbst
+    # bestimmt, und waere mit einem Header pro Versuch ausgehebelt.
+    trusted = sorted(config.TRUSTED_PROXIES)
+    if trusted:
+        logger.info("Vertraue Proxy-Headern von: %s", ", ".join(trusted))
     uvicorn.run(app, host="0.0.0.0", port=config.PORT,
-                log_level=level if level in _UVICORN_LEVELS else "info")
+                log_level=level if level in _UVICORN_LEVELS else "info",
+                proxy_headers=bool(trusted),
+                forwarded_allow_ips=",".join(trusted) if trusted else "")
 
 
 if __name__ == "__main__":

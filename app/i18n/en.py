@@ -65,6 +65,7 @@ STRINGS = {
     "login.username": "Username",
     "login.password": "Password",
     "login.submit": "Sign in",
+    "login.error_locked": "Too many failed attempts. Please try again in {min} minutes.",
     "login.error_bad": "Username or password is incorrect.",
 
     # -- No-source page (setup.html) --

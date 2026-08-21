@@ -70,6 +70,7 @@ STRINGS = {
     "login.password": "Passwort",
     "login.submit": "Anmelden",
     "login.error_bad": "Benutzername oder Passwort ist falsch.",
+    "login.error_locked": "Zu viele Fehlversuche. Bitte in {min} Minuten erneut versuchen.",
 
     # -- Quelle-fehlt-Seite (setup.html) --
     "setup_src.title": "Fast fertig - noch eine Quelle verbinden",

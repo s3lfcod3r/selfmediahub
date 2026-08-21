@@ -12,6 +12,7 @@ import base64
 import hashlib
 import hmac
 import secrets
+import time
 from datetime import datetime, timezone
 
 from .. import config, db
@@ -148,3 +149,51 @@ def verify_session(token: str) -> bool:
     # Single-User: gueltige Signatur + nicht abgelaufen + Konto existiert = angemeldet.
     # (Name im Token ist nur informativ - Umbenennen darf die Sitzung nicht killen.)
     return account_exists()
+
+
+# -- Anmeldeversuche bremsen -------------------------------------------------
+# Ohne Bremse laesst sich unbegrenzt oft ein Passwort raten. Die 240.000
+# PBKDF2-Runden verlangsamen das zwar, ersetzen aber kein Limit. Gezaehlt wird je
+# Client-IP im Arbeitsspeicher (ein Container, kein Redis noetig): nach
+# _MAX_FAILS Fehlversuchen innerhalb _FAIL_WINDOW ist diese IP fuer den Rest des
+# Fensters gesperrt. Bewusst IP- statt kontobasiert, damit ein Fremder das
+# einzige Konto nicht aussperren kann. Notausgang bleibt SMH_DISABLE_AUTH.
+_MAX_FAILS = 5
+_FAIL_WINDOW = 15 * 60
+_failed_logins: dict = {}
+
+
+def _recent_fails(ip: str, now: float) -> list:
+    """Fehlversuche dieser IP innerhalb des Zeitfensters (aeltere verfallen)."""
+    fails = [t for t in _failed_logins.get(ip, []) if now - t < _FAIL_WINDOW]
+    if fails:
+        _failed_logins[ip] = fails
+    else:
+        _failed_logins.pop(ip, None)
+    return fails
+
+
+def login_blocked_for(ip: str) -> int:
+    """Verbleibende Sperrzeit dieser IP in Sekunden (0 = darf es versuchen)."""
+    now = time.monotonic()
+    fails = _recent_fails(ip, now)
+    if len(fails) < _MAX_FAILS:
+        return 0
+    return max(1, int(_FAIL_WINDOW - (now - min(fails))))
+
+
+def note_failed_login(ip: str) -> None:
+    now = time.monotonic()
+    fails = _recent_fails(ip, now)
+    fails.append(now)
+    _failed_logins[ip] = fails
+    # Der Speicher darf nicht unbegrenzt wachsen (viele wechselnde IPs).
+    if len(_failed_logins) > 5000:
+        for k in [k for k, v in _failed_logins.items()
+                  if not [t for t in v if now - t < _FAIL_WINDOW]]:
+            _failed_logins.pop(k, None)
+
+
+def reset_login_attempts(ip: str) -> None:
+    """Nach erfolgreicher Anmeldung ist die IP wieder unbelastet."""
+    _failed_logins.pop(ip, None)
