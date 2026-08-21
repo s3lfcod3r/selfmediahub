@@ -17,6 +17,22 @@ _TEMPLATE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "templa
 templates = Jinja2Templates(directory=_TEMPLATE_DIR)
 
 
+def _script_json(data) -> str:
+    """JSON fuer die Einbettung in einen <script>-Block.
+
+    ``json.dumps`` escaped ``<`` und ``>`` NICHT. Ein Medientitel, Ordnername
+    oder Tag, der ``</script>`` enthaelt, wuerde den Script-Block vorzeitig
+    beenden - alles Dahinter parst der Browser als HTML und fuehrt es aus
+    (Stored XSS ueber den Medienbestand, z.B. ueber einen praeparierten
+    Dateinamen). Die drei kritischen Zeichen werden deshalb als Unicode-Escape
+    geschrieben: fuer JSON identisch, fuer den HTML-Parser harmlos.
+    """
+    return (json.dumps(data, ensure_ascii=False)
+            .replace("<", "\\u003c")
+            .replace(">", "\\u003e")
+            .replace("&", "\\u0026"))
+
+
 def _ctx(request: Request, **extra) -> dict:
     all_settings = settings_service.all_settings()
     base = {
@@ -38,7 +54,7 @@ def index(request: Request):
     items = queries.get_items()
     return templates.TemplateResponse(request, "index.html", _ctx(
         request,
-        items_json=json.dumps(items, ensure_ascii=False),
+        items_json=_script_json(items),
         libraries=queries.get_libraries(),
         stats=queries.compute_stats(items),
         last_sync=db.get_meta("last_sync") or "",
@@ -54,7 +70,7 @@ def fsk_page(request: Request):
     items = queries.get_items()
     return templates.TemplateResponse(request, "fsk.html", _ctx(
         request,
-        items_json=json.dumps(items, ensure_ascii=False),
+        items_json=_script_json(items),
         rating_art=settings_service.get("display.rating_art", "fsk"),
         rating_translate=bool(settings_service.get("display.rating_translate", False)),
         allow_write=config.ALLOW_EMBY_WRITE,
