@@ -11,6 +11,16 @@ GITHUB_REPO = os.environ.get("GITHUB_REPO", "s3lfcod3r/selfmediahub").strip()
 # Am Container setzen (SMH_DISABLE_AUTH=1), dann greift keine Login-Wand.
 DISABLE_AUTH = os.environ.get("SMH_DISABLE_AUTH", "0").strip() in ("1", "true", "yes")
 
+# Sitzungs-Cookie immer mit Secure ausliefern (nur HTTPS). Normalerweise wird das
+# je Anfrage erkannt (Schema bzw. X-Forwarded-Proto); dieser Schalter erzwingt es.
+COOKIE_SECURE = os.environ.get("SMH_COOKIE_SECURE", "0").strip() in ("1", "true", "yes")
+
+# Adressen von Reverse Proxys, deren X-Forwarded-For geglaubt werden darf
+# (kommagetrennt, z.B. SMH_TRUSTED_PROXIES=192.168.1.10). Ohne Eintrag zaehlt
+# fuer die Anmelde-Bremse ausschliesslich die tatsaechliche Gegenstelle - sonst
+# koennte sich jeder mit einem selbst gesetzten Header darum herummogeln.
+TRUSTED_PROXIES = {p.strip() for p in os.environ.get("SMH_TRUSTED_PROXIES", "").split(",") if p.strip()}
+
 # Eigene Daten - komplett getrennt von jedem Medienserver.
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 DB_PATH = os.environ.get("DB_PATH", os.path.join(DATA_DIR, "selfmediahub.db"))
