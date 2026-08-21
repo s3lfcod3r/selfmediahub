@@ -1,4 +1,6 @@
 """JSON-API: Sync, Tags, Regeln, FSK-Schreiben, Bild-Proxy."""
+import logging
+
 import requests
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import Response
@@ -12,6 +14,7 @@ from ..services import (
 )
 
 router = APIRouter(prefix="/api")
+logger = logging.getLogger("selfmediahub")
 
 # Cover werden ueber den Container ausgeliefert (Browser erreicht die Quelle - z.B.
 # Emby im Docker-Netz - oft nicht direkt). 1 Tag Browser-Cache.
@@ -20,7 +23,17 @@ _IMAGE_TIMEOUT = 20
 
 
 def _fail(exc: Exception):
-    raise HTTPException(status_code=500, detail=str(exc))
+    """Unerwarteter Fehler: dem Client eine neutrale Meldung, die Einzelheiten
+    ins Log. Fehlertexte enthalten sonst Dateipfade, SQL-Fragmente oder interne
+    Adressen - unnoetige Hilfe fuer jemanden, der die Anwendung ausprobiert."""
+    logger.exception("Unerwarteter Fehler in der API")
+    raise HTTPException(status_code=500, detail="Interner Fehler - Einzelheiten stehen im Log.")
+
+
+def _short(exc: Exception, limit: int = 200) -> str:
+    """Erste Zeile einer Fehlermeldung, gekuerzt - fuer Faelle, in denen der
+    Grund fuer den Nutzer wirklich hilfreich ist (z.B. Verbindungstest)."""
+    return str(exc).strip().splitlines()[0][:limit] if str(exc).strip() else "Unbekannter Fehler"
 
 
 # -- Sync -------------------------------------------------------------------
@@ -313,7 +326,8 @@ def api_source_test(source_id: int):
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     except Exception as exc:  # noqa: BLE001 - Verbindungsfehler an die UI melden
-        raise HTTPException(status_code=400, detail=str(exc))
+        logger.warning("Verbindungstest fehlgeschlagen: %s", exc)
+        raise HTTPException(status_code=400, detail=_short(exc))
 
 
 @router.get("/sources/{source_id}/libraries")
@@ -323,7 +337,8 @@ def api_source_libraries(source_id: int):
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc))
     except Exception as exc:  # noqa: BLE001 - Verbindungsfehler an die UI melden
-        raise HTTPException(status_code=400, detail=str(exc))
+        logger.warning("Verbindungstest fehlgeschlagen: %s", exc)
+        raise HTTPException(status_code=400, detail=_short(exc))
 
 
 # -- Metadaten-Dienste (Phase 5c): zwei feste Dienste -----------------------
@@ -487,7 +502,7 @@ async def api_fsk_write_bulk(request: Request):
                        (rating, rating, int(ch["item_id"])))
             saved += 1
         except Exception as exc:  # noqa: BLE001
-            errors.append({"item_id": ch["item_id"], "error": str(exc)})
+            errors.append({"item_id": ch["item_id"], "error": _short(exc)})
     return {"ok": True, "saved": saved, "errors": errors}
 
 
