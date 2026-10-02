@@ -48,20 +48,31 @@ def _resolution_label(width, height):
 
 
 def tech_from_streams(streams: list) -> dict:
-    """Technische Merkmale aus Emby/Jellyfin-MediaStreams ziehen."""
-    video_codec = width = height = hdr = None
+    """Technische Merkmale aus Emby/Jellyfin-MediaStreams ziehen.
+
+    Video-Stream mit der hoechsten Aufloesung (Breite*Hohe) wird gewaehlt -
+    das deckt den Fall mehrerer Video-Streams ab und stellt sicher, dass die
+    hoechste Qualitaet angezeigt wird (statt blind dem ersten zuzutrauen).
+    """
     audio_codecs, audio_langs, subtitle_langs = [], [], []
+    best = None
     for st in streams or []:
         stype = st.get("Type")
-        if stype == "Video" and video_codec is None:
-            video_codec = st.get("Codec")
-            width, height = st.get("Width"), st.get("Height")
-            hdr = st.get("VideoRangeType") or st.get("VideoRange")
+        if stype == "Video":
+            w, h = st.get("Width") or 0, st.get("Height") or 0
+            if best is None or w * h > best[0]:
+                best = (w * h, st)
         elif stype == "Audio":
             audio_codecs.append(st.get("Codec"))
             audio_langs.append(st.get("Language"))
         elif stype == "Subtitle":
             subtitle_langs.append(st.get("Language"))
+    video_codec = width = height = hdr = None
+    if best is not None:
+        v = best[1]
+        video_codec = v.get("Codec")
+        width, height = v.get("Width"), v.get("Height")
+        hdr = v.get("VideoRangeType") or v.get("VideoRange")
     return {
         "video_codec": video_codec, "width": width, "height": height,
         "hdr": hdr,
