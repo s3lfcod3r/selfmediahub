@@ -1,5 +1,8 @@
 """Konfiguration aus Umgebungsvariablen. Keine Secrets im Code."""
+import logging
 import os
+
+logger = logging.getLogger("selfmediahub.config")
 
 APP_NAME = "SelfMediaHub"
 VERSION = "0.7.0"
@@ -25,7 +28,29 @@ TRUSTED_PROXIES = {p.strip() for p in os.environ.get("SMH_TRUSTED_PROXIES", "").
 DATA_DIR = os.environ.get("DATA_DIR", "/data")
 DB_PATH = os.environ.get("DB_PATH", os.path.join(DATA_DIR, "selfmediahub.db"))
 
-PORT = int(os.environ.get("PORT", "8092"))
+# Defensives Parsen: ungueltige ENV-Werte (z.B. PORT=abc) duerfen den Import
+# nicht crashen; statt dessen Default mit Warning.
+def _int_env(name: str, default: int) -> int:
+    raw = os.environ.get(name, "").strip()
+    if not raw:
+        return default
+    try:
+        return int(raw)
+    except ValueError:
+        logger.warning("%s=%r kein gueltiger Zahlwert -> Default %d", name, raw, default)
+        return default
+
+def _float_env(name: str, default: float) -> float:
+    raw = os.environ.get(name, "").strip()
+    if not raw:
+        return default
+    try:
+        return float(raw)
+    except ValueError:
+        logger.warning("%s=%r kein gueltiger Zahlwert -> Default %r", name, raw, default)
+        return default
+
+PORT = _int_env("PORT", 8092)
 
 # Log-Stufe (DEBUG/INFO/WARNING/ERROR/CRITICAL). Steuert eigene Logs UND uvicorn.
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO").strip().upper()
@@ -49,7 +74,7 @@ TVDB_API_KEY = (os.environ.get("TVDB_API_KEY", "").strip()
 
 # --- Automatik & Benachrichtigung --------------------------------------
 # Hintergrund-Scan alle N Stunden (0 = aus).
-SCAN_INTERVAL_HOURS = float(os.environ.get("SCAN_INTERVAL_HOURS", "0") or "0")
+SCAN_INTERVAL_HOURS = _float_env("SCAN_INTERVAL_HOURS", 0.0)
 # Generischer JSON-Webhook (z.B. Apprise, Discord, ntfy-Bridge). Leer = aus.
 NOTIFY_WEBHOOK_URL = os.environ.get("NOTIFY_WEBHOOK_URL", "").strip()
 
