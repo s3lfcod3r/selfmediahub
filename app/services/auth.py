@@ -141,7 +141,9 @@ def verify_session(token: str) -> bool:
     if not hmac.compare_digest(_sign(payload), sig):
         return False
     try:
-        _username, issued = payload.split(":")
+        # rsplit auf das letzte ":" - der Timestamp enthaelt keinen ":"; ein
+        # ":" im Benutzername darf die Zerlegung daher nicht kaputt machen.
+        _username, issued = payload.rsplit(":", 1)
     except ValueError:
         return False
     if _now_ts() - int(issued) > _SESSION_MAX_AGE:
