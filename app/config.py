@@ -5,7 +5,7 @@ import os
 logger = logging.getLogger("selfmediahub.config")
 
 APP_NAME = "SelfMediaHub"
-VERSION = "0.7.0"
+VERSION = "0.7.1"
 
 # GitHub-Repo fuer die Update-Pruefung (vergleicht mit dem neuesten Release).
 GITHUB_REPO = os.environ.get("GITHUB_REPO", "s3lfcod3r/selfmediahub").strip()
