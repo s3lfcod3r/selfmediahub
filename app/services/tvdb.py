@@ -139,7 +139,8 @@ def _fetch_order(series_id, token: str, order: str, cache: dict):
     counts: dict = {}          # Staffel -> Anzahl veroeffentlichter Folgen
     runtimes: list = []
     future: dict = {}          # Staffel -> fruehestes Zukunfts-Datum
-    page, pages = 0, 0
+    # TheTVDB-Paging ist 1-basiert (erste Seite = 1), nicht 0.
+    page, pages = 1, 0
     while pages < _MAX_EPISODE_PAGES:
         try:
             j = _get(f"/series/{series_id}/episodes/{_SEASONTYPE[order]}", token, {"page": page})
