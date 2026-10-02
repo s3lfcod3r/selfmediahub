@@ -5,7 +5,7 @@
 **Read-only analysis, monitoring &amp; quality-control layer for your media library — Emby, Jellyfin, Plex and local folders. Never a media server, never writes back.**
 
 [![Build](https://github.com/s3lfcod3r/selfmediahub/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/s3lfcod3r/selfmediahub/actions/workflows/docker-publish.yml)
-![Version](https://img.shields.io/badge/version-0.7.0-33A78C)
+![Version](https://img.shields.io/badge/version-0.7.1-33A78C)
 ![License](https://img.shields.io/badge/license-MIT-8A9CAA)
 ![Backend](https://img.shields.io/badge/backend-FastAPI-009688)
 ![Database](https://img.shields.io/badge/db-SQLite-1DB8D4)
