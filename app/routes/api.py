@@ -79,7 +79,7 @@ def api_item_detail(item_id: int):
     item = queries.get_item(item_id)
     if not item:
         raise HTTPException(status_code=404, detail="Eintrag nicht gefunden")
-    item["tags"] = tags.tags_for_items().get(item_id, [])
+    item["tags"] = tags.tags_for_items([item_id]).get(item_id, [])
 
     episodes, note, missing, season_summary, order_meta = [], None, [], None, None
     release_meta = None

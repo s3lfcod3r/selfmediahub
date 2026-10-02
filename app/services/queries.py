@@ -58,7 +58,7 @@ def _add_rating_display(item: dict, art: str, translate: bool) -> None:
 
 def get_items() -> list:
     rows = db.query("SELECT * FROM media_items ORDER BY sort_name COLLATE NOCASE")
-    tagmap = tags_service.tags_for_items()
+    tagmap = tags_service.tags_for_items([row["id"] for row in rows])
     acked = _acked_set()
     art = settings_service.get("display.rating_art", ratings.DEFAULT_ART)
     translate = bool(settings_service.get("display.rating_translate", False))
