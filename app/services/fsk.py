@@ -117,19 +117,23 @@ def write_emby(source_ref: int, source_id: str, rating: str) -> None:
     base_url = (src["base_url"] or "").rstrip("/")
     headers = {"X-Emby-Token": crypto.decrypt(src["secret"] or "")}
     uid = _emby_admin_uid(base_url, headers)
-    full = requests.get(
+    # Nur die zu aendernden Felder senden (Partieller Update-POST). Das komplette
+    # Item-Objekt zurueckzuschicken (GET -> POST full) ist fragil: alle Felder aus
+    # dem GET-Response gehen mit, read-only-Felder (MediaSources, People) und
+    # Formate, die Emby beim Roundtrip anders darstellt, werden mitgeschickt und
+    # koennen andere Attribute unabsichtlich ueberschreiben.
+    item = requests.get(
         f"{base_url}/emby/Users/{uid}/Items/{source_id}", headers=headers, timeout=15
     ).json()
-    full["OfficialRating"] = rating or None
     # Feld sperren, damit ein Emby-Metadaten-Refresh die Korrektur nicht ueberschreibt
     # (auch "Kein Rating" = leer + gesperrt). Vorhandene Sperren bleiben erhalten.
-    locked = full.get("LockedFields") or []
+    locked = item.get("LockedFields") or []
     if "OfficialRating" not in locked:
         locked.append("OfficialRating")
-    full["LockedFields"] = locked
     resp = requests.post(
         f"{base_url}/emby/Items/{source_id}",
-        headers={**headers, "Content-Type": "application/json"},
-        data=json.dumps(full), timeout=30,
+        headers={**headers},
+        json={"OfficialRating": rating or None, "LockedFields": locked},
+        timeout=30,
     )
     resp.raise_for_status()
