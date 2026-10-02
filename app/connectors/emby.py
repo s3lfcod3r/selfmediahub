@@ -82,6 +82,17 @@ def tech_from_streams(streams: list) -> dict:
     }
 
 
+def _primary_video_source(sources):
+    """MediaSource mit Video-Stream: die erste mit einem Video-Stream; wenn
+    keine vorhanden sind (z.B. reine Audio-Datei), wird auf die erste Quelle
+    zurueckgefallen."""
+    for s in sources or []:
+        if s.get("MediaStreams") and any(st.get("Type") == "Video"
+                                         for st in s.get("MediaStreams")):
+            return s
+    return sources[0] if sources else None
+
+
 class EmbyConnector(Connector):
     kind = "emby"
     prefix = "/emby"
@@ -198,10 +209,11 @@ class EmbyConnector(Connector):
             item["have_episodes"] = it.get("RecursiveItemCount")
         else:
             sources = it.get("MediaSources") or []
-            streams = sources[0].get("MediaStreams") if sources else []
+            src = _primary_video_source(sources)
+            streams = src.get("MediaStreams") if src else []
             item.update(tech_from_streams(streams))
-            if sources:
-                item["size_bytes"] = sources[0].get("Size")
+            if src:
+                item["size_bytes"] = src.get("Size")
         return item
 
     def fetch_episodes(self, series_id: str) -> list:
@@ -218,14 +230,15 @@ class EmbyConnector(Connector):
         episodes = []
         for it in data.get("Items", []):
             sources = it.get("MediaSources") or []
-            streams = sources[0].get("MediaStreams") if sources else []
+            src = _primary_video_source(sources)
+            streams = src.get("MediaStreams") if src else []
             ticks = it.get("RunTimeTicks")
             ep = {
                 "season": it.get("ParentIndexNumber"),
                 "episode": it.get("IndexNumber"),
                 "name": it.get("Name", ""),
                 "path": it.get("Path") or "",
-                "size_bytes": sources[0].get("Size") if sources else None,
+                "size_bytes": src.get("Size") if src else None,
                 "runtime_min": round(ticks / TICKS_PER_MINUTE) if ticks else None,
             }
             ep.update(tech_from_streams(streams))
