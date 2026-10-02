@@ -44,14 +44,25 @@ def remove(item_id: int, tag_id: int) -> None:
     db.execute("DELETE FROM item_tags WHERE item_id=? AND tag_id=?", (item_id, tag_id))
 
 
-def tags_for_items() -> dict:
-    """{item_id: [ {id,name,color,icon,auto} ... ]} - eine Abfrage für alle."""
-    rows = db.query(
+def tags_for_items(item_ids: list = None) -> dict:
+    """{item_id: [ {id,name,color,icon,auto,priority} ... ]}.
+
+    item_ids: wenn angegeben (Liste), nur diese Items per IN-Query holen
+    (Detailansicht). Ohne Angabe alle (Listenansicht).
+    """
+    sql = (
         "SELECT it.item_id AS item_id, t.id AS id, t.name AS name, "
         "t.color AS color, t.icon AS icon, it.auto AS auto, t.priority AS priority "
         "FROM item_tags it JOIN tags t ON t.id = it.tag_id "
-        "ORDER BY t.priority, t.name COLLATE NOCASE"
     )
+    params: tuple = ()
+    if item_ids:
+        ids = [int(i) for i in item_ids]
+        if ids:
+            sql += "WHERE it.item_id IN (" + ",".join("?" for _ in ids) + ") "
+            params = tuple(ids)
+    sql += "ORDER BY t.priority, t.name COLLATE NOCASE"
+    rows = db.query(sql, params)
     out = {}
     for r in rows:
         out.setdefault(r["item_id"], []).append(dict(r))
