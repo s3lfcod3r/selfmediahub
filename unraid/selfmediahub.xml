@@ -9,7 +9,7 @@
   <Privileged>false</Privileged>
   <Support>https://github.com/s3lfcod3r/selfmediahub/issues</Support>
   <Project>https://github.com/s3lfcod3r/selfmediahub</Project>
-  <Overview>Read-only Analyse- und Übersichtsschicht für bestehende Mediatheken (Emby; Plex/Jellyfin/lokal folgen). Liest Filme und Serien nur lesend ein und speichert alles in einer eigenen Datenbank - es wird nie in den Medienserver zurückgeschrieben. Cover- und frei konfigurierbare Listenansicht, Filter nach Bibliothek, Typ und Freigabe. Weitere Phasen: Technik-/Qualitätsanalyse, Vollständigkeitsprüfung, Tags und Regeln, Benachrichtigungen.</Overview>
+  <Overview>Read-only Analyse- und Übersichtsschicht für bestehende Mediatheken (Emby, Jellyfin, Plex). Liest Filme und Serien nur lesend ein und speichert alles in einer eigenen Datenbank - es wird nie in den Medienserver zurückgeschrieben. FSK nachschreiben (optional), Cover- und frei konfigurierbare Listenansicht, Filter nach Bibliothek, Typ und Freigabe, Tags und Regeln, Benachrichtigungen.</Overview>
   <Category>MediaApp:Video Tools: Productivity:</Category>
   <WebUI>http://[IP]:[PORT:8092]/</WebUI>
   <TemplateURL/>
