@@ -7,7 +7,7 @@
 
 [![Build](https://github.com/s3lfcod3r/selfmediahub/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/s3lfcod3r/selfmediahub/actions/workflows/docker-publish.yml)
 ![Version](https://img.shields.io/badge/version-0.7.1-33A78C)
-![License](https://img.shields.io/badge/license-MIT-8A9CAA)
+![License](https://img.shields.io/badge/license-All%20rights%20reserved-8A9CAA)
 ![Backend](https://img.shields.io/badge/backend-FastAPI-1F7763)
 ![Web](https://img.shields.io/badge/web-Jinja2%20%2B%20vanilla%20JS-43D3AD)
 ![Database](https://img.shields.io/badge/db-SQLite-1DB8D4)
@@ -442,6 +442,26 @@ python -m app.main
 - [ ] Filmreihen-/Sequel-Tracking
 
 <p align="right"><a href="#-deutsch">⬆ nach oben</a></p>
+
+---
+
+## ⚖️ Lizenz / License
+
+**🇩🇪 Alle Rechte vorbehalten.** © 2026 s3lfcod3r / SelfCoder
+
+Du darfst die Software **privat und nicht-kommerziell** installieren und benutzen (z. B. im Homelab, über Docker oder Unraid).
+
+**Ohne schriftliche Erlaubnis verboten:** kommerzielle Nutzung · Kopieren · Verändern · Weitergeben · Einbauen in eigene Projekte (auch Closed Source) · Verkaufen.
+
+Details: [LICENSE](LICENSE)
+
+**🇬🇧 All rights reserved.** © 2026 s3lfcod3r / SelfCoder
+
+You may install and use the software **privately and non-commercially** (e.g. in your home lab, via Docker or Unraid).
+
+**Not permitted without written permission:** commercial use · copying · modifying · redistributing · incorporating into other projects (including closed source) · selling.
+
+Details: [LICENSE](LICENSE)
 
 ---
 
