@@ -24,6 +24,8 @@
     <span class="acct-chip" title="{{ t('topbar.logged_in') }}">{{ account.username }}</span>
     <a class="btn btn-small" href="/logout" title="{{ t('topbar.logout') }}">{{ t('topbar.logout') }}</a>
     {% endif %}
+    <a class="btn btn-icon" href="https://ko-fi.com/s3lfcod3r" target="_blank" rel="noopener"
+       title="{{ t('topbar.kofi') }}" aria-label="{{ t('topbar.kofi') }}" style="text-decoration:none">&#9749;</a>
     <a class="btn btn-icon {{ 'active' if active == 'settings' }}" href="/einstellungen"
        title="{{ t('topbar.settings') }}" aria-label="{{ t('topbar.settings') }}">&#9881;</a>
     <button class="btn btn-icon" id="themeBtn" title="{{ t('topbar.theme') }}" aria-label="{{ t('topbar.theme_aria') }}">◐</button>
