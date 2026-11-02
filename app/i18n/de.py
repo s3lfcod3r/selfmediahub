@@ -40,6 +40,7 @@ STRINGS = {
     "fskpage.refresh_locks_title": "Gesperrte Freigaben frisch aus Emby lesen (nötig, da der normale Sync die Sperre nicht mitbekommt). Aktualisiert Cover-Ampel und Schloss.",
     "fskpage.locks_refreshed": "Sperr-Status aktualisiert: {n} gesperrt ({c} geändert)",
     "topbar.settings": "Einstellungen",
+    "topbar.kofi": "Ko-fi ☕ SelfMediaHub unterstützen",
     "topbar.theme": "Hell/Dunkel",
     "topbar.theme_aria": "Theme umschalten",
     "topbar.sync": "Neu einlesen",
@@ -182,6 +183,9 @@ STRINGS = {
     "settings.about.auto_desc": "Die Prüfung läuft sonst automatisch im Hintergrund (beim Start und einmal täglich); die Kopfzeile zeigt bei Bedarf einen roten „Update“-Hinweis.",
     "settings.about.project": "Projekt",
     "settings.about.github": "Auf GitHub ansehen",
+    "settings.about.support": "Unterstützen",
+    "settings.about.support_desc": "SelfMediaHub ist kostenlos und werbefrei. Wenn es dir gefällt, freue ich mich über einen Kaffee.",
+    "settings.about.kofi": "Auf Ko-fi unterstützen",
 
     # -- Sprachnamen (Primaere-Sprache-Dropdown, Detail, Filter) --
     "langname.ger": "Deutsch",

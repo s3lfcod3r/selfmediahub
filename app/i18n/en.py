@@ -36,6 +36,7 @@ STRINGS = {
     "fskpage.refresh_locks_title": "Re-read locked ratings straight from Emby (needed because the normal sync doesn't see the lock). Updates the cover badge and lock icon.",
     "fskpage.locks_refreshed": "Lock status refreshed: {n} locked ({c} changed)",
     "topbar.settings": "Settings",
+    "topbar.kofi": "Ko-fi ☕ Support SelfMediaHub",
     "topbar.theme": "Light/Dark",
     "topbar.theme_aria": "Toggle theme",
     "topbar.sync": "Re-scan",
@@ -177,6 +178,9 @@ STRINGS = {
     "settings.about.auto_desc": "Otherwise the check runs automatically in the background (at startup and once a day); the header shows a red “Update” hint when one is available.",
     "settings.about.project": "Project",
     "settings.about.github": "View on GitHub",
+    "settings.about.support": "Support",
+    "settings.about.support_desc": "SelfMediaHub is free and ad-free. If you like it, a coffee is always appreciated.",
+    "settings.about.kofi": "Support on Ko-fi",
 
     # -- Language names (primary-language dropdown, detail, filter) --
     "langname.ger": "German",
