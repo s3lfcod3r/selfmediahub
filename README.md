@@ -134,7 +134,7 @@ Open `http://<host>:8092/` → add your media source under **Settings → Data s
 
 ### 📦 Unraid
 
-Template at [`unraid/selfmediahub.xml`](unraid/selfmediahub.xml). Add via *Docker → Add Container → Template*, map `/data` to `/mnt/user/appdata/selfmediahub`, then add your sources in the UI.
+Template at [`templates/selfmediahub.xml`](https://github.com/s3lfcod3r/unraid-templates/blob/main/templates/selfmediahub.xml) in [s3lfcod3r/unraid-templates](https://github.com/s3lfcod3r/unraid-templates) (all my templates). Add via *Docker → Add Container → Template*, map `/data` to `/mnt/user/appdata/selfmediahub`, then add your sources in the UI.
 
 > **⚠️ Permissions:** the container starts as root only to hand `/data` over to `PUID`:`PGID` (default `99` / `100` = `nobody:users`), then the app runs **non-root**. An existing data folder owned by root is taken over automatically.
 
@@ -346,7 +346,7 @@ docker compose up -d
 
 ### 📦 Unraid
 
-Vorlage unter [`unraid/selfmediahub.xml`](unraid/selfmediahub.xml). Über *Docker → Add Container → Template* einbinden, `/data` auf `/mnt/user/appdata/selfmediahub` mappen und danach die Quellen in der Oberfläche anlegen.
+Vorlage unter [`templates/selfmediahub.xml`](https://github.com/s3lfcod3r/unraid-templates/blob/main/templates/selfmediahub.xml) in [s3lfcod3r/unraid-templates](https://github.com/s3lfcod3r/unraid-templates) (alle meine Vorlagen). Über *Docker → Add Container → Template* einbinden, `/data` auf `/mnt/user/appdata/selfmediahub` mappen und danach die Quellen in der Oberfläche anlegen.
 
 > **⚠️ Rechte:** der Container startet nur als root, um `/data` an `PUID`:`PGID` zu übergeben (Standard `99` / `100` = `nobody:users`); danach läuft die App **ohne Root**. Ein bestehender Datenordner, der root gehört, wird automatisch übernommen.
 
